@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# MODEL="liuhaotian/llava-v1.5-13b"
+MODEL="llava-hf/llava-1.5-7b-hf"
+export CUDA_DEVICE_ORDER="PCI_BUS_ID"
+# export NCCL_P2P_DISABLE=1
+export CUDA_VISIBLE_DEVICES="1"
+# export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+NUM_GPUS=1 # Assumes CUDA_VISIBLE_DEVICES is set
+PORT=8001
+vllm serve $MODEL \
+    --tensor-parallel-size $NUM_GPUS \
+    --port $PORT \
+    --trust-remote-code
