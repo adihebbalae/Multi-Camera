@@ -8,7 +8,7 @@ all detected objects with their bounding boxes and labels on camera images.
 import argparse
 import json
 import os
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Union
 from pathlib import Path
 import cv2
 import numpy as np
@@ -17,7 +17,8 @@ from tqdm import tqdm
 from nuscenes.nuscenes import NuScenes
 from nuscenes.utils.geometry_utils import view_points
 from pyquaternion import Quaternion
-
+from shapely.geometry import MultiPoint, box
+import traceback
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -118,7 +119,7 @@ def get_object_color(obj_class: str) -> Tuple[int, int, int]:
 
 def draw_3d_box(
     image: np.ndarray,
-    corners_2d: np.ndarray,
+    corners_2d: Tuple[float, float, float, float],
     color: Tuple[int, int, int],
     thickness: int = 2
 ):
@@ -126,20 +127,27 @@ def draw_3d_box(
     h, w = image.shape[:2]
     
     # Define box edges
-    edges = [
-        [0, 1], [1, 2], [2, 3], [3, 0],  # Bottom face
-        [4, 5], [5, 6], [6, 7], [7, 4],  # Top face
-        [0, 4], [1, 5], [2, 6], [3, 7]   # Vertical edges
-    ]
+    # edges = [
+    #     [0, 1], [1, 2], [2, 3], [3, 0],  # Bottom face
+    #     [4, 5], [5, 6], [6, 7], [7, 4],  # Top face
+    #     [0, 4], [1, 5], [2, 6], [3, 7]   # Vertical edges
+    #]
     
     # Draw edges
-    for edge in edges:
-        pt1 = (int(corners_2d[0, edge[0]]), int(corners_2d[1, edge[0]]))
-        pt2 = (int(corners_2d[0, edge[1]]), int(corners_2d[1, edge[1]]))
+    # # for edge in edges:
+    lines = [
+       [[0, 1], [2,1]],
+       [[0, 1], [0,3]],
+       [[2, 3], [2,1]],
+       [[2, 3], [0,3]]# Bottom face
+    ]
+    for line in lines:
+        pt1 = (int(corners_2d[line[0][0]]), int(corners_2d[line[0][1]]))
+        pt2 = (int(corners_2d[line[1][0]]), int(corners_2d[line[1][1]]))
         
         # Only draw if points are within reasonable bounds
         if 0 <= pt1[0] < w*2 and 0 <= pt1[1] < h*2 and \
-           0 <= pt2[0] < w*2 and 0 <= pt2[1] < h*2:
+            0 <= pt2[0] < w*2 and 0 <= pt2[1] < h*2:
             cv2.line(image, pt1, pt2, color, thickness)
 
 
@@ -156,9 +164,9 @@ def draw_object_label(
     h, w = image.shape[:2]
     
     # Get label position (center-bottom of box)
-    center_2d = np.mean(corners_2d, axis=1)
-    label_x = int(center_2d[0])
-    label_y = int(np.max(corners_2d[1, :]))
+    center_2d = (corners_2d[0] + corners_2d[2]) / 2,(corners_2d[1] + corners_2d[3]) / 2
+    label_x = center_2d[0]
+    label_y = center_2d[3]
     
     # Ensure label is within image bounds
     label_x = max(10, min(label_x, w - 10))
@@ -220,7 +228,31 @@ def draw_object_label(
             cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), thickness
         )
 
+def post_process_coords(corner_coords: List,
+                        imsize: Tuple[int, int] = (1600, 900)) -> Union[Tuple[float, float, float, float], None]:
+    """
+    Get the intersection of the convex hull of the reprojected bbox corners and the image canvas, return None if no
+    intersection.
+    :param corner_coords: Corner coordinates of reprojected bounding box.
+    :param imsize: Size of the image canvas.
+    :return: Intersection of the convex hull of the 2D box corners and the image canvas.
+    """
+    polygon_from_2d_box = MultiPoint(corner_coords).convex_hull
+    img_canvas = box(0, 0, imsize[0], imsize[1])
 
+    if polygon_from_2d_box.intersects(img_canvas):
+        img_intersection = polygon_from_2d_box.intersection(img_canvas)
+        intersection_coords = np.array([coord for coord in img_intersection.exterior.coords])
+
+        min_x = min(intersection_coords[:, 0])
+        min_y = min(intersection_coords[:, 1])
+        max_x = max(intersection_coords[:, 0])
+        max_y = max(intersection_coords[:, 1])
+
+        return min_x, min_y, max_x, max_y
+    else:
+        return None
+    
 def draw_frame_info(
     image: np.ndarray,
     camera: str,
@@ -308,8 +340,8 @@ def create_video_for_camera(
             # Get ego pose for this frame (global → ego transformation)
             ego_pose_token = cam_data['ego_pose_token']
             ego_pose = nusc.get('ego_pose', ego_pose_token)
-            ego_translation = np.array(ego_pose['translation'])
-            ego_rotation = Quaternion(ego_pose['rotation'])
+            # ego_translation = np.array(ego_pose['translation'])
+            # ego_rotation = Quaternion(ego_pose['rotation'])
             
             # Get camera intrinsics and extrinsics (ego → camera transformation)
             cs_record = nusc.get('calibrated_sensor', cam_data['calibrated_sensor_token'])
@@ -330,48 +362,24 @@ def create_video_for_camera(
             # Draw each object using data directly from scene graph
             for obj in visible_objects:
                 try:
-                    # Get position, size, and rotation from scene graph
-                    position = np.array(obj['position'])  # (x, y, z) in global frame
-                    size = np.array(obj['size'])  # (width, length, height)
-                    rotation_quat = Quaternion(obj['rotation'])  # (w, x, y, z)
-                    
-                    # Create 8 corners of 3D bounding box
-                    # Corners defined as: front-left, front-right, back-right, back-left (bottom), then top
-                    w, l, h = size
-                    
-                    # Define corners in object's local frame (centered at origin)
-                    corners = np.array([
-                        [-w/2, -l/2, -h/2],  # 0: front-left-bottom
-                        [ w/2, -l/2, -h/2],  # 1: front-right-bottom
-                        [ w/2,  l/2, -h/2],  # 2: back-right-bottom
-                        [-w/2,  l/2, -h/2],  # 3: back-left-bottom
-                        [-w/2, -l/2,  h/2],  # 4: front-left-top
-                        [ w/2, -l/2,  h/2],  # 5: front-right-top
-                        [ w/2,  l/2,  h/2],  # 6: back-right-top
-                        [-w/2,  l/2,  h/2],  # 7: back-left-top
-                    ]).T  # Shape: (3, 8)
-                    
-                    # Rotate corners to object's orientation in global frame
-                    corners_rotated = rotation_quat.rotation_matrix @ corners
-                    
-                    # Translate corners to object's global position
-                    corners_global = corners_rotated + position.reshape(3, 1)
-                    
-                    # Transform from global to ego vehicle frame
-                    corners_ego = corners_global - ego_translation.reshape(3, 1)
-                    corners_ego = ego_rotation.inverse.rotation_matrix @ corners_ego
-                    
-                    # Transform from ego vehicle frame to camera frame
-                    corners_cam = corners_ego - cam_translation.reshape(3, 1)
-                    corners_cam = cam_rotation.inverse.rotation_matrix @ corners_cam
+                    box = nusc.get_box(obj['annotation_token'])
+                    corners = box.corners()
+                    box.translate(-np.array(ego_pose['translation']))
+                    box.rotate(Quaternion(ego_pose['rotation']).inverse)
+                    box.translate(-np.array(cs_record['translation']))
+                    box.rotate(Quaternion(cs_record['rotation']).inverse)
+                    corners_3d = box.corners()
                     
                     # Check if box is in front of camera
-                    if not np.any(corners_cam[2, :] > 0):
+                    if not np.any(corners_3d[2, :] > 0):
                         continue
                     
+                    in_front = np.argwhere(corners_3d[2, :] > 0).flatten()
+                    corners = corners[:, in_front]
                     # Project 3D corners to 2D image plane
-                    corners_2d = view_points(corners_cam, cam_intrinsic, normalize=True)[:2, :]
+                    corners_coords = view_points(corners, cam_intrinsic, normalize=True)[:2, :]
                     
+                    corners_2d = post_process_coords(corner_coords)
                     # Get color for this object class
                     color = get_object_color(obj['object_class'])
                     
@@ -388,6 +396,7 @@ def create_video_for_camera(
                     
                 except Exception as e:
                     # Skip objects that can't be drawn
+                    traceback.print_exc()
                     continue
             
             # Draw frame info

@@ -319,18 +319,19 @@ class SceneGraphBuilder:
 
 def parse_args():
     parser = ArgumentParser(description='Build scene graphs for nuScenes dataset')
-    parser.add_argument('--dataroot', type=str, required=True, help='Path to nuScenes dataset', default='/nas/standard_datasets/nuscenes')
-    parser.add_argument('--version', type=str, required=True, help='Version of nuScenes dataset', default='v1.0-trainval')
-    parser.add_argument('--output-dir', type=str, required=True, help='Path to output directory', default='outputs/scene_graphs')
-    parser.add_argument('--num-scenes', type=int, required=True, help='Number of scenes to process', default=1)
+    parser.add_argument('--dataroot', type=str, required=False, help='Path to nuScenes dataset', default='/nas/standard_datasets/nuscenes')
+    parser.add_argument('--version', type=str, required=False, help='Version of nuScenes dataset', default='v1.0-trainval')
+    parser.add_argument('--output-dir', type=str, required=False, help='Path to output directory', default='outputs/scene_graphs')
+    parser.add_argument('--num-scenes', type=int, required=False, help='Number of scenes to process', default=1)
     return parser.parse_args()
 
 def main():
     """Example usage of the SceneGraphBuilder."""
+    args = parse_args()
     # Configuration
-    dataroot = '/nas/standard_datasets/nuscenes'  # Update this path
-    version = 'v1.0-trainval'
-    output_dir = 'outputs/scene_graphs'
+    dataroot = args.dataroot
+    version = args.version
+    output_dir = args.output_dir
     
     # Initialize dataloader
     loader = NuScenesLidarSegmentationLoader(
@@ -366,8 +367,9 @@ def main():
             
             # Export to JSON
             os.makedirs(output_dir, exist_ok=True)
-            output_path = os.path.join(output_dir, f'{scene_token}_scene_graph.json')
-            builder.export_to_json(all_nodes, all_relationships, output_path)
+            os.makedirs(os.path.join(output_dir, scene_token), exist_ok=True)
+            output_path = os.path.join(output_dir, f'{scene_token}/scene_graph.json')
+            builder.export_to_json(all_nodes, all_relationships, output_path, scene_token)
             print(f"\nScene graph saved to {output_path}")
             
             # Get objects for VLM annotation
@@ -386,7 +388,7 @@ def main():
             print(f"\nObjects ready for VLM annotation: {len(objects_for_vlm)}")
             
             # Save objects for VLM annotation
-            vlm_output_path = os.path.join(output_dir, f'{scene_token}_vlm_objects.json')
+            vlm_output_path = os.path.join(output_dir, f'{scene_token}/vlm_objects.json')
             with open(vlm_output_path, 'w') as f:
                 json.dump(objects_for_vlm, f, indent=2)
             
