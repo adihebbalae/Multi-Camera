@@ -35,9 +35,9 @@ def parse_args() -> argparse.Namespace:
         help="nuScenes version (e.g., v1.0-trainval, v1.0-mini)"
     )
     parser.add_argument(
-        "--input-json",
+        "--scene-token",
         required=True,
-        help="Path to scene graph JSON file"
+        help="Scene token"
     )
     parser.add_argument(
         "--output-dir",
@@ -158,15 +158,16 @@ def draw_object_label(
     color: Tuple[int, int, int],
     show_properties: bool,
     font_scale: float,
-    thickness: int
+    thickness: int,
+    annotations: Dict = None,
 ):
     """Draw object label with properties."""
     h, w = image.shape[:2]
     
     # Get label position (center-bottom of box)
     center_2d = (corners_2d[0] + corners_2d[2]) / 2,(corners_2d[1] + corners_2d[3]) / 2
-    label_x = center_2d[0]
-    label_y = center_2d[3]
+    label_x = int(center_2d[0])
+    label_y = int(corners_2d[1])
     
     # Ensure label is within image bounds
     label_x = max(10, min(label_x, w - 10))
@@ -179,15 +180,21 @@ def draw_object_label(
     
     if show_properties:
         # Add velocity if available
-        if obj.get('velocity') and obj['velocity'] != [0.0, 0.0]:
-            speed = np.sqrt(obj['velocity'][0]**2 + obj['velocity'][1]**2)
-            if speed > 0.5:
-                lines.append(f"{speed:.1f} m/s")
+        # if obj.get('velocity') and obj['velocity'] != [0.0, 0.0]:
+        #     speed = np.sqrt(obj['velocity'][0]**2 + obj['velocity'][1]**2)
+        #     if speed > 0.5:
+        #         lines.append(f"{speed:.1f} m/s")
         
-        # Add distance
-        if obj.get('position'):
-            distance = np.sqrt(obj['position'][0]**2 + obj['position'][1]**2)
-            lines.append(f"{distance:.1f}m")
+        # # Add distance
+        # if obj.get('position'):
+        #     distance = np.sqrt(obj['position'][0]**2 + obj['position'][1]**2)
+        #     lines.append(f"{distance:.1f}m")
+        if annotations is not None:
+            if obj.get('activity') or annotations.get('activity'):
+                lines.append(f"activity : {annotations['activity']}")
+            if obj.get('description') or annotations.get('description'):
+                lines.append(f"description : {annotations['description']}")
+
     
     if not lines:
         return
@@ -260,7 +267,8 @@ def draw_frame_info(
     total_frames: int,
     num_objects: int,
     font_scale: float,
-    thickness: int
+    thickness: int,
+    captions: Dict = None
 ):
     """Draw frame information on image."""
     h, w = image.shape[:2]
@@ -273,10 +281,17 @@ def draw_frame_info(
     
     # Frame info at bottom
     info_text = f"Frame: {frame_idx+1}/{total_frames} | Objects: {num_objects}"
-    cv2.putText(
-        image, info_text, (10, h - 10),
-        cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), thickness
-    )
+    if captions is not None:
+        info_text += f" | Caption: {captions}"
+    info_text = info_text.replace('\n', ' ')
+    info_texts = info_text.split('.')
+    info_texts = info_texts[::-1]
+    for i, info_text in enumerate(info_texts):
+        cv2.putText(
+            image, info_text, (10, h - 10),
+            cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), thickness
+        )
+        h -= 15
 
 
 def create_video_for_camera(
@@ -284,7 +299,9 @@ def create_video_for_camera(
     scene_graph: Dict,
     camera: str,
     output_path: str,
-    args: argparse.Namespace
+    args: argparse.Namespace,
+    annotations: Dict = None,
+    captions: Dict = None
 ):
     """Create video for a specific camera."""
     print(f"\nCreating video for {camera}...")
@@ -371,15 +388,16 @@ def create_video_for_camera(
                     corners_3d = box.corners()
                     
                     # Check if box is in front of camera
-                    if not np.any(corners_3d[2, :] > 0):
-                        continue
-                    
+                    # if not np.any(corners_3d[2, :] > 0):
+                    print("corners_3d", corners_3d)
                     in_front = np.argwhere(corners_3d[2, :] > 0).flatten()
-                    corners = corners[:, in_front]
+                    corners = corners_3d[:, in_front]
                     # Project 3D corners to 2D image plane
-                    corners_coords = view_points(corners, cam_intrinsic, normalize=True)[:2, :]
+                    print("corners", corners)
+                    corner_coords = view_points(corners, cam_intrinsic, normalize=True).T[:, :2]
                     
                     corners_2d = post_process_coords(corner_coords)
+                    print("corners_2d", corners_2d)
                     # Get color for this object class
                     color = get_object_color(obj['object_class'])
                     
@@ -391,7 +409,7 @@ def create_video_for_camera(
                     if args.show_labels:
                         draw_object_label(
                             image, corners_2d, obj, color,
-                            args.show_properties, args.font_scale, args.thickness
+                            args.show_properties, args.font_scale, args.thickness, annotations[obj['object_id']]
                         )
                     
                 except Exception as e:
@@ -400,9 +418,13 @@ def create_video_for_camera(
                     continue
             
             # Draw frame info
+            if captions is not None:
+                caption = captions[frame['sample_token']]
+            else:
+                caption = None
             draw_frame_info(
                 image, camera, frame_idx, len(frames),
-                len(visible_objects), args.font_scale, args.thickness
+                len(visible_objects), args.font_scale, args.thickness, caption
             )
             
             # Write frame
@@ -415,6 +437,28 @@ def create_video_for_camera(
         else:
             print(f"  No frames written for {camera}")
 
+def load_annotations(annotations_json: str) -> Dict:
+    """Load annotations from JSON file."""
+    with open(annotations_json, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    
+    instance_annotations = data['annotations']
+    annotations = {}
+    for annotation in instance_annotations:
+        annotations[annotation['instance_token']] = {'activity': annotation['activity'].split('.')[0], 'description': annotation['description'].split('.')[0]}
+
+    return annotations
+
+def load_captions(captions_json: str) -> Dict:
+    """Load captions from JSON file."""
+    with open(captions_json, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    captions_data = data['captions']
+    captions = {}
+    for caption in captions_data:
+        captions[caption['sample_token']] = caption['caption']
+
+    return captions
 
 def main():
     args = parse_args()
@@ -428,8 +472,13 @@ def main():
     nusc = NuScenes(version=args.version, dataroot=args.dataroot, verbose=False)
     
     # Load scene graph
+    args.input_json = os.path.join(args.output_dir, f"scene_graphs/{args.scene_token}/scene_graph.json")
+    args.annotations_json = os.path.join(args.output_dir, f"instance_annotations/{args.scene_token}_instance_annotations.json")
+    args.captions_json = os.path.join(args.output_dir, f"captions/{args.scene_token}_captions.json")
     print(f"Loading scene graph from {args.input_json}...")
     scene_graph = load_scene_graph(args.input_json)
+    annotations = load_annotations(args.annotations_json)
+    captions = load_captions(args.captions_json)
     
     print(f"Scene: {scene_graph.get('scene_name', 'unknown')}")
     print(f"Frames: {scene_graph.get('num_frames', 0)}")
@@ -444,7 +493,7 @@ def main():
     
     # Create video for each camera
     for camera in args.cameras:
-        output_path = output_dir / f"{scene_name}_{camera}.mp4"
+        output_path = output_dir / "videos" / f"{scene_name}_{camera}.mp4"
         
         try:
             create_video_for_camera(
@@ -452,7 +501,9 @@ def main():
                 scene_graph=scene_graph,
                 camera=camera,
                 output_path=str(output_path),
-                args=args
+                args=args,
+                annotations=annotations,
+                captions=captions
             )
         except Exception as e:
             print(f"\nError creating video for {camera}: {e}")
