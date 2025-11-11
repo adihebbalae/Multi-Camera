@@ -1,13 +1,14 @@
+from openai import OpenAI
 import datetime
 import json
 import os
 
-
 class LLM:
-    def __init__(self, client, save_dir="/nas/mars/experiment_result/orbit/0_llm_conversation_history"):
+    def __init__(self, model="gpt-4o", history=[], save_dir="/nas/mars/experiment_result/orbit/0_llm_conversation_history"):
         """Initialize LLM"""
-        self.client = client
-        self.history = []
+        self.client = OpenAI()
+        self.model = model
+        self.history = history
         self.save_dir = save_dir
         if save_dir:
             os.makedirs(save_dir, exist_ok=True)
@@ -15,23 +16,26 @@ class LLM:
     def prompt(self, p):
         """Send a prompt to the LM and update conversation history"""
         user_message = {"role": "user", "content": [{"type": "text", "text": p}]}
-        self.history.append(user_message)
+        # self.history.append(user_message)
 
         response = self.client.chat.completions.create(
-            model="o4-mini",
-            messages=self.history,
-            store=False,
+            model=self.model,
+            messages=[user_message]
         )
         assistant_response = response.choices[0].message.content
         assistant_message = {"role": "assistant", "content": [{"type": "text", "text": assistant_response}]}
-        self.history.append(assistant_message)
+        # self.history.append(assistant_message)
 
         return assistant_response
 
-    def save_history(self, filename="conversation_history.json"):
+    def save_history(self, suffix=""):
         """Save conversation history to a JSON file and return the save path"""
-        if not self.save_dir:
+        if not os.path.exists(self.save_dir):
             return None
+        if suffix:
+            filename = f"conversation_history_target_{suffix}.json"
+        else:
+            filename = "conversation_history_target.json"
 
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         base_name, extension = os.path.splitext(filename)

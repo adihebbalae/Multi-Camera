@@ -122,7 +122,7 @@ def run_orbit(output_dir, device_number, current_split, total_splits):
         entry = data[i]
         exec_puls(entry)
         exec_target_identification(entry)
-        exec_nsvs(entry, sample_rate=1, device=device_number, model_name="Qwen/Qwen2.5-VL-7B-Instruct")
+        exec_nsvs(entry, sample_rate=1, device=device_number, model_name="OpenGVLab/InternVL3_5-14B")
         exec_merge(entry)
         output.append(entry)
 
@@ -134,12 +134,14 @@ def postprocess(output_dir):
     loader.postprocess_data(output_dir)
 
 def main():
-    current_split = 3
-    total_splits = 3
-    device_number = current_split
-    output_dir = f"/nas/mars/experiment_result/orbit/2_full_output/ego_exo4d_{current_split}.json"
-    run_orbit(output_dir, device_number, current_split, total_splits)
-    # postprocess(output_dir)
+    # current_split = 3
+    # total_splits = 3
+    # device_number = current_split
+    # output_dir = f"/nas/mars/experiment_result/orbit/2_full_output/ego_exo4d_{current_split}.json"
+    # run_orbit(output_dir, device_number, current_split, total_splits)
+
+    orbit_dir = f"/nas/mars/experiment_result/orbit/2_full_output/ego_exo4d.json"
+    postprocess(orbit_dir)
 
 if __name__ == "__main__":
     main()

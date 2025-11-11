@@ -1,6 +1,5 @@
 from orbit.puls.llm import *
 from orbit.puls.prompts import *
-from openai import OpenAI
 import json
 import os
 import re
@@ -50,8 +49,7 @@ def PULS(prompt, openai_key=None):
     if openai_key:
         os.environ["OPENAI_API_KEY"] = openai_key
 
-    client = OpenAI()
-    llm = LLM(client)
+    llm = LLM()
 
     full_prompt = find_prompt(prompt)
     llm_output = llm.prompt(full_prompt)
@@ -63,7 +61,7 @@ def PULS(prompt, openai_key=None):
     final_output["proposition"] = cleaned_props
     final_output["specification"] = processed_spec
 
-    saved_path = llm.save_history()
+    saved_path = llm.save_history("puls")
     final_output["saved_path"] = saved_path
 
     return final_output

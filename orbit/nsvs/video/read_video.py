@@ -34,13 +34,24 @@ class Mp4Reader():
         frame_idxs = self._sampled_frame_indices(fps, frame_count)
 
         images: List[np.ndarray] = []
-        for idx in tqdm.tqdm(frame_idxs, desc=f"Reading video {os.path.basename(self.path)}"):
-            cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
-            ok, frame_bgr = cap.read()
-            if not ok or frame_bgr is None:
-                continue
-            frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-            images.append(frame_rgb)
+
+        current_frame_idx = 0
+        target_idx_pos = 0
+        target_frame = frame_idxs[target_idx_pos]
+        with tqdm.tqdm(total=len(frame_idxs), desc=f"Reading video {os.path.basename(self.path)}") as pbar:
+            while True:
+                ok, frame_bgr = cap.read()
+                if not ok or frame_bgr is None:
+                    break
+                if current_frame_idx == target_frame:
+                    frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+                    images.append(frame_rgb)
+                    pbar.update(1)
+                    target_idx_pos += 1
+                    if target_idx_pos >= len(frame_idxs):
+                        break
+                    target_frame = frame_idxs[target_idx_pos]
+                current_frame_idx += 1
 
         if (width == 0 or height == 0) and images:
             height, width = images[0].shape[:2]
