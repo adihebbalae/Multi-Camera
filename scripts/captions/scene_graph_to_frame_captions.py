@@ -20,7 +20,7 @@ except ImportError:
     print("Error: openai package not installed. Install with: pip install openai")
     sys.exit(1)
 
-
+from scenegraph.nuscenes_dataloader import NuScenesLidarSegmentationLoader
 class FrameCaptionGenerator:
     """
     Generates detailed frame captions from scene graph data using GPT-4o-mini.
@@ -234,7 +234,7 @@ Generate a comprehensive, natural-sounding caption that:
 6. Don't make up any information for instance names of companies that is not provided in the scene graph or instance annotations
 
 Caption:"""
-        print(prompt)
+        # print(prompt)
         return prompt
     
     def generate_frame_caption(
@@ -270,7 +270,7 @@ Caption:"""
             )
             
             caption = response.choices[0].message.content.strip()
-            print("Frame Caption: ", caption)
+            # print("Frame Caption: ", caption)
             return {
                 'frame_idx': frame_idx,
                 'sample_token': frame_data.get('sample_token', ''),
@@ -416,10 +416,16 @@ def parse_args():
     parser.add_argument(
         '--scene-token',
         type=str,
-        required=True,
+        required=False,
         help='Scene token identifier (e.g., 0c601ff2bf004fccafec366b08bf29e2)'
     )
     
+    parser.add_argument(
+        '--num_scenes',
+        type=int,
+        default=1,
+        help='Number of scenes to process'
+    )
     parser.add_argument(
         '--output',
         type=str,
@@ -482,34 +488,45 @@ def parse_args():
         help='Disable parallel processing'
     )
     
+    parser.add_argument(
+        '--dataroot',
+        type=str,
+        default='/nas/standard_datasets/nuscenes',
+        help='Path to nuScenes dataset (default: data/nuscenes)'
+    )
+    parser.add_argument( 
+        '--version',
+        type=str,
+        default='v1.0-trainval',
+        help='Version of nuScenes dataset (default: v1.0-trainval)'
+    )
     return parser.parse_args()
 
+def caption_scenes(args, generator, scene_token=None):
+    """Caption scenes."""
 
-def main():
-    """Main execution function."""
-    args = parse_args()
-    
-    # Set default output path if not provided
-    if args.output is None:
-        os.makedirs('outputs/captions', exist_ok=True)
-        args.output = f'outputs/captions/{args.scene_token}_captions.json'
-    
-    # Initialize caption generator
-    print(f"Initializing caption generator with model: {args.model}")
-    print(f"Scene graphs directory: {args.scene_graphs_dir}")
-    print(f"Instance annotations directory: {args.instance_annotations_dir}")
-    
-    generator = FrameCaptionGenerator(
-        api_key=args.api_key,
-        model=args.model,
-        api_base=args.api_base,
-        max_workers=args.max_workers,
-        temperature=args.temperature,
-        scene_graphs_dir=args.scene_graphs_dir,
-        instance_annotations_dir=args.instance_annotations_dir
-    )
-    
     # Load scene data (scene graph + instance annotations)
+
+    if scene_token is not None:
+        args.scene_token = scene_token
+        args.output = f'outputs/captions/{args.scene_token}_captions.json'
+
+    # Load the captions if they exist
+    if os.path.exists(args.output):
+        with open(args.output, 'r') as f:
+            captions = json.load(f)
+        print(f"Loaded {len(captions)} captions from {args.output}")
+        all_success = True
+        for caption in captions['captions']:
+            if caption['status'] != 'success':
+                all_success = False
+                break
+        if all_success:
+            print(f"All captions already generated for {args.scene_token}")
+            return
+        else:
+            print(f"Some captions already generated for {args.scene_token}, continuing...")
+
     print(f"\nLoading scene data for token: {args.scene_token}")
     try:
         scene_graph_data = generator.load_scene_data(args.scene_token)
@@ -529,8 +546,8 @@ def main():
     )
     
     # Save captions
-    generator.save_captions(captions, args.output, scene_token)
-    
+    generator.save_captions(captions, args.output, args.scene_token)
+
     # Print statistics
     stats = generator.generate_summary_statistics(captions)
     print("\n=== Caption Generation Statistics ===")
@@ -543,6 +560,44 @@ def main():
         print(f"Average relationships per frame: {stats['avg_relationships_per_frame']:.1f}")
     
     print("\n✅ Caption generation complete!")
+    
+def main():
+    """Main execution function."""
+    args = parse_args()
+    
+    # Set default output path if not provided
+    if args.output is None:
+        os.makedirs('outputs/captions', exist_ok=True)
+        args.output = f'outputs/captions/{args.scene_token}_captions.json'
+    
+    # Initialize caption generator
+    print(f"Initializing caption generator with model: {args.model}")
+    print(f"Scene graphs directory: {args.scene_graphs_dir}")
+    print(f"Instance annotations directory: {args.instance_annotations_dir}")
+    loader = NuScenesLidarSegmentationLoader(
+        dataroot=args.dataroot,
+        version=args.version,
+        verbose=True
+    )
+    generator = FrameCaptionGenerator(
+            api_key=args.api_key,
+            model=args.model,
+            api_base=args.api_base,
+            max_workers=args.max_workers,
+            temperature=args.temperature,
+            scene_graphs_dir=args.scene_graphs_dir,
+            instance_annotations_dir=args.instance_annotations_dir
+    )
+    if args.num_scenes > 1 or args.scene_token is None:
+        scene_tokens = loader.get_scene_tokens()
+        for i in tqdm(range(args.num_scenes), desc="Processing scenes"):
+            scene_token = scene_tokens[i]
+            print(f"Processing scene {i} of {args.num_scenes}: {scene_token}")
+            caption_scenes(args, generator, scene_token)
+    else:
+        caption_scenes(args, generator)
+        
+       
 
 
 if __name__ == "__main__":
