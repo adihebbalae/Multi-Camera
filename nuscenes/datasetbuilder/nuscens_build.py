@@ -13,7 +13,8 @@ from collections import defaultdict
 import numpy as np
 from typing import Dict, List, Tuple, Any, Optional
 import openai
-from scripts.scenegraph.nuscenes_dataloader import NuScenesLidarSegmentationLoader
+from waymo.scenegraph.nuscenes_dataloader import NuScenesLidarSegmentationLoader
+import argparse
 
 class QASample:
     def __init__(self, scene_token: str, question_type: str, question: str, answer: str, metadata: Dict[str, Any]):
@@ -49,9 +50,9 @@ class QAGenerator:
     """
     def __init__(self, prompts_dir: Optional[Path] = None, captions_dir: Optional[Path] = None):
         self.prompts_dir = prompts_dir or (Path(__file__).parent / "prompts")
-        self.captions_dir = captions_dir or Path("/home/hg22723/projects/Orbit/scripts/outputs/captions")
-        self.scene_graphs_dir = scene_graphs_dir or Path("/home/hg22723/projects/Orbit/scripts/outputs/scene_graphs")
-        self.instance_annotations = instance_annotations_dir or Path("/home/hg22723/projects/Orbit/scripts/outputs/instance_annotations")
+        self.captions_dir = captions_dir or Path("/home/hg22723/projects/Multi-Camera/outputs/captions")
+        self.scene_graphs_dir = scene_graphs_dir or Path("/home/hg22723/projects/Multi-Camera/outputs/scene_graphs")
+        self.instance_annotations = instance_annotations_dir or Path("/home/hg22723/projects/Multi-Camera/outputs/instance_annotations")
     
     def gpt(self, prompt: str, api_key: Optional[str] = None, *, model: str = "gpt-4",
             temperature: float = 0.7, max_tokens: int = 500) -> str:
@@ -388,19 +389,19 @@ def process_questions(qa_generator: QAGenerator, scene_tokens: List[str], api_ke
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Process scene graphs and extract information.')
-    parser.add_argument('--prompts_dir', type=str, default="/home/hg22723/projects/Orbit/datasetbuilder/prompts", help='Directory containing prompts')
-    parser.add_argument('--scene_graphs_dir', type=str, default="/home/hg22723/projects/Orbit/scripts/outputs/scene_graphs", help='Directory containing scene graph subdirectories')
-    parser.add_argument('--output_dir', type=str, default="/home/hg22723/projects/Orbit/datasetbuilder/outputs", help='Directory to save extracted information')
+    parser.add_argument('--prompts_dir', type=str, default="/home/hg22723/projects/Multi-Camera/datasetbuilder/prompts", help='Directory containing prompts')
+    parser.add_argument('--scene_graphs_dir', type=str, default="/home/hg22723/projects/Multi-Camera/outputs/scene_graphs", help='Directory containing scene graph subdirectories')
+    parser.add_argument('--output_dir', type=str, default="/home/hg22723/projects/Multi-Camera/outputs", help='Directory to save extracted information')
     parser.add_argument('--limit', type=int, default=250, help='Maximum number of scenes to process')
     parser.add_argument('--question_type', type=str, default="counting", help='Question type: counting, spatial, temporal, event_ordering, causality, perception, summarization, which_camera')
-    parser.add_argument('api_key', type=str, default=None, help='OpenAI API key')
+    parser.add_argument('--api_key', type=str, default=None, help='OpenAI API key')
     return parser.parse_args()
 
 def main():
     """Main entry point for the script."""
     # Configuration
-    SCENE_GRAPHS_DIR = "/home/hg22723/projects/Orbit/scripts/outputs/scene_graphs"
-    OUTPUT_DIR = "/home/hg22723/projects/Orbit/datasetbuilder/outputs"
+    SCENE_GRAPHS_DIR = "/home/hg22723/projects/Multi-Camera/outputs/scene_graphs"
+    OUTPUT_DIR = "/home/hg22723/projects/Multi-Camera/datasetbuilder/outputs"
     
     args = parse_args()
     if args.api_key is None:

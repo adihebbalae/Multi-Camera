@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multicamera"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+]
+
+[tool.setuptools]
+# This explicitly tells setuptools to only install the 'ego_exo4d' folder
+# and ignore the 'outputs', 'waymo', and 'nuscenes' folders.
+packages = ["ego_exo4d", "waymo", "nuscenes"]
