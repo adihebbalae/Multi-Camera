@@ -14,7 +14,10 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import openai
+from dotenv import load_dotenv
+from openai import OpenAI
+
+load_dotenv()
 
 from waymo.scenegraph.nuscenes_dataloader import NuScenesLidarSegmentationLoader
 
@@ -83,12 +86,13 @@ class QAGenerator:
         temperature: float = 0.7,
         max_tokens: int = 500,
     ) -> str:
-        if api_key:
-            openai.api_key = api_key
-        else:
-            openai.api_key = os.getenv("OPENAI_API_KEY")
-        response = openai.ChatCompletion.create(
-            model=model, messages=[{"role": "user", "content": prompt}], temperature=temperature, max_tokens=max_tokens
+        key = api_key or os.getenv("OPENAI_API_KEY")
+        client = OpenAI(api_key=key)
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=temperature,
+            max_tokens=max_tokens,
         )
         return response.choices[0].message.content.strip()
 
@@ -210,7 +214,11 @@ class CountingQAGenerator(QAGenerator):
         counting_input = self.format_prompt_input(scene_info, counting_prompt)
         counting_question = self.gpt(counting_input, api_key=api_key)
         return self.construct_qa_sample(
-            scene_token, "counting", counting_question, scene_info["object_counts"], scene_info["num_frames"]
+            scene_token,
+            "counting",
+            counting_question,
+            scene_info["object_counts"],
+            metadata={"num_frames": scene_info["num_frames"], "object_counts": scene_info["object_counts"]},
         )
 
 
@@ -446,14 +454,43 @@ def extract_scene_info(scene_graph: str) -> Dict[str, Any]:
 #     return all_scene_info
 
 
+def _save_sample_incremental(output_file: Path, sample: QASample, existing: List[Dict[str, Any]]) -> None:
+    """Append a single sample to the output file, keeping valid JSON."""
+    sample_dict = sample.to_dict() if hasattr(sample, "to_dict") else sample
+    existing.append(sample_dict)
+    with open(output_file, "w") as f:
+        json.dump(existing, f, indent=2, default=str)
+
+
 def process_questions(
-    qa_generator: QAGenerator, scene_tokens: List[str], api_key: Optional[str] = None
+    qa_generator: QAGenerator,
+    scene_tokens: List[str],
+    api_key: Optional[str] = None,
+    *,
+    verbose: bool = True,
+    output_file: Optional[Path] = None,
 ) -> List[QASample]:
     qa_samples = []
-    for scene_token in scene_tokens:
+    saved_data: List[Dict[str, Any]] = []
+    total = len(scene_tokens)
+    for idx, scene_token in enumerate(scene_tokens):
+        if verbose:
+            print(f"\n[{idx + 1}/{total}] Processing scene {scene_token[:16]}...")
         qa_sample = qa_generator.generate_for_scene(scene_token, api_key=api_key)
-        if qa_sample is not None:
-            qa_samples.append(qa_sample)
+        if qa_sample is None:
+            if verbose:
+                print(f"  Skipped (no scene graph found)")
+            continue
+        qa_samples.append(qa_sample)
+        if output_file is not None:
+            _save_sample_incremental(output_file, qa_sample, saved_data)
+        if verbose:
+            q_preview = (qa_sample.question[:80] + "...") if len(qa_sample.question) > 80 else qa_sample.question
+            ans = qa_sample.answer
+            ans_str = json.dumps(ans) if isinstance(ans, dict) else str(ans)
+            ans_preview = (ans_str[:60] + "...") if len(ans_str) > 60 else ans_str
+            print(f"  Q: {q_preview}")
+            print(f"  A: {ans_preview}")
     return qa_samples
 
 
@@ -480,7 +517,7 @@ def parse_args():
     parser.add_argument(
         "--output_dir",
         type=str,
-        default="/home/hg22723/projects/Multi-Camera/outputs",
+        default="/nas/neurosymbolic/multi-cam-dataset/nuscenes",
         help="Directory to save extracted information",
     )
     parser.add_argument("--limit", type=int, default=250, help="Maximum number of scenes to process")
@@ -491,15 +528,12 @@ def parse_args():
         help="Question type: counting, spatial, temporal, event_ordering, causality, perception, summarization, which_camera",
     )
     parser.add_argument("--api_key", type=str, default=None, help="OpenAI API key")
+    parser.add_argument("--quiet", action="store_true", help="Suppress per-scene progress and question output")
     return parser.parse_args()
 
 
 def main():
     """Main entry point for the script."""
-    # Configuration
-    SCENE_GRAPHS_DIR = "/home/hg22723/projects/Multi-Camera/outputs/scene_graphs"
-    OUTPUT_DIR = "/home/hg22723/projects/Multi-Camera/datasetbuilder/outputs"
-
     args = parse_args()
     if args.api_key is None:
         args.api_key = os.getenv("OPENAI_API_KEY")
@@ -511,24 +545,37 @@ def main():
     else:
         raise NotImplementedError(f"Question type {args.question_type} not implemented")
 
-    # Extract information from scene graphs
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     print("=" * 80)
     print("NuScenes Dataset Builder - Extracting Scene Information")
+    print("=" * 80)
+    print(f"Output directory: {output_dir}")
+    print(f"Question type: {args.question_type}")
+    print(f"Limit: {args.limit} scenes")
     print("=" * 80)
 
     nuscenes_dataloader = NuScenesLidarSegmentationLoader(dataroot=args.dataroot, version=args.version)
     scene_tokens = nuscenes_dataloader.get_scene_tokens()
-    qa_samples = process_questions(qa_generator, scene_tokens, api_key=args.api_key)
+    scene_tokens = scene_tokens[: args.limit]
+    print(f"Processing {len(scene_tokens)} scenes...")
+    output_file = output_dir / f"qa_samples_{args.question_type}.json"
+    print(f"Saving incrementally to {output_file}")
+
+    qa_samples = process_questions(
+        qa_generator,
+        scene_tokens,
+        api_key=args.api_key,
+        verbose=not args.quiet,
+        output_file=output_file,
+    )
 
     print("\n" + "=" * 80)
     print("Extraction complete!")
     print("=" * 80)
-    print("\nNext steps:")
-    print("1. Review the extracted information in datasetbuilder/outputs/extracted_scene_info.json")
-    print("2. Create prompt templates in datasetbuilder/prompts/")
-    print(
-        "3. Run question generation with: python -c 'from datasetbuilder.nuscens_build import generate_questions; generate_questions()'"
-    )
+    print(f"Saved {len(qa_samples)} QA samples to {output_file}")
+    print(f"  Skipped: {len(scene_tokens) - len(qa_samples)} scenes (no scene graph)")
 
 
 if __name__ == "__main__":
