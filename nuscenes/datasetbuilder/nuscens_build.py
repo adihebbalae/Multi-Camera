@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 from dotenv import load_dotenv
 from openai import OpenAI
-
+import random
 load_dotenv()
 
 from waymo.scenegraph.nuscenes_dataloader import NuScenesLidarSegmentationLoader
@@ -289,6 +289,7 @@ class SpatialQAGenerator(QAGenerator):
     def generate_for_scene(
         self, scene_info: Dict[str, Any], counting_prompt: str, spatial_prompt: str, api_key: Optional[str] = None
     ) -> Dict[str, Any]:
+        
         counting_input = self.format_counting_input(scene_info, counting_prompt)
         spatial_input = self.build_spatial_input(scene_info, spatial_prompt)
         counting_question = self.gpt(counting_input, api_key=api_key)
@@ -304,6 +305,583 @@ class SpatialQAGenerator(QAGenerator):
             },
         }
 
+class TemporalQAGenerator(QAGenerator):
+    """
+    Temporal QA generator: Identifies two distinct events in the video (Grounding vs Target)
+    and classifies their relationship (Before, After, During) to generate reasoning questions.
+    """
+
+    def load_prompts_from_disk(self) -> str:
+        # Assumes the prompt provided in your query is saved here
+        prompts_dir = self.prompts_dir
+        temporal_prompt_path = prompts_dir / "temporal.txt"
+        if not temporal_prompt_path.exists():
+            # Fallback for demonstration if file doesn't exist
+            return "" 
+        return temporal_prompt_path.read_text()
+
+    def preprocess_instance_annotations(self, instance_annotations: Dict[str, Any]) -> Dict[str, Any]:
+        processed_annotations = {}
+        for annotation in instance_annotations.get("annotations", []):
+            processed_annotations[annotation["instance_token"]] = {
+                "activity": annotation["activity"],
+                "description": annotation["description"]
+            }
+        return processed_annotations
+    
+    def _extract_scene_info_from_dict(self, scene_data: Dict[str, Any], instance_annotations: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Parses raw scene data into:
+        1. Frame-by-frame object lookups
+        2. Consolidated 'Events' (intervals of consistent activity)
+        """
+        frames = scene_data.get("frames", [])
+        scene_token = scene_data.get("scene_token", "")
+        
+        # 1. Basic Metadata
+        unique_objects = defaultdict(set)
+        directional_relationships = []
+        
+        # 2. Track activities per object across frames to build intervals
+        # Structure: { obj_id: [ (frame_idx, activity, description, obj_class), ... ] }
+        raw_timelines = defaultdict(list)
+        processed_annotations = self.preprocess_instance_annotations(instance_annotations)
+        for frame in frames:
+            frame_idx = frame.get("frame_idx")
+            
+            # Map ID to Class for this frame
+            id_to_class = {}
+            
+            for obj in frame.get("objects", []):
+                obj_id = obj.get("object_id") or obj.get("annotation_token", "")
+                obj_class = obj.get("object_class", "unknown")
+                
+                #activity = obj.get("activity", "moving") # default to moving if missing
+                #desc = obj.get("description", "")
+                activity = processed_annotations.get(obj_id, {}).get("activity", "moving")
+                desc = processed_annotations.get(obj_id, {}).get("description", "")
+                
+                if obj_id:
+                    unique_objects[obj_class].add(obj_id)
+                    id_to_class[obj_id] = obj_class
+                    raw_timelines[obj_id].append({
+                        "frame_idx": frame_idx,
+                        "activity": activity,
+                        "description": desc,
+                        "class": obj_class
+                    })
+
+            # Extract Directional Relationships (for Spatio-Temporal use later)
+            for rel in frame.get("relationships", []) or []:
+                if rel.get("relationship_type") in {"in_front", "behind", "left", "right"}:
+                    directional_relationships.append({
+                        "frame_idx": frame_idx,
+                        "type": rel.get("relationship_type"),
+                        "source": {"id": rel["source_id"], "class": id_to_class.get(rel["source_id"], "unknown")},
+                        "target": {"id": rel["target_id"], "class": id_to_class.get(rel["target_id"], "unknown")},
+                    })
+
+        # 3. Consolidate Raw Timelines into "Events"
+        # Event = {obj_id, class, activity, start_frame, end_frame, description}
+        consolidated_events = self._consolidate_events(raw_timelines)
+
+        return {
+            "scene_token": scene_token,
+            "num_frames": len(frames),
+            "object_counts": {k: len(v) for k, v in unique_objects.items()},
+            "directional_relationships": directional_relationships,
+            "events": consolidated_events, 
+            "frames": frames # Keep raw frames for spatial lookups
+        }
+
+    def _consolidate_events(self, raw_timelines: Dict[str, List[Dict]]) -> List[Dict[str, Any]]:
+        """
+        Merges consecutive frames with the same activity into a single Event interval.
+        """
+        events = []
+        for obj_id, timeline in raw_timelines.items():
+            if not timeline: continue
+            
+            # Sort by frame index just in case
+            timeline.sort(key=lambda x: x["frame_idx"])
+            
+            current_event = None
+            
+            for step in timeline:
+                if current_event is None:
+                    current_event = {
+                        "obj_id": obj_id,
+                        "class": step["class"],
+                        "activity": step["activity"],
+                        "description": step["description"],
+                        "start_frame": step["frame_idx"],
+                        "end_frame": step["frame_idx"]
+                    }
+                else:
+                    # If activity is same and frames are consecutive (or close enough), extend event
+                    if step["activity"] == current_event["activity"] and (step["frame_idx"] - current_event["end_frame"] <= 2):
+                        current_event["end_frame"] = step["frame_idx"]
+                        # specific description might update, keep longest or last
+                        if len(step["description"]) > len(current_event["description"]):
+                            current_event["description"] = step["description"]
+                    else:
+                        # Close old event, start new one
+                        events.append(current_event)
+                        current_event = {
+                            "obj_id": obj_id,
+                            "class": step["class"],
+                            "activity": step["activity"],
+                            "description": step["description"],
+                            "start_frame": step["frame_idx"],
+                            "end_frame": step["frame_idx"]
+                        }
+            if current_event:
+                events.append(current_event)
+        
+        # Filter out very short events (noise)
+        return [e for e in events if (e["end_frame"] - e["start_frame"]) > 2]
+    
+    def _select_temporal_pair(
+            self, 
+            events: List[Dict[str, Any]], 
+            target_relationship: str = "Before"
+        ) -> Tuple[Optional[Dict], Optional[Dict], str]:
+            """
+            Selects a Grounding Event and a Target Event that satisfy the specific
+            target_relationship (Before, After, During, In-Between).
+            """
+            if len(events) < 2:
+                return None, None, target_relationship
+
+            # Shuffle events to ensure variety in generation
+            shuffled_events = list(events)
+            random.shuffle(shuffled_events)
+
+            # Logic for 'In-Between' (Requires 3 events: Grounding Start, Grounding End, Target Middle)
+            # Note: The prompt usually expects 2 grounding events for "In-Between", but here we structure it
+            # as Grounding (Range) -> Target (Inside).
+            if target_relationship == "In-Between":
+                # We need a Grounding Start (e1) and Grounding End (e2) with a Target (e3) between them.
+                # However, standard prompts often take 1 Grounding and 1 Target. 
+                # If your prompt supports 3 distinct events, the logic changes.
+                # Assuming standard Grounding/Target pair where Target is 'In-Between' two implicitly related events
+                # is complex. 
+                # instead, let's strictly look for: Grounding Event A (early) and Grounding Event B (late)
+                # and return them such that the Target Event is the one "In-Between".
+                
+                # Alternative Interpretation based on your prompt: 
+                # Grounding: "Event A and Event B" 
+                # Target: "Event C"
+                # For this helper, we will try to return a Grounding Event that represents the "Range"
+                # or simply find a Target that is between two others and formatting it externally.
+                
+                # SIMPLIFIED STRATEGY for strict pair return:
+                # We return e1 (Grounding) and e2 (Target) where e2 is "During" e1, 
+                # OR we switch to a specialized logic if you want the "A... [Target] ... B" format.
+                # Below implements "Target occurs between End of A and Start of B".
+                
+                for i in range(len(shuffled_events)):
+                    for j in range(len(shuffled_events)):
+                        if i == j: continue
+                        e1 = shuffled_events[i] # Grounding Start
+                        e2 = shuffled_events[j] # Grounding End
+                        
+                        if e1["end_frame"] < e2["start_frame"]:
+                            # Find a target (e_target) that fits in the gap
+                            gap_start = e1["end_frame"]
+                            gap_end = e2["start_frame"]
+                            
+                            for e_target in shuffled_events:
+                                if e_target["obj_id"] in [e1["obj_id"], e2["obj_id"]]:
+                                    continue
+                                    
+                                # Check if target is substantially inside the gap
+                                if e_target["start_frame"] >= gap_start and e_target["end_frame"] <= gap_end:
+                                    # Found a valid triplet!
+                                    # To fit the Tuple[Dict, Dict, str] return signature:
+                                    # We combine e1 and e2 into a single "Grounding Context" dict
+                                    combined_grounding = {
+                                        "description": [e1['description'], e2['description']],
+                                        "class": [e1['class'], e2['class']],
+                                        "activity": [e1['activity'], e2['activity']],
+                                        "start_frame": e1["start_frame"],
+                                        "end_frame": e2["end_frame"]
+                                    }
+                                    return combined_grounding, e_target, "In-Between"
+
+            # Standard Pair Logic for Before, After, During
+            for i in range(len(shuffled_events)):
+                for j in range(len(shuffled_events)):
+                    if i == j: continue
+                    
+                    e1 = shuffled_events[i] # Grounding
+                    e2 = shuffled_events[j] # Target
+                    
+                    if e1["obj_id"] == e2["obj_id"]:
+                        continue 
+
+                    # Check specific relationship requirements
+                    if target_relationship == "Before":
+                        # Question: What happened to Target BEFORE Grounding? 
+                        # Logic: Target Ends < Grounding Starts
+                        if e2["end_frame"] < e1["start_frame"]:
+                            return e1, e2, "Before"
+
+                    elif target_relationship == "After":
+                        # Question: What happened to Target AFTER Grounding?
+                        # Logic: Target Starts > Grounding Ends
+                        if e2["start_frame"] > e1["end_frame"]:
+                            return e1, e2, "After"
+
+                    elif target_relationship == "During":
+                        # Question: What happened to Target WHILE Grounding was happening?
+                        start = max(e1["start_frame"], e2["start_frame"])
+                        end = min(e1["end_frame"], e2["end_frame"])
+                        overlap = max(0, end - start)
+                        min_len = min(e1["end_frame"] - e1["start_frame"], e2["end_frame"] - e2["start_frame"])
+                        
+                        if min_len > 0 and (overlap / min_len) > 0.5:
+                            return e1, e2, "During"
+
+            # If strict search failed, fallback to relaxation or default
+            # (Optional: Recursively call with different relationship or return None)
+            return None, None, target_relationship
+
+    def build_temporal_input(self, scene_info: Dict[str, Any], prompt_template: str) -> str:
+        events = scene_info.get("events", [])
+        all_relationships = ["Before", "After", "During", "In-Between"]
+        grounding = None
+        target = None
+        while grounding is None or target is None:
+            target_relationship = random.choice(all_relationships)
+            grounding, target, rel = self._select_temporal_pair(events, target_relationship)
+            if grounding is not None and target is not None:
+                break
+            target_relationship = random.choice(all_relationships)
+
+        
+        print(grounding, target, rel)
+
+
+        # Format descriptions for the prompt
+        # e.g., "The white van (id: 123) is turning left"
+        if isinstance(grounding['description'], list):
+            grounding_str = f"Event A: The {grounding['class'][0]} {grounding['activity'][0]} ({grounding['description'][0]} Event B: The {grounding['class'][1]} {grounding['activity'][1]} ({grounding['description'][1]})"
+        else:
+            grounding_str = f"The {grounding['class']} {grounding['activity']} ({grounding['description']})"
+
+        target_str = f"The {target['class']} {target['activity']} ({target['description']})"
+
+        # Fill the template slots defined in your prompt: {grounding_input}, {target_input}, {rel_type}
+        return prompt_template.format(
+            grounding_input=grounding_str,
+            target_input=target_str,
+            rel_type=rel
+        ), {"grounding": grounding, "target": target, "rel": rel}
+    
+    def load_scene_graph(self, scene_token: str) -> Optional[Dict[str, Any]]:
+        scene_graph_file = self.scene_graphs_dir / f"{scene_token}/scene_graph.json"
+        if not scene_graph_file.exists():
+            return None
+        with open(scene_graph_file, "r") as f:
+            scene_graph = json.load(f)
+        return scene_graph
+    
+    def generate_for_scene(self, scene_token: str, api_key: Optional[str] = None) -> Dict[str, Any]:
+        # Pre-process scene info to get events
+        scene_graph = self.load_scene_graph(scene_token)
+        instance_annotations = self.load_instance_annotations(scene_token)
+        scene_info = self._extract_scene_info_from_dict(scene_graph, instance_annotations)
+        if scene_info is None:
+            return None
+        temporal_prompt = self.load_prompts_from_disk()
+        prompt_input, temporal_info = self.build_temporal_input(scene_info, temporal_prompt)
+
+        if not prompt_input:
+            return {"error": "Not enough events for temporal QA"}
+
+
+        response = self.gpt(prompt_input, api_key=api_key)
+
+        return self.construct_qa_sample(
+            scene_token,
+            "temporal",
+            response,
+            None,
+            metadata=temporal_info,
+        )
+
+
+class EventOrderingQAGenerator(TemporalQAGenerator):
+    """
+    Event Ordering QA: Selects N events and asks the model to generate a question
+    asking the user to sort them chronologically.
+    """
+    def load_prompts_from_disk(self) -> str:
+        ordering_prompt_file = self.prompts_dir / "ordering.txt"
+        with open(ordering_prompt_file, "r") as f:
+            return f.read()
+    
+    def build_ordering_input(self, scene_info: Dict[str, Any], prompt_template: str, length_of_chain: int = 4, buffer_frames: int = 5) -> str:
+        events = scene_info.get("events", [])
+        
+        # Sort by start time for sequential processing
+        sorted_events = sorted(events, key=lambda x: x["start_frame"])            
+
+        def find_chain(require_unique_classes: bool, target_length: int):
+            """
+            Tries to find a chain of 4 events.
+            If require_unique_classes is True: All 4 events must have different 'class'.
+            If False: No single class can appear more than 2 times in the chain.
+            """
+            
+            for start_idx in range(len(sorted_events)):
+                current_chain = [sorted_events[start_idx]]
+                current_classes = [sorted_events[start_idx]["class"]]
+                last_end = sorted_events[start_idx]["end_frame"]
+                
+                # Scan remaining events to fill the chain
+                for i in range(start_idx + 1, len(sorted_events)):
+                    candidate = sorted_events[i]
+                    cand_class = candidate["class"]
+                    
+                    # 1. Check Temporal Spacing upto an overlap of buffer_frames
+                    if candidate["start_frame"] < last_end - buffer_frames:
+                        continue
+                    
+                    # Must ensure that the candidate event ends after the last event in the chain
+                    if candidate["end_frame"] < last_end:
+                        continue
+                        
+                    # 2. Check Object Uniqueness Constraints
+                    if candidate["obj_id"] in [e["obj_id"] for e in current_chain]:
+                        continue # Always require distinct object IDs
+
+                    # 3. Check Class/Type Constraints
+                    if require_unique_classes:
+                        # Strict: Must be a type we haven't seen yet
+                        if cand_class in current_classes:
+                            continue
+                    else:
+                        # Relaxed: Allow repeats, but max 2 of any specific type
+                        if current_classes.count(cand_class) >= 2:
+                            continue
+
+                    # Add to chain
+                    current_chain.append(candidate)
+                    current_classes.append(cand_class)
+                    last_end = candidate["end_frame"]
+                    
+                    if len(current_chain) == target_length:
+                        return current_chain
+            
+            return None
+        
+        # Attempt 1: Strict Diversity (4 distinct classes)
+        selected_chain = find_chain(require_unique_classes=True, target_length=length_of_chain)
+        
+        # Attempt 2: Relaxed Diversity (Max 2 of same type)
+        if not selected_chain:
+            selected_chain = find_chain(require_unique_classes=False, target_length=length_of_chain)
+        
+        # If we still don't have a chain, try again with a shorter chain
+        if not selected_chain:
+            selected_chain = find_chain(require_unique_classes=True, target_length=length_of_chain - 1)
+
+        # If we still don't have a chain, try again with a shorter chain
+        if not selected_chain:
+            selected_chain = find_chain(require_unique_classes=False, target_length=length_of_chain - 1)
+        
+        # If we still don't have a chain, return an empty string
+        if not selected_chain:
+            return "", None
+
+        # Randomize presentation order for the Question
+        # The LLM needs to figure out the correct order based on descriptions/context
+        presentation_order = list(selected_chain)
+
+        events_desc = []
+        for i, e in enumerate(presentation_order):
+            # Using Letters A, B, C, D for options
+            events_desc.append(f"Event {chr(65+i)}: A {e['class']} is {e['activity']} ({e['description']})")
+        
+        events_block = "\n".join(events_desc)
+        
+        return prompt_template.format(events_list=events_block), events_block
+
+    def generate_for_scene(self, scene_token: str, api_key: Optional[str] = None) -> Dict[str, Any]:
+        
+        scene_graph = self.load_scene_graph(scene_token)
+        instance_annotations = self.load_instance_annotations(scene_token)
+        scene_info = self._extract_scene_info_from_dict(scene_graph, instance_annotations)
+        if scene_info is None:
+            return None
+        ordering_prompt = self.load_prompts_from_disk()
+        
+        prompt_input = None
+        events_block = None
+        length_of_chain = 4
+        buffer_frames = 5
+        while prompt_input is None or events_block is None:
+
+            prompt_input, events_block = self.build_ordering_input(scene_info, ordering_prompt, length_of_chain=length_of_chain, buffer_frames=buffer_frames)
+            length_of_chain = random.randint(3, 5)
+            buffer_frames = random.randint(3, 5)
+        if not prompt_input or not events_block:
+            return {"error": "Not enough events for ordering QA"}
+            
+        response = self.gpt(prompt_input, api_key=api_key)
+        return self.construct_qa_sample(
+            scene_token,
+            "event_ordering",
+            response,
+            None,
+            metadata=events_block,
+        )
+
+
+class SpatioTemporalQAGenerator(TemporalQAGenerator):
+    """
+    Spatio-Temporal QA: Generates questions that mix spatial grounding (left/right/next to)
+    with temporal logic (before/after).
+    """
+
+    def _select_event_grounded_spatial_query(self, events, frames_map):
+        """
+        Type 1: Time -> Space
+        Logic: Pick an Event. Look at the frame where it starts. Pick a spatial relationship 
+        visible at that frame.
+        Question: "At the start of [Event], what was [Spatial Rel]?"
+        """
+        if not events: return None
+        
+        # 1. Pick an Anchor Event (The "Time")
+        anchor_event = random.choice(events)
+        time_idx = anchor_event["start_frame"]
+        
+        # 2. Get frame data for that time
+        frame_data = frames_map.get(time_idx)
+        if not frame_data: return None
+
+        # 3. Find valid spatial relationships in this frame
+        # We want relationships like: "A is Left of B"
+        rels = [r for r in frame_data.get("relationships", []) 
+                if r["relationship_type"] in ["left", "right", "in_front", "behind", "next_to"]]
+        
+        if not rels: return None
+        
+        target_rel = random.choice(rels)
+        
+        # 4. Format for Prompt
+        return {
+            "mode": "Type 1: Event-Grounded Spatial Query (Time -> Space)",
+            "context_info": f"Anchor Event: A {anchor_event['class']} is {anchor_event['activity']} ({anchor_event['description']}).",
+            "target_info": f"Spatial Anchor Object: {target_rel['source_class']} (ID: {target_rel['source_id']}).",
+            "relationship_query": f"Question Goal: Identify the object that is '{target_rel['relationship_type']}' the Spatial Anchor at the time of the Anchor Event. (Correct Answer: {target_rel['target_class']})"
+        }
+
+    def _select_spatially_grounded_temporal_query(self, events, frames_map):
+        """
+        Type 2: Space -> Time
+        Logic: Pick an object defined by a spatial relationship (e.g., "Car next to bus").
+        Then find an event involving that object that happens *after* that spatial context.
+        Question: "What did the [Object next to bus] do afterwards?"
+        """
+        # 1. Find candidates: Objects that have a spatial relationship AND an event later
+        candidates = []
+        
+        # Iterate through events to find a "Target Event" first
+        for target_event in events:
+            # We want to describe this actor based on where they were *before* this event
+            # Let's look at a frame shortly before the event starts (or at start)
+            lookback_frame = max(0, target_event["start_frame"] - 5)
+            frame_data = frames_map.get(lookback_frame)
+            
+            if not frame_data: continue
+            
+            # Does the actor (target_event['obj_id']) have a spatial descriptor here?
+            # We look for: [Actor] is [Relation] [Anchor]
+            actor_rels = [r for r in frame_data.get("relationships", []) 
+                          if r["source_id"] == target_event["obj_id"]]
+            
+            if actor_rels:
+                # Found a spatial descriptor for this actor!
+                candidates.append((target_event, actor_rels[0]))
+
+        if not candidates: return None
+        
+        # 2. Pick a random candidate
+        target_event, spatial_rel = random.choice(candidates)
+        
+        # 3. Format for Prompt
+        # Describe the object purely spatially
+        spatial_desc = f"The {spatial_rel['source_class']} located {spatial_rel['relationship_type'].replace('_', ' ')} the {spatial_rel['target_class']}"
+        
+        return {
+            "mode": "Type 2: Spatially-Grounded Temporal Query (Space -> Time)",
+            "context_info": f"Spatially Defined Actor: {spatial_desc}.",
+            "target_info": f"Target Activity: {target_event['activity']} ({target_event['description']}).",
+            "relationship_query": "Question Goal: Ask what this Spatially Defined Actor did immediately after/during the spatial context. (Relationship: Sequence/Action)"
+        }
+
+    def build_spatiotemporal_input(self, scene_info: Dict[str, Any], prompt_template: str) -> str:
+        events = scene_info.get("events", [])
+        
+        # Pre-process frames for O(1) lookup
+        frames_map = {f["frame_idx"]: self._process_frame_relationships(f) for f in scene_info.get("frames", [])}
+        
+        if not events or not frames_map: return ""
+
+        # Randomly choose between Type 1 and Type 2 logic
+        # You can adjust weights if you want one type more often
+        if random.random() < 0.5:
+            data = self._select_event_grounded_spatial_query(events, frames_map)
+        else:
+            data = self._select_spatially_grounded_temporal_query(events, frames_map)
+            
+        # Fallback if selection failed (e.g. no relationships found for Type 2)
+        if not data:
+            data = self._select_event_grounded_spatial_query(events, frames_map)
+        
+        if not data:
+            return ""
+
+        return prompt_template.format(
+            logic_mode=data["mode"],
+            context_info=data["context_info"],
+            target_info=data["target_info"],
+            relationship_query=data["relationship_query"]
+        )
+    
+    def _process_frame_relationships(self, frame):
+        """Helper to map IDs to Classes in relationship data"""
+        id_to_class = {o["object_id"]: o["object_class"] for o in frame.get("objects", [])}
+        processed_rels = []
+        for r in frame.get("relationships", []):
+            # Filter for relevant spatial prepositions
+            if r["relationship_type"] in ["in_front", "behind", "left", "right", "next_to"]:
+                processed_rels.append({
+                    "relationship_type": r["relationship_type"],
+                    "source_id": r["source_id"],
+                    "source_class": id_to_class.get(r["source_id"], "unknown"),
+                    "target_id": r["target_id"],
+                    "target_class": id_to_class.get(r["target_id"], "unknown")
+                })
+        return {"relationships": processed_rels}
+
+    def generate_for_scene(self, scene_info: Dict[str, Any], spatiotemporal_prompt: str, api_key: Optional[str] = None) -> Dict[str, Any]:
+        processed_info = self._extract_scene_info_from_dict(scene_info)
+        prompt_input = self.build_spatiotemporal_input(processed_info, spatiotemporal_prompt)
+        
+        if not prompt_input:
+            return {"error": "Could not generate spatio-temporal scenario (lack of spatial rels)"}
+            
+        response = self.gpt(prompt_input, api_key=api_key)
+        return {
+            "scene_token": scene_info["scene_token"],
+            "question_data": response,
+            "type": "spatio_temporal"
+        }
 
 def extract_scene_info(scene_graph: str) -> Dict[str, Any]:
     """
@@ -515,6 +1093,12 @@ def parse_args():
         help="Directory containing scene graph subdirectories",
     )
     parser.add_argument(
+        "--instance_annotations_dir",
+        type=str,
+        default="/home/hg22723/projects/Multi-Camera/outputs/instance_annotations",
+        help="Directory containing instance annotations subdirectories",
+    )
+    parser.add_argument(
         "--output_dir",
         type=str,
         default="/nas/neurosymbolic/multi-cam-dataset/nuscenes",
@@ -542,6 +1126,12 @@ def main():
         qa_generator = CountingQAGenerator(prompts_dir=args.prompts_dir, scene_graphs_dir=args.scene_graphs_dir)
     elif args.question_type == "spatial":
         qa_generator = SpatialQAGenerator(prompts_dir=args.prompts_dir, scene_graphs_dir=args.scene_graphs_dir)
+    elif args.question_type == "temporal":
+        qa_generator = TemporalQAGenerator(prompts_dir=args.prompts_dir, scene_graphs_dir=args.scene_graphs_dir, instance_annotations_dir=args.instance_annotations_dir)
+    elif args.question_type == "event_ordering":
+        qa_generator = EventOrderingQAGenerator(prompts_dir=args.prompts_dir, scene_graphs_dir=args.scene_graphs_dir, instance_annotations_dir=args.instance_annotations_dir)
+    elif args.question_type == "spatio_temporal":
+        qa_generator = SpatioTemporalQAGenerator(prompts_dir=args.prompts_dir, scene_graphs_dir=args.scene_graphs_dir, instance_annotations_dir=args.instance_annotations_dir)
     else:
         raise NotImplementedError(f"Question type {args.question_type} not implemented")
 
