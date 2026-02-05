@@ -1,0 +1,86 @@
+You are an expert at creating video understanding questions for autonomous driving datasets.  You will be a given a list of objects and their descriptions and activity in the temporal order they appear in the video. Your job is to create temporal reasoning questions from this list.
+
+TASK: Generate ONE temporal reasoning multiple choice question with 4 options and its answer pair based on the provided list of objects and their activities over time
+
+GUIDELINES:
+1. Temporal Grounding: You will be given Object 1 and its associated activity/description at a given frame index
+2. You are given a "Target Event" (Object 2 and its activity/description) that occurs either before, after, or simultaneously with the Anchor Event.
+3. Construct question types of the following three types: Before/After: "What did the [Object A] do immediately after [Object B] finished crossing?", In-Between: "While the ego-vehicle was waiting at the light, what activity was the pedestrian on the right performing?", and State Change: "What happened to the cyclist's behavior during the truck changing lanes?"
+4. You could also construct 'in between' type questions which would require you to sample a third object and its activity for grounding.  
+5. Distractors (A, B, C, D): * Generate three plausible but incorrect distractors. Distractors should be realistic driving behaviors (e.g., "slowed down," "changed lanes," "remained stationary") that are contextually relevant to the scene but chronologically incorrect.
+6. Make the question natural and conversational
+7. Focus on interesting or varied object classes (not always cars or trucks)
+8. Format: Return a JSON object with "question" and "answer" fields
+
+EXAMPLES:
+
+Example 1: In-Between Logic
+Grounding: Event A: A blue car turns right. Event B: A city bus stops at a red light.
+Target: A cyclist cycles through traffic on the right side.
+Temporal Relationship: In-between
+Output:
+
+JSON
+
+
+{{
+  "question": "What activity occurred in the time between the blue car initiating its right turn and the city bus coming to a full stop at the red light?",
+  "options": {{
+    "A": "A pedestrian began crossing the street.",
+    "B": "A cyclist cycles through the stationary traffic on the right.",
+    "C": "The ego-vehicle performed a U-turn.",
+    "D": "A delivery truck moved into the bus lane."
+  }},
+  "answer": "B",
+  "reasoning": "The target event (cyclist filtering) happens chronologically between the two grounding events (car turning and bus stopping)."
+}}
+
+
+Example 2: Before/After Logic
+Grounding: A white hatchback clears the intersection.
+Target: A yellow taxi begins to merge into the left lane.
+Temporal Relationship: Immediately after
+Output:
+
+{{
+  "question": "What did the yellow taxi do right after the white hatchback cleared the intersection?",
+  "options": {{
+    "A": "It merged into the left lane.",
+    "B": "It came to a sudden stop.",
+    "C": "It honked at a pedestrian.",
+    "D": "It turned into a parking lot."
+  }},
+  "answer": "A",
+  "reasoning": "The grounding event is the hatchback clearing the path, which is immediately followed by the taxi's merge maneuver."
+}}
+
+
+Example 3: During/Simultaneous Logic
+Grounding: The ego-vehicle is waiting for a group of schoolchildren to cross.
+Target: A white van is idling behind the ego-vehicle.
+Temporal Relationship: During
+Output:
+
+JSON
+
+
+{{
+  "question": "While the ego-vehicle was waiting for the schoolchildren to finish crossing, what was the white van directly behind it doing?",
+  "answer": "C",
+  "options": {{
+    "A": "It attempted to overtake the ego-vehicle.",
+    "B": "It reversed to find another route.",
+    "C": "It remained idling in its lane.",
+    "D": "It turned on its hazard lights."
+  }},
+  "reasoning": "The target state (idling) occurs simultaneously with the grounding state (waiting for pedestrians)."
+}}
+
+NOW GENERATE A QUESTION FOR THIS SCENE:
+
+Grounding Object/Event: {grounding_input}
+Target Object/Event: {target_input}
+Temporal Relationship: {rel_type}
+
+Instructions: Return only a JSON object containing "question", "answer", and "reasoning". Ensure the question focuses on the temporal relationship between objects.
+

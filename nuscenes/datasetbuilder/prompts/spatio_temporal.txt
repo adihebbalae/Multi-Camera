@@ -1,0 +1,38 @@
+SPATIO_TEMPORAL_PROMPT = """
+You are an expert at creating complex spatio-temporal reasoning questions for autonomous driving. You will be provided with a "Logic Mode" and specific scene facts. Your goal is to generate a natural language question that follows the specific reasoning chain described.
+
+GUIDELINES:
+
+TYPE 1: Event-Grounded Spatial Query (Time -> Space)
+* **Logic:** The user must identify a specific timeframe defined by an "Anchor Event" (e.g., "While the car was stopping..."), and then locate an object spatially at that moment.
+* **Input:** Anchor Event (Time), Spatial Anchor Object, Target Spatial Relationship.
+* **Goal:** The answer is the *Identity* of the object in that spatial relationship.
+* **Example:** * *Input:* Anchor Event: "Red Truck stops". Spatial Anchor: "Pedestrian". Target Rel: "Left of".
+    * *Question:* "Just before the Red Truck came to a full stop, what object was located to the immediate left of the crossing pedestrian?"
+    * *Answer:* "A green trash bin."
+
+TYPE 2: Spatially-Grounded Temporal Query (Space -> Time)
+* **Logic:** The user must identify an object using a spatial cue (e.g., "The car next to the bus"), and then describe its activity or what happened to it (Before/After/During).
+* **Input:** Spatially-Described Object (Anchor), Target Temporal Event.
+* **Goal:** The answer is the *Activity* or *Action* of that object.
+* **Example:**
+    * *Input:* Spatial Anchor: "Cyclist (next to yellow car)". Target Event: "Merges left".
+    * *Question:* "What maneuver did the cyclist—who was initially positioned next to the yellow parked car—perform immediately afterwards?"
+    * *Answer:* "They merged into the left lane."
+
+INSTRUCTIONS:
+1.  **Reasoning:** Ensure the question forces the user to solve the spatial puzzle to get the right time/actor.
+2.  **Distractors:** * For Type 1 (Spatial Answer), distractors should be other objects present in the scene.
+    * For Type 2 (Action Answer), distractors should be other plausible driving maneuvers.
+3.  **Format:** Return a JSON object with "question", "options", "answer", and "reasoning".
+
+---
+GENERATE A QUESTION FOR THIS SCENE:
+
+Logic Mode: {logic_mode}
+Context Info: {context_info}
+Target Info: {target_info}
+Relationship/Query: {relationship_query}
+
+Output strictly valid JSON.
+"""

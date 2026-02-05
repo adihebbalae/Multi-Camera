@@ -1,0 +1,104 @@
+EVENT_ORDERING_PROMPT = """
+You are an expert at creating temporal logic questions for autonomous driving datasets. You will be given a list of distinct events occurring in a specific chronological order (from start to finish). Your job is to create a "re-ordering" multiple choice question.
+
+TASK: Generate ONE event ordering multiple choice question. You must randomize the presentation of the events in the question text, and ask the agent to identify the correct chronological sequence.
+
+GUIDELINES:
+1. **Input Data:** You are provided with a list of events: Event 1 -> Event 2 -> Event 3 -> Event 4. This is the GROUND TRUTH order.
+2. **Question Construction:** - List the events in the question body in a **RANDOM/SCRAMBLED** order.
+   - Assign them temporary labels (e.g., I, II, III, IV or A, B, C, D) inside the question text.
+   - Ask "Which is the correct chronological order of these events?"
+3. **Options:** - The correct option must correspond to the Ground Truth sequence (e.g., "II -> IV -> I -> III").
+   - The three distractors must be incorrect permutations (e.g., reverse order, or swapped middle steps).
+   - Option for the correct answer should be randomized
+   - Ensure that 
+4. **Clarity:** Ensure the event descriptions are distinct enough that a human observer could logically deduce the order (e.g., "Car approaches intersection" must clearly happen before "Car leaves intersection").
+5. **Format:** Return a JSON object with "question", "options", "answer", and "reasoning".
+
+EXAMPLES:
+
+Example 1: 3 Events
+Ground Truth Input: 
+1. The traffic light turns red.
+2. The white SUV comes to a stop.
+3. Pedestrians enter the crosswalk.
+
+Output:
+{{
+  "question": "Identify the correct chronological order of the following related events observed in the scene:\\n(A) Pedestrians enter the crosswalk\\n(B) The traffic light turns red\\n(C) The white SUV comes to a stop",
+  "options": {{
+    "A": "B -> C -> A",
+    "B": "A -> B -> C",
+    "C": "C -> A -> B",
+    "D": "B -> A -> C"
+  }},
+  "answer": "A",
+  "reasoning": "The logical traffic sequence is: Light turns red (B) -> Vehicle stops (C) -> Pedestrians feel safe to enter (A)."
+}}
+
+Example 2: 4 Events
+Ground Truth Input:
+1. A delivery truck activates its turn signal.
+2. The truck merges into the right lane.
+3. The truck slows down approaching the driveway.
+4. The truck turns into the delivery bay.
+
+Output:
+{{
+  "question": "The following four events occurred involving a delivery truck. Arrange them in the order they happened:\\nI. The truck turns into the delivery bay\\nII. The truck merges into the right lane\\nIII. The truck activates its turn signal\\nIV. The truck slows down approaching the driveway",
+  "options": {{
+    "A": "III -> II -> IV -> I",
+    "B": "II -> III -> I -> IV",
+    "C": "I -> IV -> II -> III",
+    "D": "III -> IV -> II -> I"
+  }},
+  "answer": "A",
+  "reasoning": "Standard driving maneuver sequence: Signal (III) -> Merge (II) -> Decelerate (IV) -> Turn (I)."
+}}
+
+Example 3: 4 Events
+Ground Truth Input:
+1. A delivery truck activates its turn signal.
+2. Cyclist on the right side of the door stopped by a yellow parked car
+3. The truck turns into a building.
+4. Construction worker entering a building
+
+Output:
+{{
+  "question": "The following four events occurred involving a delivery truck. Arrange them in the order they happened:\\nI. Cyclist on the right side of the door stopped by a yellow parked car\\nII. Construction worker entering a building\\nIII. A delivery truck activates its turn signal.\\nIV. The truck turns into a building.",
+  "options": {{
+    "A": "III -> II -> IV -> I",
+    "B": "II -> III -> I -> IV",
+    "C": "I -> IV -> II -> III",
+    "D": "III -> I -> IV -> II"
+  }},
+  "answer": "D",
+  "reasoning": "The video has events occuring in this order"
+}}
+
+
+Example 4: 3 Events
+Ground Truth Input:
+1. A delivery truck activates its turn signal.
+2. The truck merges into the right lane.
+3. The truck slows down approaching the driveway.
+
+Output:
+{{
+  "question": "The following four events occurred involving a delivery truck. Arrange them in the order they happened:\\n\nI. The truck merges into the right lane\\nII. A delivery truck activates its turn signal\\nIII. The truck slows down approaching the driveway",
+  "options": {{
+    "A": "II -> III -> I",
+    "B": "I -> II -> III",
+    "C": "III -> I -> II"
+    "D": "II -> I -> III"
+  }},
+  "answer": "D",
+  "reasoning": "Standard driving maneuver sequence as shown in the videp"
+}}
+NOW GENERATE A QUESTION FOR THIS SCENE:
+
+Ground Truth Events (Chronological):
+{events_list}
+
+Instructions: Scramble the events in the question text. Provide 4 option sequences. Return strictly valid JSON.
+"""
