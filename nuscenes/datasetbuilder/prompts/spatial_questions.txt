@@ -32,7 +32,7 @@ Relationships:
 
 Generated:
 {
-  "question": "In this scene {scene_description}, where is the bicycle relative to the car?",
+  "question": "In this scene [scene description], where is the bicycle relative to the car?",
   "options": {
     "A": "In front of the car",
     "B": "Behind the car",
@@ -50,7 +50,7 @@ Relationships:
 
 Generated:
 {
-  "question": "In the scene_description where {description}, what is in directly front of the bus?",
+  "question": "In the scene description, what is directly in front of the bus?",
   "options": {
     "A": "Car",
     "B": "Pedestrian",
@@ -68,11 +68,11 @@ Relationships:
 
 Generated:
 {
-  "question": "Which of the statement is true for the scene {scene_description}?",
+  "question": "Which of the statements is true for the scene?",
   "options": {
-    "A": "A bus in front of the pedestrian",
-    "B": "A Pedestrian is in front of the bus",
-    "C": "A biscycle is to the right of the bus",
+    "A": "A bus is in front of the pedestrian",
+    "B": "A pedestrian is in front of the bus",
+    "C": "A bicycle is to the right of the bus",
     "D": "A wheelchair is in front of the pedestrian"
   },
   "correct_option": "B",
