@@ -9,6 +9,7 @@ This script extracts relevant information from nuScenes scene graphs to generate
 import argparse
 import json
 import os
+import re
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -61,6 +62,7 @@ class QAGenerator:
         captions_dir: Optional[Path] = None,
         scene_graphs_dir: Optional[Path] = None,
         instance_annotations_dir: Optional[Path] = None,
+        gpt_logs_dir: Optional[Path] = None,
     ):
         self.prompts_dir = Path(prompts_dir) if prompts_dir else (Path(__file__).parent / "prompts")
         self.captions_dir = (
@@ -76,6 +78,42 @@ class QAGenerator:
             if instance_annotations_dir
             else Path("/home/hg22723/projects/Multi-Camera/outputs/instance_annotations")
         )
+        self.gpt_logs_dir = Path(gpt_logs_dir) if gpt_logs_dir else None
+
+    def _sanitize_log_filename(self, scene_token: str) -> str:
+        """Create a filesystem-safe filename from scene_token."""
+        safe = re.sub(r"[^\w\-.]", "_", str(scene_token))
+        return (safe[:128] + "_") if len(safe) > 128 else safe
+
+    def _log_gpt_call(
+        self,
+        input_text: str,
+        output_text: str,
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        scene_token: Optional[str] = None,
+        **metadata: Any,
+    ) -> None:
+        """Write GPT conversation to log file under gpt_logs_dir."""
+        if self.gpt_logs_dir is None:
+            return
+        self.gpt_logs_dir.mkdir(parents=True, exist_ok=True)
+        safe_name = self._sanitize_log_filename(scene_token or "unknown")
+        log_file = self.gpt_logs_dir / f"{safe_name}.json"
+        log_entry = {
+            "input": input_text,
+            "output": output_text,
+            "metadata": {
+                "model": model,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                "scene_token": scene_token,
+                **metadata,
+            },
+        }
+        with open(log_file, "w") as f:
+            json.dump(log_entry, f, indent=2, default=str)
 
     def gpt(
         self,
@@ -85,6 +123,7 @@ class QAGenerator:
         model: str = "gpt-4",
         temperature: float = 0.7,
         max_tokens: int = 500,
+        **log_metadata: Any,
     ) -> str:
         key = api_key or os.getenv("OPENAI_API_KEY")
         client = OpenAI(api_key=key)
@@ -94,7 +133,18 @@ class QAGenerator:
             temperature=temperature,
             max_tokens=max_tokens,
         )
-        return response.choices[0].message.content.strip()
+        result = response.choices[0].message.content.strip()
+
+        if self.gpt_logs_dir is not None:
+            self._log_gpt_call(
+                input_text=prompt,
+                output_text=result,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                **log_metadata,
+            )
+        return result
 
     def format_prompt_input(self, scene_info: Dict[str, Any], counting_prompt: str) -> str:
 
@@ -212,7 +262,9 @@ class CountingQAGenerator(QAGenerator):
             return None
         counting_prompt = self.load_prompts_from_disk()
         counting_input = self.format_prompt_input(scene_info, counting_prompt)
-        counting_question = self.gpt(counting_input, api_key=api_key)
+        counting_question = self.gpt(
+            counting_input, api_key=api_key, scene_token=scene_token, question_type="counting"
+        )
         return self.construct_qa_sample(
             scene_token,
             "counting",
@@ -294,7 +346,9 @@ class SpatialQAGenerator(QAGenerator):
             return None
         spatial_prompt = self.load_prompts_from_disk()
         spatial_input = self.build_spatial_input(scene_info, spatial_prompt)
-        raw_response = self.gpt(spatial_input, api_key=api_key)
+        raw_response = self.gpt(
+            spatial_input, api_key=api_key, scene_token=scene_token, question_type="spatial"
+        )
         # Parse JSON from response (may be wrapped in markdown code blocks)
         response_text = raw_response.strip()
         if "```" in response_text:
@@ -322,6 +376,195 @@ class SpatialQAGenerator(QAGenerator):
             question_type="spatial",
             question=question,
             answer=answer,
+            metadata=metadata,
+        )
+
+
+# Default summarization question (fixed for every scene)
+SUMMARIZATION_QUESTION = "Provide a comprehensive summary of the ego-actor's interactions across all views."
+
+
+class SummarizationQAGenerator(QAGenerator):
+    """
+    Summarization QA generator: produces a fixed question with an answer that condenses
+    the temporal scene graph into a 2-3 sentence summary via OpenAI.
+    """
+
+    DEFAULT_QUESTION = SUMMARIZATION_QUESTION
+
+    def __init__(
+        self,
+        prompts_dir: Optional[Path] = None,
+        captions_dir: Optional[Path] = None,
+        scene_graphs_dir: Optional[Path] = None,
+        instance_annotations_dir: Optional[Path] = None,
+        gpt_logs_dir: Optional[Path] = None,
+        max_frames_for_summary: int = 15,
+    ):
+        super().__init__(
+            prompts_dir=prompts_dir,
+            captions_dir=captions_dir,
+            scene_graphs_dir=scene_graphs_dir,
+            instance_annotations_dir=instance_annotations_dir,
+            gpt_logs_dir=gpt_logs_dir,
+        )
+        self.max_frames_for_summary = max_frames_for_summary
+
+    def load_raw_scene_graph(self, scene_token: str) -> Optional[Dict[str, Any]]:
+        """Load raw scene graph JSON (full frames, objects, relationships)."""
+        scene_graph_file = self.scene_graphs_dir / f"{scene_token}/scene_graph.json"
+        if not scene_graph_file.exists():
+            return None
+        with open(scene_graph_file, "r") as f:
+            return json.load(f)
+
+    def _build_temporal_scene_graph(
+        self,
+        scene_token: str,
+        raw_scene: Dict[str, Any],
+        captions: Optional[Dict[int, str]],
+        instance_annotations: Optional[Dict[str, Any]],
+    ) -> str:
+        """
+        Condense raw scene graph + captions into a textual temporal representation
+        for summarization.
+        """
+        frames = raw_scene.get("frames", [])
+        if not frames:
+            return "No frame data available."
+
+        # Map instance_token -> {activity, description} from annotations
+        inst_activities: Dict[str, Dict[str, str]] = {}
+        if instance_annotations:
+            for ann in instance_annotations.get("annotations", []):
+                tok = ann.get("instance_token", "")
+                if tok:
+                    inst_activities[tok] = {
+                        "activity": ann.get("activity", ""),
+                        "description": ann.get("description", ""),
+                        "class": ann.get("object_class", ""),
+                    }
+
+        # Sample frames evenly across the scene
+        n_frames = len(frames)
+        if n_frames <= self.max_frames_for_summary:
+            sampled_indices = list(range(n_frames))
+        else:
+            step = max(1, n_frames // self.max_frames_for_summary)
+            sampled_indices = list(range(0, n_frames, step))[: self.max_frames_for_summary]
+            if sampled_indices[-1] != n_frames - 1:
+                sampled_indices.append(n_frames - 1)
+
+        lines: List[str] = []
+        lines.append(f"Scene: {scene_token}")
+        lines.append(f"Total frames: {n_frames}")
+        lines.append("")
+
+        directional_types = {"in_front", "behind", "left", "right", "near"}
+
+        for idx in sampled_indices:
+            if idx >= len(frames):
+                continue
+            frame = frames[idx]
+            frame_idx = frame.get("frame_idx", idx)
+            objects = frame.get("objects", [])
+            relationships = frame.get("relationships", []) or []
+
+            lines.append(f"--- Frame {frame_idx} ---")
+
+            # Use caption if available (richest description)
+            if captions and frame_idx in captions:
+                cap = captions[frame_idx]
+                if cap:
+                    lines.append(f"Caption: {cap[:400]}{'...' if len(cap) > 400 else ''}")
+            else:
+                # Fall back to object list + relationships
+                obj_classes = [o.get("object_class", "unknown") for o in objects]
+                obj_counts: Dict[str, int] = defaultdict(int)
+                for c in obj_classes:
+                    short = c.split(".")[-1] if "." in c else c
+                    obj_counts[short] += 1
+                count_str = ", ".join(f"{v} {k}" for k, v in sorted(obj_counts.items()))
+                lines.append(f"Objects: {count_str}")
+
+                # Add activities for objects if available
+                for obj in objects[:8]:  # Limit to avoid verbosity
+                    oid = obj.get("object_id") or obj.get("annotation_token", "")
+                    oclass = (obj.get("object_class") or "unknown").split(".")[-1]
+                    act = inst_activities.get(oid, {})
+                    act_str = act.get("activity", "")
+                    desc_str = act.get("description", "")
+                    if act_str or desc_str:
+                        extra = f" [{act_str}; {desc_str}]" if act_str and desc_str else f" [{act_str or desc_str}]"
+                        lines.append(f"  - {oclass}: {extra}")
+
+            # Key spatial relationships (sample a few)
+            dir_rels = [r for r in relationships if r.get("relationship_type") in directional_types]
+            id_to_class = {
+                (o.get("object_id") or o.get("annotation_token", "")): (
+                    o.get("object_class", "unknown")
+                ).split(".")[-1]
+                for o in objects
+            }
+            for rel in dir_rels[:5]:
+                src = id_to_class.get(rel.get("source_id", ""), "?")
+                tgt = id_to_class.get(rel.get("target_id", ""), "?")
+                rtype = rel.get("relationship_type", "").replace("_", " ")
+                dist = rel.get("distance")
+                dstr = f" ({dist:.1f}m)" if dist is not None else ""
+                lines.append(f"  Relation: {src} is {rtype} {tgt}{dstr}")
+
+            lines.append("")
+
+        return "\n".join(lines).strip()
+
+    def load_prompts_from_disk(self) -> str:
+        prompts_dir = self.prompts_dir
+        path = prompts_dir / "summarization_questions.txt"
+        if not path.exists():
+            raise FileNotFoundError(
+                f"Prompt file not found in {prompts_dir}. "
+                "Please ensure summarization_questions.txt exists."
+            )
+        return path.read_text()
+
+    def generate_for_scene(self, scene_token: str, api_key: Optional[str] = None) -> Optional[QASample]:
+        raw_scene = self.load_raw_scene_graph(scene_token)
+        if raw_scene is None:
+            return None
+
+        captions = self.load_captions_for_scene(scene_token)
+        instance_annotations = self.load_instance_annotations(scene_token)
+
+        temporal_graph = self._build_temporal_scene_graph(
+            scene_token, raw_scene, captions, instance_annotations
+        )
+
+        prompt_template = self.load_prompts_from_disk()
+        prompt = prompt_template.replace("{temporal_scene_graph}", temporal_graph)
+
+        summary = self.gpt(
+            prompt,
+            api_key=api_key,
+            model="gpt-4",
+            temperature=0.5,
+            max_tokens=300,
+            scene_token=scene_token,
+            question_type="summarization",
+        )
+
+        scene_info = self._extract_scene_info_from_dict(raw_scene)
+        metadata = {
+            "num_frames": scene_info["num_frames"],
+            "object_counts": scene_info.get("object_counts", {}),
+            "used_captions": captions is not None and len(captions) > 0,
+        }
+
+        return self.construct_qa_sample(
+            scene_token=scene_token,
+            question_type="summarization",
+            question=self.DEFAULT_QUESTION,
+            answer=summary,
             metadata=metadata,
         )
 
@@ -526,7 +769,7 @@ def parse_args():
     parser.add_argument(
         "--prompts_dir",
         type=str,
-        default="/home/hg22723/projects/Multi-Camera/nuscenes/datasetbuilder/prompts",
+        default="./nuscenes/datasetbuilder/prompts",
         help="Directory containing prompts",
     )
     parser.add_argument(
@@ -545,7 +788,7 @@ def parse_args():
     parser.add_argument(
         "--question_type",
         type=str,
-        default="spatial",
+        default="summarization",
         help="Question type: counting, spatial, temporal, event_ordering, causality, perception, summarization, which_camera",
     )
     parser.add_argument("--api_key", type=str, default=None, help="OpenAI API key")
@@ -559,14 +802,22 @@ def main():
     if args.api_key is None:
         args.api_key = os.getenv("OPENAI_API_KEY")
 
+    output_dir = Path(args.output_dir)
+    gpt_logs_dir = output_dir / "gpt-logs" / args.question_type
+    gen_kwargs = {
+        "prompts_dir": args.prompts_dir,
+        "scene_graphs_dir": args.scene_graphs_dir,
+        "gpt_logs_dir": gpt_logs_dir,
+    }
+
     if args.question_type == "counting":
-        qa_generator = CountingQAGenerator(prompts_dir=args.prompts_dir, scene_graphs_dir=args.scene_graphs_dir)
+        qa_generator = CountingQAGenerator(**gen_kwargs)
     elif args.question_type == "spatial":
-        qa_generator = SpatialQAGenerator(prompts_dir=args.prompts_dir, scene_graphs_dir=args.scene_graphs_dir)
+        qa_generator = SpatialQAGenerator(**gen_kwargs)
+    elif args.question_type == "summarization":
+        qa_generator = SummarizationQAGenerator(**gen_kwargs)
     else:
         raise NotImplementedError(f"Question type {args.question_type} not implemented")
-
-    output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print("=" * 80)
@@ -574,6 +825,7 @@ def main():
     print("=" * 80)
     print(f"Output directory: {output_dir}")
     print(f"Question type: {args.question_type}")
+    print(f"GPT logs: {gpt_logs_dir}")
     print(f"Limit: {args.limit} scenes")
     print("=" * 80)
 

@@ -1,0 +1,19 @@
+You are an expert at summarizing driving scenes from multi-camera autonomous vehicle data. Given a temporal scene graph that describes objects, their activities, spatial relationships, and evolution across frames (from the ego-vehicle's perspective across all camera views), produce a concise summary.
+
+TASK: Summarize the ego-actor's interactions across all views in 2-3 sentences.
+
+QUESTION (fixed, for reference): "Provide a comprehensive summary of the ego-actor's interactions across all views."
+
+GUIDELINES:
+1. Focus on what the ego-vehicle (self-driving car) encountered and interacted with over the scene
+2. Mention key objects (vehicles, pedestrians, cyclists, etc.), their activities, and salient spatial/temporal patterns
+3. Condense the temporal scene graph into a coherent narrative - avoid listing frame-by-frame details
+4. Write in natural, fluent language
+5. Keep the response to 2-3 sentences maximum
+
+INPUT - Temporal Scene Graph (condensed from scene graph + captions):
+---
+{temporal_scene_graph}
+---
+
+Generate the summary now. Return ONLY the 2-3 sentence summary, no preamble or labels.
