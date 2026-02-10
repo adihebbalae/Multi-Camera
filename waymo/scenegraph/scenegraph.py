@@ -8,11 +8,12 @@ and properties that we want to annotate for these objects with a VLM (activity, 
 import os
 import json
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, asdict
 import numpy as np
 from tqdm import tqdm
 from argparse import ArgumentParser
+from pyquaternion import Quaternion
 from nuscenes_dataloader import (
     NuScenesLidarSegmentationLoader,
     FrameData,
@@ -84,7 +85,7 @@ class SceneGraphBuilder:
         self,
         frame: FrameData,
         frame_idx: int
-    ) -> tuple[List[SceneGraphNode], List[SceneGraphRelationship]]:
+    ) -> Tuple[List[SceneGraphNode], List[SceneGraphRelationship]]:
         """
         Build a scene graph for a single frame.
         
@@ -97,6 +98,9 @@ class SceneGraphBuilder:
         """
         nodes = []
         relationships = []
+        
+        # Extract ego pose for coordinate transformation
+        ego_pose = frame.ego_pose
         
         # Create nodes for each object
         for obj in frame.objects:
@@ -118,33 +122,68 @@ class SceneGraphBuilder:
             )
             nodes.append(node)
         
-        # Extract relationships if enabled
+        # Extract relationships if enabled (now using ego pose for ego-centric relationships)
         if self.extract_relationships and len(nodes) > 1:
-            relationships = self._extract_spatial_relationships(nodes, frame_idx)
+            relationships = self._extract_spatial_relationships(nodes, frame_idx, ego_pose)
         
         return nodes, relationships
+    
+    def _transform_to_ego_frame(
+        self,
+        global_position: np.ndarray,
+        ego_pose: Dict[str, Any]
+    ) -> np.ndarray:
+        """
+        Transform a position from global frame to ego vehicle frame.
+        
+        Args:
+            global_position: Position in global frame (x, y, z)
+            ego_pose: Ego pose dict with 'translation' and 'rotation'
+            
+        Returns:
+            Position in ego vehicle frame (x, y, z)
+        """
+        # Get ego translation and rotation
+        ego_translation = np.array(ego_pose['translation'])
+        ego_rotation = Quaternion(ego_pose['rotation'])
+        
+        # Translate to ego origin
+        translated = global_position - ego_translation
+        
+        # Rotate to ego frame (inverse of ego rotation)
+        ego_frame_pos = ego_rotation.inverse.rotate(translated)
+        
+        return np.array(ego_frame_pos)
     
     def _extract_spatial_relationships(
         self,
         nodes: List[SceneGraphNode],
-        frame_idx: int
+        frame_idx: int,
+        ego_pose: Dict[str, Any]
     ) -> List[SceneGraphRelationship]:
         """
-        Extract spatial relationships between objects.
+        Extract spatial relationships between objects in ego-centric frame.
         
         Args:
             nodes: List of scene graph nodes
             frame_idx: Frame index
+            ego_pose: Ego pose dict for coordinate transformation
             
         Returns:
             List of SceneGraphRelationship objects
         """
         relationships = []
         
+        # Pre-compute ego-frame positions for all nodes
+        ego_frame_positions = {}
+        for node in nodes:
+            global_pos = np.array(node.position)
+            ego_frame_positions[node.object_id] = self._transform_to_ego_frame(global_pos, ego_pose)
+        
         # Compute pairwise relationships
         for i, node_a in enumerate(nodes):
             for node_b in nodes[i+1:]:
-                # Compute distance
+                # Compute distance (can use either frame, distance is invariant)
                 pos_a = np.array(node_a.position)
                 pos_b = np.array(node_b.position)
                 distance = np.linalg.norm(pos_a - pos_b)
@@ -160,8 +199,12 @@ class SceneGraphBuilder:
                     )
                     relationships.append(rel)
                 
-                # Compute directional relationships (behind, in_front, left, right)
-                rel_type = self._compute_directional_relationship(node_a, node_b)
+                # Compute directional relationships in ego frame (behind, in_front, left, right)
+                # Get positions in ego frame
+                ego_pos_a = ego_frame_positions[node_a.object_id]
+                ego_pos_b = ego_frame_positions[node_b.object_id]
+                
+                rel_type = self._compute_directional_relationship_ego_frame(ego_pos_a, ego_pos_b)
                 if rel_type:
                     rel = SceneGraphRelationship(
                         source_id=node_a.object_id,
@@ -174,32 +217,42 @@ class SceneGraphBuilder:
         
         return relationships
     
-    def _compute_directional_relationship(
+    def _compute_directional_relationship_ego_frame(
         self,
-        node_a: SceneGraphNode,
-        node_b: SceneGraphNode
+        ego_pos_a: np.ndarray,
+        ego_pos_b: np.ndarray
     ) -> Optional[str]:
         """
-        Compute directional relationship (behind, in_front, left, right).
+        Compute directional relationship in ego-centric frame.
+        
+        In the ego frame:
+        - +X is forward (in front of ego)
+        - +Y is left
+        - -X is behind
+        - -Y is right
+        
+        This computes where object B is relative to object A, from the ego's perspective.
         
         Args:
-            node_a: First node
-            node_b: Second node
+            ego_pos_a: Position of object A in ego frame (x, y, z)
+            ego_pos_b: Position of object B in ego frame (x, y, z)
             
         Returns:
-            Relationship type or None
+            Relationship type: 'in_front', 'behind', 'left', 'right', or None
         """
-        pos_a = np.array(node_a.position[:2])  # x, y
-        pos_b = np.array(node_b.position[:2])
+        # Compute relative position of B with respect to A (in ego frame)
+        rel_pos = ego_pos_b[:2] - ego_pos_a[:2]  # x, y in ego frame
         
-        # Compute relative position
-        rel_pos = pos_b - pos_a
-        
-        # Compute angle
+        # Compute angle from A to B in ego frame
+        # atan2(y, x) gives angle where 0 = +X direction (forward in ego frame)
         angle = np.arctan2(rel_pos[1], rel_pos[0])
         angle_deg = np.degrees(angle)
         
-        # Classify relationship based on angle
+        # Classify relationship based on angle in ego frame
+        # in_front: B is ahead of A (in +X direction from A)
+        # behind: B is behind A (in -X direction from A)
+        # left: B is to the left of A (in +Y direction from A)
+        # right: B is to the right of A (in -Y direction from A)
         if -45 <= angle_deg < 45:
             return 'in_front'
         elif 45 <= angle_deg < 135:
@@ -212,7 +265,7 @@ class SceneGraphBuilder:
     def build_scene_graphs(
         self,
         scene_token: str
-    ) -> tuple[List[List[SceneGraphNode]], List[List[SceneGraphRelationship]]]:
+    ) -> Tuple[List[List[SceneGraphNode]], List[List[SceneGraphRelationship]]]:
         """
         Build scene graphs for all frames in a scene.
         

@@ -479,7 +479,7 @@ def main():
     parser.add_argument('--version', type=str, default='v1.0-trainval', help='Dataset version')
     parser.add_argument('--output', type=str, default='outputs/annotations', help='Output directory')
     parser.add_argument('--vllm-api', type=str, default='http://localhost:8001/v1', help='vLLM server URL')
-    parser.add_argument('--model', type=str, default='llava-hf/llava-1.5-7b-hf', help='VLM model name')
+    parser.add_argument('--model', type=str, default='OpenGVLab/InternVL3_5-14B', help='VLM model name')
     parser.add_argument('--scene-idx', type=int, default=0, help='Scene index to process')
     parser.add_argument('--max-frames', type=int, default=None, help='Max frames per scene')
     

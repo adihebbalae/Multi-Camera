@@ -20,7 +20,7 @@ except ImportError:
     print("Error: openai package not installed. Install with: pip install openai")
     sys.exit(1)
 
-from scenegraph.nuscenes_dataloader import NuScenesLidarSegmentationLoader
+from waymo.scenegraph.nuscenes_dataloader import NuScenesLidarSegmentationLoader
 class FrameCaptionGenerator:
     """
     Generates detailed frame captions from scene graph data using GPT-4o-mini.
@@ -155,6 +155,9 @@ class FrameCaptionGenerator:
         """
         Format relationship information for the prompt.
         
+        Filters out relationships >30m and removes redundant bidirectional pairs
+        (keeps only one direction per object pair).
+        
         Args:
             relationships: List of relationship dictionaries
             objects: List of object dictionaries
@@ -169,8 +172,24 @@ class FrameCaptionGenerator:
         obj_map = {obj['object_id']: obj['object_class'].split('.')[-1] 
                    for obj in objects}
         
+        # 1. Filter out relationships beyond 30 metres
+        filtered = [r for r in relationships 
+                    if r.get('distance') is None or r.get('distance', 0) <= 30.0]
+        
+        # 2. Remove redundant bidirectional pairs
+        #    For each (A, B) pair, keep only the first relationship encountered
+        seen_pairs = set()
+        deduplicated = []
+        for rel in filtered:
+            pair_key = frozenset([rel['source_id'], rel['target_id']])
+            rel_type = rel['relationship_type']
+            pair_with_type = (pair_key, rel_type)
+            if pair_with_type not in seen_pairs:
+                seen_pairs.add(pair_with_type)
+                deduplicated.append(rel)
+        
         rel_strings = []
-        for rel in relationships:
+        for rel in deduplicated:
             source = obj_map.get(rel['source_id'], 'unknown')
             target = obj_map.get(rel['target_id'], 'unknown')
             rel_type = rel['relationship_type']
@@ -213,11 +232,11 @@ class FrameCaptionGenerator:
         
         count_str = ", ".join([f"{count} {cat}" for cat, count in obj_counts.items()])
         
-        prompt = f"""You are an expert at describing driving scenes. Given the following scene information from frame {frame_idx}, generate a detailed, natural language caption that describes what is happening in this frame.
+        prompt = f"""You are a precise autonomous driving scene annotator. Given the following structured scene data from frame {frame_idx}, write a factual, detailed caption of at least 200 words.
 
 Scene Statistics:
 - Total objects: {len(objects)} ({count_str})
-- Relationships: {len(relationships)}
+- Spatial relationships: {len(relationships)}
 
 Objects in the scene (with activities where available):
 {object_info}
@@ -225,16 +244,16 @@ Objects in the scene (with activities where available):
 Spatial Relationships:
 {rel_info}
 
-Generate a comprehensive, natural-sounding caption that:
-1. Describes the overall scene composition and context
-2. Highlights all object activities, descriptions and movements (using the activity information provided)
-3. Mentions all important spatial relationships between objects
-4. Uses natural language without listing technical details
-5. Integrates all the specific object activities and descriptions into the narrative flow
-6. Don't make up any information for instance names of companies that is not provided in the scene graph or instance annotations
+Requirements:
+1. The caption MUST be at least 200 words. Be thorough.
+2. Write factual, precise descriptions. State exactly what each object is doing, where it is, and how it relates to other objects.
+3. DO NOT use filler phrases such as "bustling scene", "lively atmosphere", "dynamic environment", "creating a sense of", "painting a picture", or any similar literary flourishes.
+4. DO NOT fabricate information (e.g., company names, colors, or details not present in the object descriptions or data).
+5. You may use every object's activity and description verbatim where provided.
+6. Organize the caption logically: start with the ego vehicle context, then describe objects by proximity, then summarize the overall traffic situation.
+7. Use direct, technical language. Avoid using numerical values for speed, or distance and focus on relative positions and motion states.
 
 Caption:"""
-        # print(prompt)
         return prompt
     
     def generate_frame_caption(
@@ -266,7 +285,7 @@ Caption:"""
                     {"role": "user", "content": prompt}
                 ],
                 temperature=self.temperature,
-                max_tokens=300
+                max_tokens=600
             )
             
             caption = response.choices[0].message.content.strip()
@@ -429,7 +448,7 @@ def parse_args():
     parser.add_argument(
         '--output',
         type=str,
-        default=None,
+        default='outputs/captions',
         help='Path to save the frame captions JSON (defaults to outputs/captions/{scene_token}_captions.json)'
     )
     
@@ -464,7 +483,7 @@ def parse_args():
     parser.add_argument(
         '--model',
         type=str,
-        default='gpt-5-mini',
+        default='gpt-4o',
         help='Model name (default: gpt-5-mini)'
     )
     
