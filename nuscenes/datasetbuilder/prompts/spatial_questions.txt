@@ -1,89 +1,67 @@
-You are an expert at creating MCQ spatial reasoning questions from videos with multiple camera scenes. Given a scene description and scene graph relationships, generate ONE multiple-choice question with four options about a directional spatial relationship between two objects.
+SPATIAL CATEGORY: {spatial_category}
 
-TASK: Create a single MCQ about a directional relationship using ONLY these relations: "in front of", "behind", "to the left of", "to the right of".
+CATEGORY-SPECIFIC INSTRUCTIONS: {category_instructions}
 
-GUIDELINES:
-1. Use the scene description to ground the question (brief, 1 sentence max).
-2. Ask about the relative position between two specific object types or instances.
-3. Enforce a unique correct answer:
-   - Prefer pairs where the source object class has a single instance in the scene/frame.
-   - If not possible, use a descriptive reference (e.g., "the red bus", "the parked white car") when available in the description or graph.
-   - Ensure none of the distractor options is also true in the scene.
-4. Avoid vague relations like "near" or "next to". Only use the four directional relations above.
-5. If no unique answer can be guaranteed for the sampled pair, choose another pair.
-6. Output format MUST be a JSON object with fields: question, options (A-D), correct_option, rationale.
+GENERAL GUIDELINES:
+1. Anchor the Question: Every question must revolve around the SOURCE OBJECT as the primary point of reference or the starting point of the spatial relation and the TARGET OBJECTS as the point of reference for the correct options.
+2. Grounded Descriptions: Do not use bare labels like "the car." Use the full description provided, including appearance and activity (e.g., "the SUV (silver, parked on the curb with hazard lights on)").
+3. Incorporate Activity: Use the activity/behavior of the objects (e.g., "waiting," "merging," "accelerating") to distinguish between multiple objects of the same class.
+4. Logical Distractors: Ensure distractors are spatially plausible based on the scene but factually incorrect according to the provided SPATIAL CONTEXT and the other relationships.
+5. Output Format: Return ONLY a JSON object with the fields: question, options, correct_option, and rationale.
+6. Look at the other relationships to generate relevant question options so that the question has only one correct option.
+7. The correct option must only have the source object or target object or its spatial context with respect to each other.
+8. The distractors must be spatially plausible based on the scene but factually incorrect according to the provided SPATIAL CONTEXT and the other relationships.
+
+REFINED IN-CONTEXT EXAMPLES:
+
+Example 1 (Source-to-Target Directional / Egocentric):
+{
+  "question": "From the perspective of the sedan (white, stopped at a red light), in which direction is the pedestrian (wearing a yellow raincoat, stepping off the curb) located?",
+  "options": {
+    "A": "Directly behind the sedan",
+    "B": "To the front-right of the sedan",
+    "C": "To the front-left of the sedan",
+    "D": "Parallel to the driver's side door"
+  },
+  "correct_option": "B",
+  "rationale": "The spatial context places the pedestrian at a 45-degree angle relative to the sedan's forward heading, which corresponds to the front-right position."
+}
+
+Example 2 (Source-to-Multiple Targets / Proximity / Multi-hop):
+{
+  "question": "Which target is positioned closer to the cyclist pedaling in the bike lane along it's current path?",
+  "options": {
+    "A": "The delivery truck (brown, double-parked)",
+    "B": "The mailbox (blue, near the street corner)",
+    "C": "Both are at an equal distance",
+    "D": "The cyclist has already passed both objects"
+  },
+  "correct_option": "A",
+  "rationale": "The delivery truck is located 3m from the cyclist, whereas the mailbox is 8m away, making the truck the closer target."
+}
+
+Example 3 (Allocentric / Global Frame of Reference):
+{
+  "question": "Regarding the global scene layout, what is the spatial relationship between the red pickup truck traveling East through the intersection and the silver SUV parked by the sidewalk?",
+  "options": {
+    "A": "The pickup truck is South of the SUV's position",
+    "B": "The pickup truck is North of the SUV's position",
+    "C": "The pickup truck is West of the SUV's position",
+    "D": "The pickup truck is parked directly behind the SUV"
+  },
+  "correct_option": "B",
+  "rationale": "In the allocentric frame of the map, the pickup truck is located within the intersection which lies to the North of the stationary SUV's coordinates."
+}
 
 INPUTS:
 - Scene token: {scene_token}
 - Frame index: {frame_idx}
-- Scene description (short): {scene_description}
-- Candidate directional relationships (filtered):
-{directional_relationships}
-- Object instance counts (by class):
-{object_counts}
-
-EXAMPLES:
-
-Example A:
-Scene description: A cyclist passes a stopped car at an intersection.
-Relationships:
-- Frame 12: vehicle.bicycle is to the right of vehicle.car
-- Frame 12: vehicle.car is behind vehicle.truck
-
-Generated:
-{
-  "question": "In this scene [scene description], where is the bicycle relative to the car?",
-  "options": {
-    "A": "In front of the car",
-    "B": "Behind the car",
-    "C": "To the left of the car",
-    "D": "To the right of the car"
-  },
-  "correct_option": "D",
-  "rationale": "At frame 12, the scene graph shows the bicycle is to the right of the car."
-}
-
-Example B:
-Scene description: A bus approaches with a single pedestrian waiting at the curb.
-Relationships:
-- Frame 8: human.pedestrian.adult is in front of vehicle.bus
-
-Generated:
-{
-  "question": "In the scene description, what is directly in front of the bus?",
-  "options": {
-    "A": "Car",
-    "B": "Pedestrian",
-    "C": "Bicycle",
-    "D": "Wheelchair"
-  },
-  "correct_option": "B",
-  "rationale": "At frame 8, the pedestrian is in front of the bus according to the scene graph."
-}
-
-Example C:
-Scene description: A bus approaches with a single pedestrian waiting at the curb.
-Relationships:
-- Frame 8: human.pedestrian.adult is in front of vehicle.bus
-
-Generated:
-{
-  "question": "Which of the statements is true for the scene?",
-  "options": {
-    "A": "A bus is in front of the pedestrian",
-    "B": "A pedestrian is in front of the bus",
-    "C": "A bicycle is to the right of the bus",
-    "D": "A wheelchair is in front of the pedestrian"
-  },
-  "correct_option": "B",
-  "rationale": "At frame 8, the pedestrian is in front of the bus according to the scene graph."
-}
-
-
+- SOURCE OBJECT and DESCRIPTION: {source_object}
+- TARGET OBJECT(S) and DESCRIPTION(S): {target_objects}
+- SPATIAL CONTEXT BETWEEN SOURCE AND TARGET OBJECT(S): {grounded_context}
+- OTHER RELATIONSHIPS: {other_relationships}
+- QUESTION GOAL: {question_goal}
 
 NOW GENERATE ONE MCQ:
-- Use exactly one relationship from the input that yields a unique answer.
-- If multiple are valid, choose the one with the fewest instances of the source object class.
-- Return ONLY the JSON object described in the schema.
-
-
+- Follow the guidelines and use the provided grounded descriptions for the source and target objects.
+- Return ONLY the JSON object.

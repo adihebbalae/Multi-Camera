@@ -276,33 +276,370 @@ class CountingQAGenerator(QAGenerator):
 
 class SpatialQAGenerator(QAGenerator):
     """
-    TODO: Fix accordingly Spatial QA generator: builds MCQ questions using directional relationships
-    contained in the scene graph and a short scene description.
+    Unified Spatial QA generator: randomly selects one of three spatial question
+    categories per scene and sends a single prompt to GPT with category-specific
+    context injected.
+
+    Categories:
+        1. Egocentric     – "What object is in front of / to the left of B?"
+                            or "Where is A relative to B?"
+        2. Frame of Ref.  – "From B's perspective, where is A?"
+                            (transforms positions into B's local reference frame)
+        3. Multi-hop      – "Which object is nearer/further to B: X or Y?"
     """
 
-    def _select_candidate(
-        self, directional: List[Dict[str, Any]], frames_meta: Dict[int, Dict[str, Any]]
-    ) -> Optional[Dict[str, Any]]:
-        candidate: Optional[Dict[str, Any]] = None
-        for rel in directional:
-            frame_idx = rel["frame_idx"]
-            frame_objects = frames_meta.get(frame_idx, {}).get("objects", [])
-            obj_class = lambda o: o.get("object_class") or o.get("class", "")
-            num_source_class_in_frame = sum(1 for o in frame_objects if obj_class(o) == rel["source"]["class"])
-            if num_source_class_in_frame == 1:
-                candidate = rel
+    SPATIAL_CATEGORIES = ["egocentric", "frame_of_reference", "multihop"]
+
+    # ------------------------------------------------------------------ helpers
+    @staticmethod
+    def _short_class(obj_class: str) -> str:
+        """'vehicle.car' -> 'car'"""
+        return obj_class.split(".")[-1] if "." in obj_class else obj_class
+
+    def _build_grounded_description(
+        self, obj_id: str, obj_class: str, inst_ann: Dict[str, Any]
+    ) -> str:
+        """Build a descriptive reference like 'the sedan (driving through the intersection)'."""
+        short = self._short_class(obj_class)
+        ann = inst_ann.get(obj_id, {})
+        activity = (ann.get("activity") or "")
+        description = (ann.get("description") or "")
+        if description and activity:
+            return f"the {short} ({description}, {activity})"
+        elif description:
+            return f"the {short} ({description})"
+        elif activity:
+            return f"the {short} ({activity})"
+        return f"the {short}"
+
+    @staticmethod
+    def _quaternion_to_yaw(q: List[float]) -> float:
+        """Convert quaternion [w, x, y, z] to yaw angle (radians)."""
+        w, x, y, z = q
+        siny_cosp = 2.0 * (w * z + x * y)
+        cosy_cosp = 1.0 - 2.0 * (y * y + z * z)
+        return np.arctan2(siny_cosp, cosy_cosp)
+
+    @staticmethod
+    def _transform_to_local_frame(
+        ref_pos: List[float], ref_yaw: float, target_pos: List[float]
+    ) -> Tuple[str, float]:
+        """
+        Compute where *target_pos* lies relative to *ref_pos* in the reference
+        object's local frame (defined by ref_yaw).
+
+        Returns (direction_label, distance).
+        direction_label ∈ {"in front", "behind", "to the left", "to the right"}
+        """
+        dx = target_pos[0] - ref_pos[0]
+        dy = target_pos[1] - ref_pos[1]
+        # Rotate into reference frame
+        cos_y, sin_y = np.cos(-ref_yaw), np.sin(-ref_yaw)
+        local_x = cos_y * dx - sin_y * dy   # forward axis
+        local_y = sin_y * dx + cos_y * dy   # left axis
+        dist = float(np.sqrt(dx * dx + dy * dy))
+
+        if abs(local_x) >= abs(local_y):
+            label = "in front" if local_x >= 0 else "behind"
+        else:
+            label = "to the left" if local_y >= 0 else "to the right"
+        return label, dist
+
+    # ----------------------------------------------------- instance annotations
+    def _preprocess_instance_annotations(
+        self, instance_annotations: Optional[Dict[str, Any]]
+    ) -> Dict[str, Dict[str, str]]:
+        """Map instance_token -> {activity, description}."""
+        if not instance_annotations:
+            return {}
+        out: Dict[str, Dict[str, str]] = {}
+        for ann in instance_annotations.get("annotations", []):
+            tok = ann.get("instance_token", "")
+            if tok:
+                out[tok] = {
+                    "activity": ann.get("activity", ""),
+                    "description": ann.get("description", ""),
+                    "class": ann.get("object_class", ""),
+                }
+        return out
+
+    # ------------------------------------------------ category context builders
+    def _build_egocentric_context(
+        self,
+        frame: Dict[str, Any],
+        rels: List[Dict[str, Any]],
+        inst_ann: Dict[str, Any],
+    ) -> Optional[Dict[str, str]]:
+        """
+        Egocentric: pick object A, list ego-relative directional rels involving B.
+        Two sub-types randomly chosen:
+          a) "What object is <dir> of A?"
+          b) "Where is B relative to A?"
+        """
+        directional = [
+            r for r in rels
+            if r.get("relationship_type") in {"in_front", "behind", "left", "right"}
+        ]
+        if not directional:
+            return None
+
+        objects = frame.get("objects", [])
+        id_to_obj = {
+            (o.get("object_id") or o.get("annotation_token", "")): o for o in objects
+        }
+
+        # Pick a relationship with a well-described target
+        random.shuffle(directional)
+        chosen = directional[0]
+        src_id, tgt_id = chosen["source_id"], chosen["target_id"]
+        src_obj = id_to_obj.get(src_id, {})
+        tgt_obj = id_to_obj.get(tgt_id, {})
+
+        src_class = src_obj.get("object_class", "unknown")
+        tgt_class = tgt_obj.get("object_class", "unknown")
+
+        src_desc = self._build_grounded_description(src_id, src_class, inst_ann)
+        tgt_desc = self._build_grounded_description(tgt_id, tgt_class, inst_ann)
+
+        rel_type = chosen["relationship_type"].replace("_", " ")
+
+        # Collect all rels involving the target for richer context
+        src_rels = [r for r in directional if r["target_id"] == src_id or r["source_id"] == src_id][:6]
+        rel_lines = []
+        for r in src_rels:
+            s_cls = self._short_class(id_to_obj.get(r["source_id"], {}).get("object_class", "unknown"))
+            t_cls = self._short_class(id_to_obj.get(r["target_id"], {}).get("object_class", "unknown"))
+            rel_lines.append(f"  - {s_cls} is {r['relationship_type'].replace('_',' ')} {t_cls}")
+
+        sub_type = random.choice(["what_object", "where_is"])
+        if sub_type == "what_object":
+            question_goal = (
+                f"Ask: 'What object is {rel_type} of {src_desc}?' "
+                f"(Correct answer: {tgt_desc})"
+            )
+        else:
+            question_goal = (
+                f"Ask: 'Where is {tgt_desc} relative to {src_desc}?' "
+                f"(Correct answer: {rel_type})"
+            )
+
+        rel_lines = "\n".join(rel_lines)    
+        return {
+            "category_label": "Egocentric",
+            "category_instructions": (
+                "Use the provided grounded reference object (Source) as the center of the universe. "
+                "Translate its local coordinate system into clear, ego-relative directional terms (e.g., 'directly in front,' 'to the rear-left,' 'on the passenger side')."
+            ),
+            "source_object": src_desc,
+            "target_objects": tgt_desc,
+            "grounded_context": {
+                "reference_object": src_desc,
+                "query_object": tgt_desc,
+                "relationship": f"{src_desc} is {rel_type} {tgt_desc}",
+                "all_relationships": rel_lines,
+            },
+            "question_goal": question_goal,
+        }
+
+    def _build_frame_of_reference_context(
+        self,
+        frame: Dict[str, Any],
+        rels: List[Dict[str, Any]],
+        inst_ann: Dict[str, Any],
+    ) -> Optional[Dict[str, str]]:
+        """
+        Frame of Reference: pick object A with a known rotation, transform nearby objects
+        into A's local frame, ask "From A's perspective, where is B?"
+        """
+        objects = frame.get("objects", [])
+        # Need objects with position and rotation
+        valid_objects = [
+            o for o in objects
+            if o.get("position") and o.get("rotation") and len(o.get("rotation", [])) == 4
+        ]
+        if len(valid_objects) < 2:
+            return None
+
+        random.shuffle(valid_objects)
+        ref_obj = valid_objects[0]
+        ref_id = ref_obj.get("object_id") or ref_obj.get("annotation_token", "")
+        ref_class = ref_obj.get("object_class", "unknown")
+        ref_pos = ref_obj["position"]
+        ref_yaw = self._quaternion_to_yaw(ref_obj["rotation"])
+        ref_desc = self._build_grounded_description(ref_id, ref_class, inst_ann)
+
+        # Find nearby objects and transform them
+        candidates = []
+        for o in valid_objects[1:]:
+            o_id = o.get("object_id") or o.get("annotation_token", "")
+            if o_id == ref_id:
+                continue
+            o_pos = o.get("position")
+            if not o_pos:
+                continue
+            direction, dist = self._transform_to_local_frame(ref_pos, ref_yaw, o_pos)
+            if dist > 20.0:  # skip far-away objects
+                continue
+            o_class = o.get("object_class", "unknown")
+            o_desc = self._build_grounded_description(o_id, o_class, inst_ann)
+            candidates.append({
+                "desc": o_desc,
+                "class": o_class,
+                "direction": direction,
+                "distance": round(dist, 1),
+            })
+
+        if not candidates:
+            return None
+
+        # Pick a target candidate
+        target = random.choice(candidates)
+        # Build context lines for all nearby objects from B's perspective
+        context_lines = []
+        for c in candidates[:6]:
+            if c['desc'] == target['desc']:
+                continue
+            context_lines.append(
+                f"  - {c['desc']} is {c['direction']} ({c['distance']}m away)"
+            )
+        context_lines = "\n".join(context_lines)
+
+        # Build target objects list
+        return {
+            "category_label": "Frame of Reference",
+            "category_instructions": (
+                "Generate an MCQ about the spatial position of an object from ANOTHER OBJECT's perspective "
+                "(NOT the ego vehicle). The reference frame is defined by the reference object's heading/orientation. "
+                "Directions (in front, behind, left, right) are relative to where the reference object is facing."
+            ),
+            "source_object": ref_desc,
+            "target_objects": target["desc"],
+            "grounded_context": {
+                "source_object": ref_desc,
+                "target_object": target["desc"],
+                "relationship": f"{target['desc']} is {target['direction']} of {ref_desc} relative to {ref_desc}",
+                "all_relationships": context_lines,
+            },
+            "question_goal": (
+                f"Ask: 'From {ref_desc}'s perspective, where is {target['desc']}?' "
+                f"(Correct answer: {target['direction']})"
+            ),
+        }
+
+    def _build_multihop_context(
+        self,
+        frame: Dict[str, Any],
+        rels: List[Dict[str, Any]],
+        inst_ann: Dict[str, Any],
+    ) -> Optional[Dict[str, str]]:
+        """
+        Multi-hop: pick reference object B, find 2+ objects at different distances,
+        ask "Which is nearer/further to B?"
+        """
+        objects = frame.get("objects", [])
+        id_to_obj = {
+            (o.get("object_id") or o.get("annotation_token", "")): o for o in objects
+        }
+
+        # We need relationships with distance
+        rels_with_dist = [
+            r for r in rels
+            if r.get("distance") is not None and r["distance"] > 0
+        ]
+        if len(rels_with_dist) < 2:
+            return None
+
+        # Group by source (reference object)
+        from collections import defaultdict as _dd
+        by_source: Dict[str, List[Dict]] = _dd(list)
+        for r in rels_with_dist:
+            if r.get("source_id") is None:
+                continue
+            by_source[r["source_id"]].append(r)
+
+        # Find a reference object with at least 2 targets at meaningfully different distances
+        ref_candidates = [
+            (src, targets) for src, targets in by_source.items() if len(targets) >= 2
+        ]
+        if not ref_candidates:
+            return None
+
+        random.shuffle(ref_candidates)
+        ref_id, ref_rels = ref_candidates[0]
+        ref_obj = id_to_obj.get(ref_id, {})
+        ref_class = ref_obj.get("object_class", "unknown")
+        ref_desc = self._build_grounded_description(ref_id, ref_class, inst_ann)
+
+        # Sort targets by distance and pick two with different distances
+        ref_rels.sort(key=lambda r: r["distance"])
+        # Try to find pair with at least 2m difference
+        chosen_pair = None
+        for i in range(len(ref_rels)):
+            for j in range(i + 1, len(ref_rels)):
+                if abs(ref_rels[j]["distance"] - ref_rels[i]["distance"]) >= 2.0:
+                    chosen_pair = (ref_rels[i], ref_rels[j])
+                    break
+            if chosen_pair:
                 break
-        if candidate is None and directional:
-            candidate = directional[0]
-        return candidate
 
-    def format_prompt_input(self, scene_info: Dict[str, Any], spatial_prompt: str) -> str:
+        if not chosen_pair:
+            # Fallback: just pick first two
+            if len(ref_rels) >= 2:
+                chosen_pair = (ref_rels[0], ref_rels[1])
+            else:
+                return None
 
-        object_count_str = "\n".join([f"- {cls}: {count}" for cls, count in scene_info["object_counts"].items()])
-        return spatial_prompt.format(
-            scene_token=scene_info["scene_token"], num_frames=scene_info["num_frames"], object_counts=object_count_str
-        )
+        nearer_rel, farther_rel = chosen_pair
+        nearer_id = nearer_rel["target_id"]
+        farther_id = farther_rel["target_id"]
+        nearer_obj = id_to_obj.get(nearer_id, {})
+        farther_obj = id_to_obj.get(farther_id, {})
 
+        nearer_class = nearer_obj.get("object_class", "unknown")
+        farther_class = farther_obj.get("object_class", "unknown")
+        nearer_desc = self._build_grounded_description(nearer_id, nearer_class, inst_ann)
+        farther_desc = self._build_grounded_description(farther_id, farther_class, inst_ann)
+
+        ask_nearer = random.choice([True, False])
+        if ask_nearer:
+            question_goal = (
+                f"Ask: 'Which object is nearer to {ref_desc}: {nearer_desc} or {farther_desc}?' "
+                f"(Correct answer: {nearer_desc}, at {nearer_rel['distance']:.1f}m vs {farther_rel['distance']:.1f}m)"
+            )
+        else:
+            question_goal = (
+                f"Ask: 'Which object is further from {ref_desc}: {nearer_desc} or {farther_desc}?' "
+                f"(Correct answer: {farther_desc}, at {farther_rel['distance']:.1f}m vs {nearer_rel['distance']:.1f}m)"
+            )
+
+        # Context with all distances from reference
+        dist_lines = []
+        for r in ref_rels[:6]:
+            t_obj = id_to_obj.get(r["target_id"], {})
+            t_desc = self._build_grounded_description(
+                r["target_id"], t_obj.get("object_class", "unknown"), inst_ann
+            )
+            dist_lines.append(f"  - {t_desc}: {r['distance']:.1f}m")
+        
+        dist_lines = "\n".join(dist_lines)
+        return {
+            "category_label": "Multi-hop Spatial",
+            "category_instructions": (
+                "Generate an MCQ comparing distances of multiple objects to a reference object. "
+                "Ask which object is nearer or further. Use the distance values provided."
+            ),
+            "source_object": ref_desc,
+            "target_objects": f"Object 1:{nearer_desc} Object 2: {farther_desc}",
+            "grounded_context": {
+                "source_object": ref_desc,
+                "target_object": f"Object 1:{nearer_desc} Object 2: {farther_desc}",
+                "relationships": f"Object 1: {nearer_desc} is {nearer_rel['distance']:.1f}m from {ref_desc}. Object 2: {farther_desc} is {farther_rel['distance']:.1f}m from {ref_desc}",
+                "all_relationships": dist_lines,
+            },
+            "question_goal": question_goal,
+        }
+
+    # ------------------------------------------------------ prompt construction
     def load_prompts_from_disk(self) -> str:
         prompts_dir = self.prompts_dir
         spatial_prompt_path = prompts_dir / "spatial_questions.txt"
@@ -312,43 +649,119 @@ class SpatialQAGenerator(QAGenerator):
             )
         return spatial_prompt_path.read_text()
 
-    def build_spatial_input(self, scene_info: Dict[str, Any], spatial_prompt: str) -> str:
+    def _select_frame_with_relationships(
+        self, scene_info: Dict[str, Any]
+    ) -> Tuple[Optional[Dict], List[Dict]]:
+        """Pick a frame that has directional relationships, return (frame, rels)."""
+        frames = scene_info.get("frames", [])
         directional = scene_info.get("directional_relationships", [])
-        frames_meta = {f["frame_idx"]: f for f in scene_info.get("frames", [])}
-        candidate = self._select_candidate(directional, frames_meta)
+        if not directional:
+            return None, []
 
-        captions_map = self.load_captions_for_scene(scene_info["scene_token"]) or {}
-        frame_idx_for_prompt = candidate["frame_idx"] if candidate else 0
-        scene_description = captions_map.get(frame_idx_for_prompt, "")[:600]
+        # Group rels by frame
+        rels_by_frame: Dict[int, List[Dict]] = defaultdict(list)
+        for r in directional:
+            rels_by_frame[r["frame_idx"]].append(r)
 
-        rels_same_frame = [r for r in directional if r["frame_idx"] == frame_idx_for_prompt][:6]
-        rel_lines = []
-        for r in rels_same_frame:
-            rel_lines.append(
-                f"- Frame {r['frame_idx']}: {r['source']['class']} is {r['type'].replace('_', ' ')} {r['target']['class']}"
-            )
-        directional_relationships_str = "\n".join(rel_lines) if rel_lines else "- None"
-        object_counts_str = "\n".join([f"- {cls}: {count}" for cls, count in scene_info["object_counts"].items()])
-        scene_desc = scene_description if scene_description else "A driving scene with various road users."
+        # Prefer frames with many relationships
+        frame_map = {f.get("frame_idx"): f for f in frames}
+        candidates = [
+            (fidx, frame_map[fidx], rs)
+            for fidx, rs in rels_by_frame.items()
+            if fidx in frame_map and len(rs) >= 2
+        ]
+        if not candidates:
+            # Fallback to any frame with at least one rel
+            candidates = [
+                (fidx, frame_map[fidx], rs)
+                for fidx, rs in rels_by_frame.items()
+                if fidx in frame_map
+            ]
+        if not candidates:
+            return None, []
 
-        # Use explicit substitution so JSON examples in the prompt (with { }) are not interpreted by .format()
-        return (
-            spatial_prompt.replace("{scene_token}", scene_info["scene_token"])
-            .replace("{frame_idx}", str(frame_idx_for_prompt))
-            .replace("{scene_description}", scene_desc)
-            .replace("{directional_relationships}", directional_relationships_str)
-            .replace("{object_counts}", object_counts_str)
+        _, frame, rels = random.choice(candidates)
+        return frame, rels
+
+    def build_spatial_input(
+        self, scene_info: Dict[str, Any], spatial_prompt: str, inst_ann: Dict[str, Any]
+    ) -> Tuple[str, str]:
+        """
+        Randomly pick a spatial category, build context, inject into prompt.
+        Returns (filled_prompt, chosen_category).
+        """
+        frame, rels = self._select_frame_with_relationships(scene_info)
+        if frame is None:
+            return "", ""
+
+        # Try categories in random order until one succeeds
+        categories = list(self.SPATIAL_CATEGORIES)
+        random.shuffle(categories)
+
+        context_data = None
+        chosen_category = ""
+        for cat in categories:
+            if cat == "egocentric":
+                context_data = self._build_egocentric_context(frame, rels, inst_ann)
+            elif cat == "frame_of_reference":
+                context_data = self._build_frame_of_reference_context(frame, rels, inst_ann)
+            elif cat == "multihop":
+                context_data = self._build_multihop_context(frame, rels, inst_ann)
+            if context_data is not None:
+                chosen_category = cat
+                break
+
+        if context_data is None:
+            return "", ""
+
+        frame_idx = frame.get("frame_idx", 0)
+
+        # Format source_object and target_objects for prompt
+        source_object_str = context_data["source_object"]
+        target_objects_raw = context_data["target_objects"]
+        if isinstance(target_objects_raw, list):
+            target_objects_str = json.dumps(target_objects_raw, indent=2)
+        else:
+            target_objects_str = str(target_objects_raw)
+
+        # Format grounded_context dict as JSON for the prompt
+        grounded_context_str = json.dumps(context_data["grounded_context"], indent=2)
+
+        filled = (
+            spatial_prompt
+            .replace("{scene_token}", scene_info["scene_token"])
+            .replace("{frame_idx}", str(frame_idx))
+            .replace("{spatial_category}", context_data["category_label"])
+            .replace("{category_instructions}", context_data["category_instructions"])
+            .replace("{source_object}", source_object_str)
+            .replace("{target_objects}", target_objects_str)
+            .replace("{grounded_context}", context_data["grounded_context"]["relationship"])
+            .replace("{other_relationships}", context_data["grounded_context"]["all_relationships"])
+            .replace("{question_goal}", context_data["question_goal"])
         )
+        return filled, chosen_category
 
     def generate_for_scene(self, scene_token: str, api_key: Optional[str] = None) -> Optional[QASample]:
         scene_info = self.load_scene_graph(scene_token)
         if scene_info is None:
             return None
+
+        instance_annotations = self.load_instance_annotations(scene_token)
+        inst_ann = self._preprocess_instance_annotations(instance_annotations)
+
         spatial_prompt = self.load_prompts_from_disk()
-        spatial_input = self.build_spatial_input(scene_info, spatial_prompt)
+        spatial_input, chosen_category = self.build_spatial_input(scene_info, spatial_prompt, inst_ann)
+
+        if not spatial_input:
+            return None
+
         raw_response = self.gpt(
-            spatial_input, api_key=api_key, scene_token=scene_token, question_type="spatial"
+            spatial_input,
+            api_key=api_key,
+            scene_token=scene_token,
+            question_type=f"spatial_{chosen_category}",
         )
+
         # Parse JSON from response (may be wrapped in markdown code blocks)
         response_text = raw_response.strip()
         if "```" in response_text:
@@ -360,6 +773,7 @@ class SpatialQAGenerator(QAGenerator):
             parsed = json.loads(response_text)
         except json.JSONDecodeError:
             parsed = {"question": raw_response[:500], "options": {}, "correct_option": "", "rationale": raw_response}
+
         question = parsed.get("question", "")
         answer = {
             "options": parsed.get("options", {}),
@@ -369,6 +783,7 @@ class SpatialQAGenerator(QAGenerator):
         metadata = {
             "num_frames": scene_info["num_frames"],
             "object_counts": scene_info["object_counts"],
+            "spatial_category": chosen_category,
             "num_directional_relationships": len(scene_info.get("directional_relationships") or []),
         }
         return self.construct_qa_sample(
@@ -1396,7 +1811,7 @@ def main():
     if args.question_type == "counting":
         qa_generator = CountingQAGenerator(**gen_kwargs)
     elif args.question_type == "spatial":
-        qa_generator = SpatialQAGenerator(prompts_dir=args.prompts_dir, scene_graphs_dir=args.scene_graphs_dir)
+        qa_generator = SpatialQAGenerator(prompts_dir=args.prompts_dir, scene_graphs_dir=args.scene_graphs_dir, instance_annotations_dir=args.instance_annotations_dir, gpt_logs_dir=gpt_logs_dir)
     elif args.question_type == "temporal":
         qa_generator = TemporalQAGenerator(prompts_dir=args.prompts_dir, scene_graphs_dir=args.scene_graphs_dir, instance_annotations_dir=args.instance_annotations_dir)
     elif args.question_type == "event_ordering":
