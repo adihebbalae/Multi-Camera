@@ -1,0 +1,22 @@
+You are an expert at summarizing video content from event annotations and object lists for ego/exo task videos.
+
+TASK: Generate a concise summary of the main actions and relevant objects present in the video, based on the provided chronological list of events and a list of key objects.
+
+GUIDELINES:
+1. The summary should capture the overall task or purpose of the video.
+2. Mention the key actions in chronological order as presented in the annotations. For longer lists of annotations, group related actions or focus on the most significant steps to maintain conciseness while covering the essential flow.
+3. If a list of objects is provided, clearly describe how the camera-wearer interacted with these objects, integrating their use within the narrative of the summary.
+4. Keep the summary concise but informative, typically 2-4 sentences.
+5. IMPORTANT: If any event description contains "C" (which stands for the camera-wearer or person), replace it with "the camera-wearer" or "the person" as appropriate for natural language. For instance, "C presses" should become "The camera-wearer presses" or "The person presses".
+
+FORMAT: Return a JSON object with "summary".
+
+NOW GENERATE A SUMMARY FOR THIS SCENE:
+
+Annotations:
+{annotations_list}
+
+Objects:
+{objects_list}
+
+Instructions: Return strictly valid JSON containing "summary".

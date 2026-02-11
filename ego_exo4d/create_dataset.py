@@ -19,7 +19,8 @@ def read_dataset():
         keystep_train = json.load(f)
     with open(os.path.join(DATASET_PATH, "annotations", "keystep_val.json"), "r") as f:
         keystep_val = json.load(f)
-    keystep_data = keystep_train["annotations"] | keystep_val["annotations"]
+    keystep_annotations_data = keystep_train["annotations"] | keystep_val["annotations"]
+    keystep_taxonomy_data = keystep_train["taxonomy"] | keystep_val["taxonomy"]
 
     with open(os.path.join(DATASET_PATH, "annotations", "atomic_descriptions_train.json"), "r") as f:
         atomic_descriptions_train = json.load(f)
@@ -30,18 +31,27 @@ def read_dataset():
     for take in takes:
         if take["validated"] and take["is_narrated"]:
             # organize keystep
-            keystep_take = keystep_data.get(take["take_uid"], {})
+            keystep_take = keystep_annotations_data.get(take["take_uid"], {})
             keystep_array = []
             if keystep_take:
                 segments = keystep_take["segments"]
-                keystep_array = [
-                    {
-                        "start_time": s["start_time"],
-                        "end_time": s["end_time"],
-                        "description": s["step_description"],
-                        "is_essential": s["is_essential"],
-                    } for s in segments
-                ]
+                keystep_array = []
+                for s in segments:
+                    if str(s["step_id"]) in keystep_taxonomy_data[keystep_take["scenario"]]:
+                        keystep_array.append(
+                            {
+                                "start_time": s["start_time"],
+                                "end_time": s["end_time"],
+                                "category": keystep_take["scenario"],
+                                "is_essential": s["is_essential"],
+                                "description": s["step_description"],
+                                "node_id": keystep_taxonomy_data[keystep_take["scenario"]][str(s["step_id"])]["id"],
+                                "node_name": keystep_taxonomy_data[keystep_take["scenario"]][str(s["step_id"])]["name"],
+                                "parent_id": keystep_taxonomy_data[keystep_take["scenario"]][str(s["step_id"])]["parent_id"],
+                                "parent_name": keystep_taxonomy_data[keystep_take["scenario"]][str(s["step_id"])]["parent_name"],
+                            }
+                        )
+
 
             # organize atomic descriptions
             atomic_descriptions_take = atomic_descriptions_data.get(take["take_uid"], [])
@@ -65,8 +75,8 @@ def read_dataset():
                 "take_uid": take["take_uid"],
                 "task_id": metadata_data["tasks"][str(take["task_id"])],
                 "best_camera": take["best_exo"],
-                "video_files": [glob.glob(os.path.join(DATASET_PATH, "takes", take["take_name"], "frame_aligned_videos", "downscaled", "448", "cam*.mp4"))
-                + glob.glob(os.path.join(DATASET_PATH, "takes", take["take_name"], "frame_aligned_videos", "downscaled", "448", "gp*.mp4"))],
+                "video_files": glob.glob(os.path.join(DATASET_PATH, "takes", take["take_name"], "frame_aligned_videos", "downscaled", "448", "cam*.mp4"))
+                + glob.glob(os.path.join(DATASET_PATH, "takes", take["take_name"], "frame_aligned_videos", "downscaled", "448", "gp*.mp4")),
                 "benchmarks": splits_data["take_uid_to_benchmark"].get(take["take_uid"], []),
                 "objects": [(obj["name"], obj["object_uid"]) for obj in take["objects"]],
                 "annotations": atomic_descriptions_array,
