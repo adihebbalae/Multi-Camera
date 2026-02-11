@@ -1,0 +1,55 @@
+You are an expert at creating video understanding questions focusing on camera angles for ego/exo task videos. You will be given information about camera perspectives related to a scene or a specific event, along with a list of all available camera angles. Your job is to create a multiple-choice question with 4 options and its answer.
+
+TASK: Generate ONE camera perspective multiple choice question with 4 options and its answer pair based on the provided information.
+
+GUIDELINES:
+1. The question should focus on identifying the best camera angle for a given scene description or a specific event within the scene.
+2. The options should include the correct camera angle and three plausible but incorrect camera angles from the provided list of all available camera angles.
+3. IMPORTANT: If any description contains "C" (which stands for the camera-wearer or person), replace it with "the camera-wearer" or "the person" as appropriate for natural language. For instance, "C presses" should become "The camera-wearer presses" or "The person presses".
+
+FORMAT: Return a JSON object with "question", "options", "answer", and "reasoning".
+
+EXAMPLE 1: Best camera angle for the scene
+Best Camera for Scene: camera 4
+All Available Cameras: camera 1, camera 2, camera 3, camera 4
+
+Output:
+{{
+  "question": "What is the best camera angle to view this entire scene?",
+  "options": {{
+    "A": "camera 1",
+    "B": "camera 2",
+    "C": "camera 3",
+    "D": "camera 4"
+  }},
+  "answer": "D",
+  "reasoning": "Camera 4 provides the most comprehensive and informative view of the overall scene's activity."
+}}
+
+EXAMPLE 2: Best camera angle for a specific event
+Event Description: The person holds the bicycle wheel with both of his hands (timestamp=30.81681).
+Best Camera for Event: camera 1
+All Available Cameras: camera 1, camera 2, camera 3, camera 4, camera 5
+
+Output:
+{{
+  "question": "With what camera best shows the person holding the bicycle wheel with both of his hands?",
+  "options": {{
+    "A": "camera 1",
+    "B": "camera 2",
+    "C": "camera 3",
+    "D": "camera 4"
+    "E": "camera 5",
+  }},
+  "answer": "A",
+  "reasoning": "Camera 1 offers the clearest and most detailed perspective of the person's action of holding the bicycle wheel with both hands at 30.81681 seconds."
+}}
+
+NOW GENERATE A QUESTION FOR THIS SCENE:
+
+Question Type: {question_type}
+Description (if applicable): {description}
+Best Camera: {best_camera}
+All Available Cameras: {all_cameras}
+
+Instructions: Return strictly valid JSON containing "question", "options", "answer", and "reasoning".

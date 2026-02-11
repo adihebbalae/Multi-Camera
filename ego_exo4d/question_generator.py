@@ -1,0 +1,397 @@
+import json
+import random
+import os
+import re # Import regex module
+
+from llm import LLM
+from tqdm import tqdm
+
+OUTPUT_DIRECTORY = "/nas/neurosymbolic/multi-cam-dataset/ego-exo4d/"
+
+
+def temporal(data, num_questions_per_video=2):
+    with open("prompts/temporal.txt", "r") as f:
+        prompt_template = f.read()
+
+    all_generated_questions = []
+
+    for video_id, video_data in tqdm(data.items(), desc="Generating temporal questions for videos"):
+        annotations = [ann for sublist in video_data["annotations"] for ann in sublist]
+        if not annotations:
+            continue
+
+        # print(f"Generating questions for video: {video_id}")
+        for _ in range(num_questions_per_video):
+            found_suitable_events = False
+            
+            grounding_event = []
+            target_event = None
+
+            for _ in range(20): # Retry more times to find a suitable triplet or pair
+                rel_type = random.choice(["Before", "After", "In-Between"])
+                
+                if rel_type == "In-Between":
+                    if len(annotations) < 3:
+                        continue
+
+                    event_choices = random.sample(annotations, 3)
+                    event_choices.sort(key=lambda x: x['timestamp'])
+
+                    event_start = event_choices[0]
+                    event_middle = event_choices[1]
+                    event_end = event_choices[2]
+
+                    if (event_middle['timestamp'] - event_start['timestamp'] > 1.0 and
+                        event_end['timestamp'] - event_middle['timestamp'] > 1.0):
+                        
+                        grounding_input_desc = (
+                            f"\n- Start: \"{event_start['text']}\"\n"
+                            f"- End: \"{event_end['text']}\""
+                        )
+                        target_input_desc = f"\"{event_middle['text']}\""
+
+                        grounding_event = [event_start, event_end]
+                        target_event = event_middle
+                        found_suitable_events = True
+                        break
+
+                else: # Before or After
+                    if len(annotations) < 2:
+                        continue
+
+                    event_choices = random.sample(annotations, 2)
+                    event_choices.sort(key=lambda x: x['timestamp'])
+
+                    event_earlier = event_choices[0]
+                    event_later = event_choices[1]
+
+                    if (event_later['timestamp'] - event_earlier['timestamp']) > 1.0:
+                        if rel_type == "Before":
+                            grounding_input_desc = f"\"{event_later['text']}\""
+                            target_input_desc = f"\"{event_earlier['text']}\""
+
+                            grounding_event = [event_later]
+                            target_event = event_earlier
+                            found_suitable_events = True
+                            break
+
+                        elif rel_type == "After":
+                            grounding_input_desc = f"\"{event_earlier['text']}\""
+                            target_input_desc = f"\"{event_later['text']}\""
+
+                            grounding_event = [event_earlier]
+                            target_event = event_later
+                            found_suitable_events = True
+                            break
+            
+            if not found_suitable_events:
+                continue
+
+            prompt = prompt_template.format(
+                grounding_input=grounding_input_desc,
+                target_input=target_input_desc,
+                rel_type=f"\"{rel_type}\""
+            )
+
+            llm = LLM()
+            response = llm.prompt(prompt)
+            if response.startswith("```json"):
+                response = response[7:-4]
+            
+            try:
+                qa_pair = json.loads(response)
+            except json.JSONDecodeError as e:
+                continue
+
+            formatted_question = {
+                "video_id": video_id,
+                "question_type": "temporal",
+                "question": json.dumps(qa_pair),
+                "answer": None,
+                "metadata": {
+                    "grounding": [
+                        {
+                            "activity": g['text'],
+                            "start_timestamp": g['timestamp'],
+                        } for g in grounding_event
+                    ],
+                    "target": {
+                        "activity": target_event['text'],
+                        "start_timestamp": target_event['timestamp'],
+                    },
+                    "rel": rel_type.lower()
+                }
+ 
+            }
+
+            all_generated_questions.append(formatted_question)
+            # print(json.dumps(qa_pair, indent=4))
+
+    output_file_path = os.path.join(OUTPUT_DIRECTORY, "qa_temporal.json")
+    os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
+    with open(output_file_path, "w") as f:
+        json.dump(all_generated_questions, f, indent=2)
+
+def event_ordering(data, num_questions_per_video=2):
+    with open("prompts/ordering.txt", "r") as f:
+        prompt_template = f.read()
+
+    all_generated_questions = []
+
+    for video_id, video_data in tqdm(data.items(), desc="Generating event ordering questions for videos"):
+        annotations = [ann for sublist in video_data["annotations"] for ann in sublist]
+        if not annotations:
+            continue
+
+        for _ in range(num_questions_per_video):
+            found_suitable_events = False
+            selected_events = []
+
+            for _ in range(20): # Retry to find suitable events
+                num_events_to_select = random.choice([3, 4]) # Choose between 3 or 4 events
+                if len(annotations) < num_events_to_select:
+                    continue
+
+                event_choices = random.sample(annotations, num_events_to_select)
+                event_choices.sort(key=lambda x: x['timestamp'])
+
+                # Check if events are distinct enough in time
+                suitable_sequence = True
+                for i in range(len(event_choices) - 1):
+                    if (event_choices[i+1]['timestamp'] - event_choices[i]['timestamp']) < 1.0: # Minimum 1 second difference
+                        suitable_sequence = False
+                        break
+                
+                if suitable_sequence:
+                    selected_events = event_choices
+                    found_suitable_events = True
+                    break
+            
+            if not found_suitable_events:
+                continue
+
+            events_list_for_prompt = ""
+            for i, event in enumerate(selected_events):
+                events_list_for_prompt += f"{i+1}. {event['text']}\n"
+            
+            prompt = prompt_template.format(events_list=events_list_for_prompt)
+
+            llm = LLM()
+            response = llm.prompt(prompt)
+            if response.startswith("```json"):
+                response = response[7:-4]
+            
+            try:
+                qa_pair = json.loads(response)
+            except json.JSONDecodeError as e:
+                continue
+
+            formatted_question = {
+                "video_id": video_id,
+                "question_type": "event_ordering",
+                "question": json.dumps(qa_pair),
+                "answer": None,
+                "metadata": {
+                    "ordered_events": [
+                        {
+                            "activity": ev['text'],
+                            "start_timestamp": ev['timestamp'],
+                        } for ev in selected_events
+                    ]
+                }
+            }
+            all_generated_questions.append(formatted_question)
+    
+    output_file_path = os.path.join(OUTPUT_DIRECTORY, "qa_event_ordering.json")
+    os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
+    with open(output_file_path, "w") as f:
+        json.dump(all_generated_questions, f, indent=2)
+
+def causal(data):
+    pass
+
+def camera(data, num_questions_per_video=2):
+    with open("prompts/camera.txt", "r") as f:
+        prompt_template = f.read()
+
+    all_generated_questions = []
+
+    def _format_camera_name(cam_id_raw):
+        if cam_id_raw.startswith("cam"):
+            return f"camera {int(cam_id_raw[3:])}"
+        elif cam_id_raw.startswith("gp"):
+            return f"camera {int(cam_id_raw[2:])}"
+
+    for video_id, video_data in tqdm(data.items(), desc="Generating camera questions for videos"):
+        print(video_id)
+        annotations = [ann for sublist in video_data["annotations"] for ann in sublist]
+        
+        camera_ids_set = set()
+        for path in video_data["video_files"]:
+            cam_id_raw = os.path.basename(path).split('.')[0]
+            camera_ids_set.add(_format_camera_name(cam_id_raw))
+        
+        all_camera_options = sorted(list(camera_ids_set), key=lambda x: int(x.split()[-1]))
+
+        if not all_camera_options:
+            continue
+
+        if "best_camera" in video_data and video_data["best_camera"] != None:
+            best_camera_scene = _format_camera_name(video_data["best_camera"])
+            incorrect_options = [cam for cam in all_camera_options if cam != best_camera_scene]
+            
+            if len(incorrect_options) >= 3:
+
+                prompt = prompt_template.format(
+                    question_type="Best camera angle for the scene",
+                    description="N/A",
+                    best_camera=best_camera_scene,
+                    all_cameras=", ".join(all_camera_options)
+                )
+
+                llm = LLM()
+                response = llm.prompt(prompt)
+                if response.startswith("```json"):
+                    response = response[7:-4]
+                
+                try:
+                    qa_pair = json.loads(response)
+                except json.JSONDecodeError as e:
+                    continue
+
+                formatted_question = {
+                    "video_id": video_id,
+                    "question_type": "camera",
+                    "question": json.dumps(qa_pair),
+                    "answer": qa_pair.get("answer"),
+                    "metadata": {
+                        "best_camera_scene": video_data["best_camera"]
+                    }
+                }
+                all_generated_questions.append(formatted_question)
+
+        suitable_annotations = [ann for ann in annotations if "best_camera" in ann and ann["best_camera"] != None]
+        if suitable_annotations:
+            num_event_questions_to_generate = num_questions_per_video
+            if "best_camera" in video_data:
+                 num_event_questions_to_generate = max(0, num_questions_per_video - 1)
+
+            for _ in range(num_event_questions_to_generate): 
+                if not suitable_annotations:
+                    break
+
+                selected_annotation = random.choice(suitable_annotations)
+                suitable_annotations.remove(selected_annotation)
+                best_camera_event = _format_camera_name(selected_annotation["best_camera"])
+
+                incorrect_options = [cam for cam in all_camera_options if cam != best_camera_event]
+                
+                if len(incorrect_options) >= 3:
+                    prompt = prompt_template.format(
+                        question_type="Best camera angle for a specific event",
+                        description=f"{selected_annotation['text']} (timestamp={selected_annotation['timestamp']})",
+                        best_camera=best_camera_event,
+                        all_cameras=", ".join(all_camera_options)
+                    )
+
+                    llm = LLM()
+                    response = llm.prompt(prompt)
+                    if response.startswith("```json"):
+                        response = response[7:-4]
+                    
+                    try:
+                        qa_pair = json.loads(response)
+                    except json.JSONDecodeError as e:
+                        continue
+
+                    formatted_question = {
+                        "video_id": video_id,
+                        "question_type": "camera",
+                        "question": json.dumps(qa_pair),
+                        "answer": qa_pair.get("answer"),
+                        "metadata": {
+                            "event_description": selected_annotation["text"],
+                            "event_timestamp": selected_annotation["timestamp"],
+                            "best_camera_event": selected_annotation["best_camera"]
+                        }
+                    }
+                    all_generated_questions.append(formatted_question)
+
+    output_file_path = os.path.join(OUTPUT_DIRECTORY, "qa_camera.json")
+    os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
+    with open(output_file_path, "w") as f:
+        json.dump(all_generated_questions, f, indent=2)
+
+def summarization(data, num_summaries_per_video=1):
+    with open("prompts/summarization.txt", "r") as f:
+        prompt_template = f.read()
+
+    all_generated_summaries = []
+
+    for video_id, video_data in tqdm(data.items(), desc="Generating summaries for videos"):
+        annotations = [ann for sublist in video_data["annotations"] for ann in sublist]
+        annotations.sort(key=lambda x: x['timestamp']) # Ensure annotations are in temporal order
+        
+        if not annotations:
+            continue
+
+        # Annotations
+        annotations_list_for_prompt = ""
+        for ann in annotations:
+            annotations_list_for_prompt += f"- {ann['text']}\n"
+        
+        # Objects
+        objects_list_for_prompt = ""
+        processed_objects = []
+        if "objects" in video_data and video_data["objects"]:
+            for obj_item in video_data["objects"]:
+                obj_name_raw = obj_item[0]
+                obj_name_processed = '_'.join(obj_name_raw.split('_')[:-1]).replace('_', ' ') if obj_name_raw.split('_')[-1].isdigit() else obj_name_raw.replace('_', ' ')
+                processed_objects.append(obj_name_processed)
+                objects_list_for_prompt += f"- {obj_name_processed}\n"
+
+        for _ in range(num_summaries_per_video):
+            prompt = prompt_template.format(
+                annotations_list=annotations_list_for_prompt,
+                objects_list=objects_list_for_prompt if objects_list_for_prompt else "None"
+            )
+
+            llm = LLM()
+            response = llm.prompt(prompt)
+            if response.startswith("```json"):
+                response = response[7:-4]
+            
+            try:
+                summary_data = json.loads(response)
+            except json.JSONDecodeError as e:
+                continue
+
+            formatted_summary = {
+                "video_id": video_id,
+                "question_type": "summarization",
+                "summary": summary_data.get("summary", ""),
+                "metadata": {
+                    "annotations": [
+                        {
+                            "activity": ann['text'],
+                            "start_timestamp": ann['timestamp'],
+                        } for ann in annotations
+                    ],
+                    "objects": processed_objects
+                }
+            }
+            all_generated_summaries.append(formatted_summary)
+    
+    output_file_path = os.path.join(OUTPUT_DIRECTORY, "qa_summarization.json")
+    os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
+    with open(output_file_path, "w") as f:
+        json.dump(all_generated_summaries, f, indent=2)
+
+if __name__ == "__main__":
+    with open("compiled.json", "r") as f:
+        data = json.load(f)
+    # temporal(data)
+    # event_ordering(data)
+    # summarization(data)
+    # camera(data)
+    causal(data)

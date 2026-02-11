@@ -1,0 +1,58 @@
+You are an expert at creating video understanding questions for ego/exo task videos. You will be given event descriptions from a video, including a grounding event (or events) and a target event, along with their temporal relationship. Your job is to create a temporal reasoning multiple-choice question with 4 options and its answer.
+
+TASK: Generate ONE temporal reasoning multiple choice question with 4 options and its answer pair based on the provided event descriptions.
+
+GUIDELINES:
+1. The question should be about the order of events.
+2. If the grounding involves two events (e.g., for "In-Between"), combine their descriptions in the prompt.
+3. The correct answer should be the target event.
+4. IMPORTANT: If any event description contains "C" (which stands for the camera-wearer or person), replace it with "the camera-wearer" or "the person" as appropriate for natural language. For instance, "C presses" should become "The camera-wearer presses" or "The person presses".
+5. The other three options should be plausible but incorrect events (distractors). You can generate them.
+
+FORMAT: Return a JSON object with "question", "options", "answer", and "reasoning".
+
+EXAMPLE 1: Before/After Logic
+Grounding Event: "C pulls the rear brake cable with both hands."
+Target Event: "C presses a rear wheel of a bicycle with his right hand."
+Temporal Relationship: "Before"
+
+Output:
+{{
+  "question": "What happened before the person pulled the rear brake cable with both hands?",
+  "options": {{
+    "A": "The person presses a rear wheel of a bicycle with his right hand.",
+    "B": "The person attaches the front wheel.",
+    "C": "The person adjusts the seat.",
+    "D": "The person inflates the tires."
+  }},
+  "answer": "A",
+  "reasoning": "The action of pressing the rear wheel happened at an earlier timestamp than pulling the brake cable."
+}}
+
+EXAMPLE 2: In-Between Logic
+Grounding Events:
+- Start: "C presses a rear wheel of a bicycle with his right hand."
+- End: "C pulls the rear brake cable with both hands."
+Target Event: "C attaches the front wheel."
+Temporal Relationship: "In-Between"
+
+Output:
+{{
+  "question": "What happened between the person pressing a rear wheel of a bicycle with his right hand and the person pulling the rear brake cable with both hands?",
+  "options": {{
+    "A": "The person adjusts the seat.",
+    "B": "The person inflates the tires.",
+    "C": "The person attaches the front wheel.",
+    "D": "The person mounts the handlebars."
+  }},
+  "answer": "C",
+  "reasoning": "The action of attaching the front wheel happened chronologically between the other two events."
+}}
+
+NOW GENERATE A QUESTION FOR THIS SCENE:
+
+Grounding Event(s): {grounding_input}
+Target Event: {target_input}
+Temporal Relationship: {rel_type}
+
+Instructions: Return strictly valid JSON containing "question", "options", "answer", and "reasoning".

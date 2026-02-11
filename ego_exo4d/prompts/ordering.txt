@@ -1,0 +1,59 @@
+You are an expert at creating temporal logic questions for ego/exo task videos. You will be given a list of event descriptions from a video in a specific chronological order (from start to finish). Your job is to create a "re-ordering" multiple choice question.
+
+TASK: Generate ONE event ordering multiple-choice question with 4 options and its answer pair based on the provided chronological event list.
+
+GUIDELINES:
+1. Randomize the presentation of the events within the question text, assigning them temporary labels (e.g., I, II, III, IV).
+2. IMPORTANT: If any event description contains "C" (which stands for the camera-wearer or person), replace it with "the camera-wearer" or "the person" as appropriate for natural language. For instance, "C presses" should become "The camera-wearer presses" or "The person presses".
+3. The correct answer must be the sequence that matches the ground truth chronological order; the other three options should be plausible but incorrect permutations (e.g., reversed or swapped steps).
+4. Ensure the descriptions are distinct enough that the order can be logically deduced from the visual cues provided.
+
+FORMAT: Return a JSON object with "question", "options", "answer", and "reasoning".
+
+EXAMPLES:
+
+Example 1: 3 Events
+Ground Truth Events (Chronological):
+1. C picks up a white ceramic bowl from the set of ceramic bowls on the countertop with her right hand.
+2. C pours the rice vinegar from its bottle into the stainless steel spoon in her left hand.
+3. C stirs the rice vinegar mixture in the ceramic bowl with the stainless steel spoon in her right hand.
+
+Output:
+{{
+  "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person stirs the rice vinegar mixture in the ceramic bowl with the stainless steel spoon.\\nII. The person picks up a white ceramic bowl from the set of ceramic bowls on the countertop.\\nIII. The person pours rice vinegar from its bottle into a stainless steel spoon held in her left hand.",
+  "options": {{
+    "A": "I -> II -> III",
+    "B": "II -> III -> I",
+    "C": "III -> II -> I",
+    "D": "II -> I -> III"
+  }},
+  "answer": "B",
+  "reasoning": "The logical preparation sequence begins with the person obtaining the white ceramic bowl (II), followed by measuring out the rice vinegar into a spoon (III), and finally stirring the mixture within the bowl (I)."
+}}
+
+Example 2: 4 Events
+Ground Truth Events (Chronological):
+1. C presses a rear wheel of a bicycle with his right hand.
+2. C picks an auxiliary wrench from a table with his right.
+3. C picks a socket wrench from the table with his right.
+4. C removes a chain from the wheel with his right hand.
+
+Output:
+{{
+  "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person removes a chain from the wheel with his right hand.\\nII. The person picks an auxiliary wrench from a table with his right hand.\\nIII. The person presses a rear wheel of a bicycle with his right hand.\\nIV. The person picks a socket wrench from the table with his right hand.",
+  "options": {{
+    "A": "III -> II -> IV -> I",
+    "B": "I -> IV -> II -> III",
+    "C": "II -> III -> IV -> I",
+    "D": "III -> IV -> II -> I"
+  }},
+  "answer": "A",
+  "reasoning": "The sequence begins with the person inspecting the bicycle wheel (III), followed by picking up an auxiliary wrench (II) and then a socket wrench later in the process (IV) before finally performing the mechanical task of removing the chain (I)."
+}}
+
+NOW GENERATE A QUESTION FOR THIS SCENE:
+
+Ground Truth Events (Chronological):
+{events_list}
+
+Instructions: Return strictly valid JSON containing "question", "options", "answer", and "reasoning".
