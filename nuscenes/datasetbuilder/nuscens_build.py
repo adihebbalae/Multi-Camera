@@ -20,6 +20,7 @@ from openai import OpenAI
 import random
 load_dotenv()
 
+import copy
 from waymo.scenegraph.nuscenes_dataloader import NuScenesLidarSegmentationLoader
 
 
@@ -692,27 +693,36 @@ class SpatialQAGenerator(QAGenerator):
         """
         frame, rels = self._select_frame_with_relationships(scene_info)
         if frame is None:
-            return "", ""
+            return "", "", {}
 
         # Try categories in random order until one succeeds
-        categories = list(self.SPATIAL_CATEGORIES)
-        random.shuffle(categories)
 
+        categories = list(self.SPATIAL_CATEGORIES)
         context_data = None
-        chosen_category = ""
-        for cat in categories:
-            if cat == "egocentric":
-                context_data = self._build_egocentric_context(frame, rels, inst_ann)
-            elif cat == "frame_of_reference":
-                context_data = self._build_frame_of_reference_context(frame, rels, inst_ann)
-            elif cat == "multihop":
-                context_data = self._build_multihop_context(frame, rels, inst_ann)
-            if context_data is not None:
-                chosen_category = cat
-                break
+        NUM_TRIES = 20
+
+        while context_data is None and NUM_TRIES > 0:
+
+            random.shuffle(categories)
+
+
+            chosen_category = ""
+            for cat in categories:
+                if cat == "egocentric":
+                    context_data = self._build_egocentric_context(frame, rels, inst_ann)
+                elif cat == "frame_of_reference":
+                    context_data = self._build_frame_of_reference_context(frame, rels, inst_ann)
+                elif cat == "multihop":
+                    context_data = self._build_multihop_context(frame, rels, inst_ann)
+                if context_data is not None:
+                    chosen_category = cat
+                    break
+            
+            NUM_TRIES -= 1
+        
 
         if context_data is None:
-            return "", ""
+            return "", "", {}
 
         frame_idx = frame.get("frame_idx", 0)
 
@@ -739,7 +749,7 @@ class SpatialQAGenerator(QAGenerator):
             .replace("{other_relationships}", context_data["grounded_context"]["all_relationships"])
             .replace("{question_goal}", context_data["question_goal"])
         )
-        return filled, chosen_category
+        return filled, chosen_category, context_data
 
     def generate_for_scene(self, scene_token: str, api_key: Optional[str] = None) -> Optional[QASample]:
         scene_info = self.load_scene_graph(scene_token)
@@ -750,7 +760,7 @@ class SpatialQAGenerator(QAGenerator):
         inst_ann = self._preprocess_instance_annotations(instance_annotations)
 
         spatial_prompt = self.load_prompts_from_disk()
-        spatial_input, chosen_category = self.build_spatial_input(scene_info, spatial_prompt, inst_ann)
+        spatial_input, chosen_category, grounded_context = self.build_spatial_input(scene_info, spatial_prompt, inst_ann)
 
         if not spatial_input:
             return None
@@ -781,10 +791,9 @@ class SpatialQAGenerator(QAGenerator):
             "rationale": parsed.get("rationale", ""),
         }
         metadata = {
-            "num_frames": scene_info["num_frames"],
-            "object_counts": scene_info["object_counts"],
             "spatial_category": chosen_category,
             "num_directional_relationships": len(scene_info.get("directional_relationships") or []),
+            "grounded_context": grounded_context,
         }
         return self.construct_qa_sample(
             scene_token=scene_token,
@@ -1420,146 +1429,931 @@ class EventOrderingQAGenerator(TemporalQAGenerator):
 
 class SpatioTemporalQAGenerator(TemporalQAGenerator):
     """
-    Spatio-Temporal QA: Generates questions that mix spatial grounding (left/right/next to)
-    with temporal logic (before/after).
+    Spatio-Temporal QA Engine: generates questions by cross-referencing spatial
+    states with temporal events using a Grounding-Target architecture.
+
+    Category I  – Spatial Grounding → Temporal Understanding
+      I-A  Sequential (Before/After)
+      I-B  In-Between
+
+    Category II – Temporal Grounding → Spatial Understanding
+      II-A  Snapshot (Point-based)
+      II-B  Intermediary (In-Between)
+      II-C  Comparative (Change)
     """
 
-    def _select_event_grounded_spatial_query(self, events, frames_map):
+    CATEGORIES = [
+        "cat1a_sequential",
+        "cat1b_in_between",
+        "cat2a_snapshot",
+        "cat2b_intermediary",
+        "cat2c_comparative",
+    ]
+    TEMPORAL_BUFFER = 5  # frames around event boundaries for spatial stability
+    DIRECTIONAL_TYPES = {"in_front", "behind", "left", "right"}
+
+    # ------------------------------------------------------------------
+    # helpers reused from SpatialQAGenerator
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _short_class(obj_class: str) -> str:
+        """'vehicle.car' -> 'car'"""
+        return obj_class.split(".")[-1] if "." in obj_class else obj_class
+
+    def _build_grounded_description(
+        self, obj_id: str, obj_class: str, inst_ann: Dict[str, Any]
+    ) -> str:
+        """Build a descriptive reference like 'the sedan (driving through the intersection)'."""
+        short = self._short_class(obj_class)
+        ann = inst_ann.get(obj_id, {})
+        activity = ann.get("activity") or ""
+        description = ann.get("description") or ""
+        if description and activity:
+            return f"the {short} ({description}, {activity})"
+        elif description:
+            return f"the {short} ({description})"
+        elif activity:
+            return f"the {short} ({activity})"
+        return f"the {short}"
+
+    @staticmethod
+    def _quaternion_to_yaw(q: List[float]) -> float:
+        """Convert quaternion [w, x, y, z] to yaw angle (radians)."""
+        w, x, y, z = q
+        siny_cosp = 2.0 * (w * z + x * y)
+        cosy_cosp = 1.0 - 2.0 * (y * y + z * z)
+        return np.arctan2(siny_cosp, cosy_cosp)
+
+    @staticmethod
+    def _transform_to_local_frame(
+        ref_pos: List[float], ref_yaw: float, target_pos: List[float]
+    ) -> Tuple[str, float]:
         """
-        Type 1: Time -> Space
-        Logic: Pick an Event. Look at the frame where it starts. Pick a spatial relationship 
-        visible at that frame.
-        Question: "At the start of [Event], what was [Spatial Rel]?"
+        Compute where *target_pos* lies relative to *ref_pos* in the reference
+        object's local frame (defined by ref_yaw).
+
+        Returns (direction_label, distance).
+        direction_label ∈ {"in front", "behind", "to the left", "to the right"}
         """
-        if not events: return None
-        
-        # 1. Pick an Anchor Event (The "Time")
-        anchor_event = random.choice(events)
-        time_idx = anchor_event["start_frame"]
-        
-        # 2. Get frame data for that time
-        frame_data = frames_map.get(time_idx)
-        if not frame_data: return None
+        dx = target_pos[0] - ref_pos[0]
+        dy = target_pos[1] - ref_pos[1]
+        cos_y, sin_y = np.cos(-ref_yaw), np.sin(-ref_yaw)
+        local_x = cos_y * dx - sin_y * dy
+        local_y = sin_y * dx + cos_y * dy
+        dist = float(np.sqrt(dx * dx + dy * dy))
 
-        # 3. Find valid spatial relationships in this frame
-        # We want relationships like: "A is Left of B"
-        rels = [r for r in frame_data.get("relationships", []) 
-                if r["relationship_type"] in ["left", "right", "in_front", "behind", "next_to"]]
-        
-        if not rels: return None
-        
-        target_rel = random.choice(rels)
-        
-        # 4. Format for Prompt
-        return {
-            "mode": "Type 1: Event-Grounded Spatial Query (Time -> Space)",
-            "context_info": f"Anchor Event: A {anchor_event['class']} is {anchor_event['activity']} ({anchor_event['description']}).",
-            "target_info": f"Spatial Anchor Object: {target_rel['source_class']} (ID: {target_rel['source_id']}).",
-            "relationship_query": f"Question Goal: Identify the object that is '{target_rel['relationship_type']}' the Spatial Anchor at the time of the Anchor Event. (Correct Answer: {target_rel['target_class']})"
-        }
-
-    def _select_spatially_grounded_temporal_query(self, events, frames_map):
-        """
-        Type 2: Space -> Time
-        Logic: Pick an object defined by a spatial relationship (e.g., "Car next to bus").
-        Then find an event involving that object that happens *after* that spatial context.
-        Question: "What did the [Object next to bus] do afterwards?"
-        """
-        # 1. Find candidates: Objects that have a spatial relationship AND an event later
-        candidates = []
-        
-        # Iterate through events to find a "Target Event" first
-        for target_event in events:
-            # We want to describe this actor based on where they were *before* this event
-            # Let's look at a frame shortly before the event starts (or at start)
-            lookback_frame = max(0, target_event["start_frame"] - 5)
-            frame_data = frames_map.get(lookback_frame)
-            
-            if not frame_data: continue
-            
-            # Does the actor (target_event['obj_id']) have a spatial descriptor here?
-            # We look for: [Actor] is [Relation] [Anchor]
-            actor_rels = [r for r in frame_data.get("relationships", []) 
-                          if r["source_id"] == target_event["obj_id"]]
-            
-            if actor_rels:
-                # Found a spatial descriptor for this actor!
-                candidates.append((target_event, actor_rels[0]))
-
-        if not candidates: return None
-        
-        # 2. Pick a random candidate
-        target_event, spatial_rel = random.choice(candidates)
-        
-        # 3. Format for Prompt
-        # Describe the object purely spatially
-        spatial_desc = f"The {spatial_rel['source_class']} located {spatial_rel['relationship_type'].replace('_', ' ')} the {spatial_rel['target_class']}"
-        
-        return {
-            "mode": "Type 2: Spatially-Grounded Temporal Query (Space -> Time)",
-            "context_info": f"Spatially Defined Actor: {spatial_desc}.",
-            "target_info": f"Target Activity: {target_event['activity']} ({target_event['description']}).",
-            "relationship_query": "Question Goal: Ask what this Spatially Defined Actor did immediately after/during the spatial context. (Relationship: Sequence/Action)"
-        }
-
-    def build_spatiotemporal_input(self, scene_info: Dict[str, Any], prompt_template: str) -> str:
-        events = scene_info.get("events", [])
-        
-        # Pre-process frames for O(1) lookup
-        frames_map = {f["frame_idx"]: self._process_frame_relationships(f) for f in scene_info.get("frames", [])}
-        
-        if not events or not frames_map: return ""
-
-        # Randomly choose between Type 1 and Type 2 logic
-        # You can adjust weights if you want one type more often
-        if random.random() < 0.5:
-            data = self._select_event_grounded_spatial_query(events, frames_map)
+        if abs(local_x) >= abs(local_y):
+            label = "in front" if local_x >= 0 else "behind"
         else:
-            data = self._select_spatially_grounded_temporal_query(events, frames_map)
-            
-        # Fallback if selection failed (e.g. no relationships found for Type 2)
-        if not data:
-            data = self._select_event_grounded_spatial_query(events, frames_map)
-        
-        if not data:
-            return ""
+            label = "to the left" if local_y >= 0 else "to the right"
+        return label, dist
 
-        return prompt_template.format(
-            logic_mode=data["mode"],
-            context_info=data["context_info"],
-            target_info=data["target_info"],
-            relationship_query=data["relationship_query"]
-        )
-    
-    def _process_frame_relationships(self, frame):
-        """Helper to map IDs to Classes in relationship data"""
-        id_to_class = {o["object_id"]: o["object_class"] for o in frame.get("objects", [])}
-        processed_rels = []
-        for r in frame.get("relationships", []):
-            # Filter for relevant spatial prepositions
-            if r["relationship_type"] in ["in_front", "behind", "left", "right", "next_to"]:
-                processed_rels.append({
-                    "relationship_type": r["relationship_type"],
-                    "source_id": r["source_id"],
-                    "source_class": id_to_class.get(r["source_id"], "unknown"),
-                    "target_id": r["target_id"],
-                    "target_class": id_to_class.get(r["target_id"], "unknown")
-                })
-        return {"relationships": processed_rels}
+    # ------------------------------------------------------------------
+    # instance annotation preprocessing
+    # ------------------------------------------------------------------
+    def _preprocess_instance_annotations(
+        self, instance_annotations: Optional[Dict[str, Any]]
+    ) -> Dict[str, Dict[str, str]]:
+        """Map instance_token -> {activity, description, class}."""
+        if not instance_annotations:
+            return {}
+        out: Dict[str, Dict[str, str]] = {}
+        for ann in instance_annotations.get("annotations", []):
+            tok = ann.get("instance_token", "")
+            if tok:
+                out[tok] = {
+                    "activity": ann.get("activity", ""),
+                    "description": ann.get("description", ""),
+                    "class": ann.get("object_class", ""),
+                }
+        return out
 
-    def generate_for_scene(self, scene_info: Dict[str, Any], spatiotemporal_prompt: str, api_key: Optional[str] = None) -> Dict[str, Any]:
-        processed_info = self._extract_scene_info_from_dict(scene_info)
-        prompt_input = self.build_spatiotemporal_input(processed_info, spatiotemporal_prompt)
-        
-        if not prompt_input:
-            return {"error": "Could not generate spatio-temporal scenario (lack of spatial rels)"}
-            
-        response = self.gpt(prompt_input, api_key=api_key)
-        return {
-            "scene_token": scene_info["scene_token"],
-            "question_data": response,
-            "type": "spatio_temporal"
+    # ------------------------------------------------------------------
+    # frame / relationship helpers
+    # ------------------------------------------------------------------
+    def _build_frames_map(
+        self, frames: List[Dict[str, Any]]
+    ) -> Dict[int, Dict[str, Any]]:
+        """Pre-process raw frames into {frame_idx -> frame_dict} for O(1) lookup."""
+        return {f.get("frame_idx", i): f for i, f in enumerate(frames)}
+
+    def _get_spatial_rels_at_frame(
+        self, frame: Dict[str, Any]
+    ) -> Tuple[List[Dict[str, Any]], Dict[str, Dict[str, Any]]]:
+        """
+        Return (directional_rels, id_to_obj) for a single frame.
+        Each rel dict has: source_id, target_id, relationship_type, distance.
+        """
+        objects = frame.get("objects", [])
+        id_to_obj = {
+            (o.get("object_id") or o.get("annotation_token", "")): o
+            for o in objects
         }
+        directional = []
+        for r in frame.get("relationships", []) or []:
+            if r.get("relationship_type") in self.DIRECTIONAL_TYPES:
+                directional.append(r)
+        return directional, id_to_obj
+
+    def _find_spatial_state_frames(
+        self,
+        frames_map: Dict[int, Dict[str, Any]],
+        sorted_frame_idxs: List[int],
+    ) -> Optional[Tuple[int, Dict, str, str, str]]:
+        """
+        Find a frame where a directional spatial state S(O1, R, O2) holds.
+        Returns (frame_idx, rel_dict, src_id, tgt_id, rel_type) or None.
+        """
+        candidate_idxs = list(sorted_frame_idxs)
+        random.shuffle(candidate_idxs)
+        for fidx in candidate_idxs:
+            frame = frames_map.get(fidx)
+            if frame is None:
+                continue
+            rels, _ = self._get_spatial_rels_at_frame(frame)
+            if rels:
+                rel = random.choice(rels)
+                return (
+                    fidx,
+                    rel,
+                    rel.get("source_id", ""),
+                    rel.get("target_id", ""),
+                    rel.get("relationship_type", ""),
+                )
+        return None
+
+    # ------------------------------------------------------------------
+    # Distractor helpers
+    # ------------------------------------------------------------------
+    def _make_spatial_distractor(
+        self,
+        correct_direction: str,
+        obj_desc: str,
+        inst_ann: Dict[str, Any],
+    ) -> str:
+        """Spatial distractor: correct time, wrong direction."""
+        opposites = {
+            "left": "right", "right": "left",
+            "in_front": "behind", "behind": "in_front",
+        }
+        wrong_dir = opposites.get(correct_direction, "nearby")
+        return f"{obj_desc} is {wrong_dir.replace('_', ' ')}"
+
+    def _make_temporal_distractor(
+        self,
+        events: List[Dict[str, Any]],
+        exclude_event: Optional[Dict[str, Any]],
+        inst_ann: Dict[str, Any],
+    ) -> str:
+        """Temporal distractor: action from the video but at the wrong time."""
+        candidates = [
+            e for e in events
+            if exclude_event is None or e.get("obj_id") != exclude_event.get("obj_id")
+        ]
+        if not candidates:
+            return "No other event occurs in this segment."
+        ev = random.choice(candidates)
+        obj_desc = self._build_grounded_description(
+            ev["obj_id"], ev["class"], inst_ann
+        )
+        return f"{obj_desc} {ev['activity']}"
+
+    def _make_existential_distractor(
+        self,
+        frame: Dict[str, Any],
+        all_obj_ids_in_scene: set,
+        inst_ann: Dict[str, Any],
+    ) -> str:
+        """Existential distractor: refers to an object not present in the segment."""
+        present_ids = {
+            o.get("object_id") or o.get("annotation_token", "")
+            for o in frame.get("objects", [])
+        }
+        absent = all_obj_ids_in_scene - present_ids
+        if not absent:
+            return "An object not visible in this segment."
+        absent_id = random.choice(list(absent))
+        ann = inst_ann.get(absent_id, {})
+        obj_class = ann.get("class", "object")
+        return self._build_grounded_description(absent_id, obj_class, inst_ann)
+
+    def _collect_all_object_ids(
+        self, frames: List[Dict[str, Any]]
+    ) -> set:
+        """Collect all unique object IDs across all frames."""
+        ids = set()
+        for f in frames:
+            for o in f.get("objects", []):
+                oid = o.get("object_id") or o.get("annotation_token", "")
+                if oid:
+                    ids.add(oid)
+        return ids
+
+    # ==================================================================
+    # CATEGORY I-A: Spatial Grounding → Temporal Sequential (Before/After)
+    # ==================================================================
+    def _build_cat1a_sequential(
+        self,
+        events: List[Dict[str, Any]],
+        frames_map: Dict[int, Dict[str, Any]],
+        sorted_idxs: List[int],
+        inst_ann: Dict[str, Any],
+        all_obj_ids: set,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Find frames where S(O1, R, O2) is True. Query Event E in adjacent
+        frame segments (Before or After the spatial state).
+        """
+        spatial = self._find_spatial_state_frames(frames_map, sorted_idxs)
+        if spatial is None:
+            return None
+
+        fidx, rel, src_id, tgt_id, rel_type = spatial
+        frame = frames_map[fidx]
+        _, id_to_obj = self._get_spatial_rels_at_frame(frame)
+
+        src_class = id_to_obj.get(src_id, {}).get("object_class", "unknown")
+        tgt_class = id_to_obj.get(tgt_id, {}).get("object_class", "unknown")
+        src_desc = self._build_grounded_description(src_id, src_class, inst_ann)
+        tgt_desc = self._build_grounded_description(tgt_id, tgt_class, inst_ann)
+
+        marker = random.choice(["Before", "After"])
+
+        # Find an event adjacent to the spatial state
+        adjacent_events = []
+        buf = self.TEMPORAL_BUFFER
+        for ev in events:
+            if marker == "After" and ev["start_frame"] > fidx + buf:
+                if ev["obj_id"] != src_id and ev["obj_id"] != tgt_id:
+                    adjacent_events.append(ev)
+            elif marker == "Before" and ev["end_frame"] < fidx - buf:
+                if ev["obj_id"] != src_id and ev["obj_id"] != tgt_id:
+                    adjacent_events.append(ev)
+
+        if not adjacent_events:
+            return None
+
+        target_event = random.choice(adjacent_events)
+        target_desc = self._build_grounded_description(
+            target_event["obj_id"], target_event["class"], inst_ann
+        )
+
+        # Build distractors
+        distractors = []
+        distractors.append(self._make_spatial_distractor(rel_type, tgt_desc, inst_ann))
+        distractors.append(self._make_temporal_distractor(events, target_event, inst_ann))
+        distractors.append(self._make_existential_distractor(frame, all_obj_ids, inst_ann))
+
+        rel_label = rel_type.replace("_", " ")
+        return {
+            "category_label": "Category I-A: Spatial Grounding → Temporal Sequential",
+            "category_instructions": (
+                "Use the spatial configuration as the anchor. The question should describe "
+                "a spatial state (e.g., 'O1 is left of O2') and ask what event occurred "
+                f"{marker.lower()} that state."
+            ),
+            "scene_token": "",  # filled later
+            "grounding_anchor": (
+                f"Spatial state: {tgt_desc} is {rel_label} {src_desc} "
+                f"(observed at frame {fidx})"
+            ),
+            "target_query": (
+                f"What happens {marker.lower()} this spatial state? "
+                f"(Correct: {target_desc} {target_event['activity']}, "
+                f"frames {target_event['start_frame']}-{target_event['end_frame']})"
+            ),
+            "spatial_context": f"{tgt_desc} is {rel_label} {src_desc}",
+            "temporal_context": (
+                f"Target event: {target_desc} {target_event['activity']} {target_event['description']} "
+                f"(frames {target_event['start_frame']}-{target_event['end_frame']})"
+            ),
+            "distractor_candidates": json.dumps(distractors),
+        }
+
+    # ==================================================================
+    # CATEGORY I-B: Spatial Grounding → Temporal In-Between
+    # ==================================================================
+    def _build_cat1b_in_between(
+        self,
+        events: List[Dict[str, Any]],
+        frames_map: Dict[int, Dict[str, Any]],
+        sorted_idxs: List[int],
+        inst_ann: Dict[str, Any],
+        all_obj_ids: set,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Find two spatial states S1@t1 and S2@t2. Query Event E in [t1, t2].
+        """
+        if len(sorted_idxs) < 2:
+            return None
+
+        # Find two distinct spatial states at different frames
+        s1 = self._find_spatial_state_frames(frames_map, sorted_idxs)
+        if s1 is None:
+            return None
+        fidx1, rel1, src1_id, tgt1_id, rel1_type = s1
+
+        # Find second spatial state at a different frame
+        remaining_idxs = [i for i in sorted_idxs if abs(i - fidx1) > self.TEMPORAL_BUFFER * 2]
+        if not remaining_idxs:
+            return None
+
+        s2 = self._find_spatial_state_frames(frames_map, remaining_idxs)
+        if s2 is None:
+            return None
+        fidx2, rel2, src2_id, tgt2_id, rel2_type = s2
+
+        # Ensure proper ordering
+        if fidx1 > fidx2:
+            fidx1, fidx2 = fidx2, fidx1
+            rel1, rel2 = rel2, rel1
+            src1_id, src2_id = src2_id, src1_id
+            tgt1_id, tgt2_id = tgt2_id, tgt1_id
+            rel1_type, rel2_type = rel2_type, rel1_type
+
+        # Find events in the gap [fidx1 + buf, fidx2 - buf]
+        gap_start = fidx1 + self.TEMPORAL_BUFFER
+        gap_end = fidx2 - self.TEMPORAL_BUFFER
+        if gap_start >= gap_end:
+            return None
+
+        gap_events = [
+            e for e in events
+            if e["start_frame"] >= gap_start and e["end_frame"] <= gap_end
+        ]
+        if not gap_events:
+            return None
+
+        target_event = random.choice(gap_events)
+
+        # Build descriptions
+        frame1 = frames_map.get(fidx1, {})
+        frame2 = frames_map.get(fidx2, {})
+        _, id_to_obj1 = self._get_spatial_rels_at_frame(frame1)
+        _, id_to_obj2 = self._get_spatial_rels_at_frame(frame2)
+
+        src1_class = id_to_obj1.get(src1_id, {}).get("object_class", "unknown")
+        tgt1_class = id_to_obj1.get(tgt1_id, {}).get("object_class", "unknown")
+        src2_class = id_to_obj2.get(src2_id, {}).get("object_class", "unknown")
+        tgt2_class = id_to_obj2.get(tgt2_id, {}).get("object_class", "unknown")
+
+        s1_desc = (
+            f"{self._build_grounded_description(tgt1_id, tgt1_class, inst_ann)} is "
+            f"{rel1_type.replace('_', ' ')} "
+            f"{self._build_grounded_description(src1_id, src1_class, inst_ann)}"
+        )
+        s2_desc = (
+            f"{self._build_grounded_description(tgt2_id, tgt2_class, inst_ann)} is "
+            f"{rel2_type.replace('_', ' ')} "
+            f"{self._build_grounded_description(src2_id, src2_class, inst_ann)}"
+        )
+        target_desc = self._build_grounded_description(
+            target_event["obj_id"], target_event["class"], inst_ann
+        )
+
+        distractors = []
+        distractors.append(self._make_temporal_distractor(events, target_event, inst_ann))
+        distractors.append(self._make_existential_distractor(frame1, all_obj_ids, inst_ann))
+
+        return {
+            "category_label": "Category I-B: Spatial Grounding → Temporal In-Between",
+            "category_instructions": (
+                "Use two spatial states as temporal anchors. The question asks what event "
+                "occurs in the time interval between S1 and S2."
+            ),
+            "scene_token": "",
+            "grounding_anchor": (
+                f"Spatial state S1 (frame {fidx1}): {s1_desc}. "
+                f"Spatial state S2 (frame {fidx2}): {s2_desc}."
+            ),
+            "target_query": (
+                f"What happens in between S1 and S2? "
+                f"(Correct: {target_desc} {target_event['activity']}, "
+                f"frames {target_event['start_frame']}-{target_event['end_frame']})"
+            ),
+            "spatial_context": f"S1: {s1_desc} | S2: {s2_desc}",
+            "temporal_context": (
+                f"Gap: frames {gap_start}-{gap_end}. "
+                f"Target: {target_desc} {target_event['activity']}"
+            ),
+            "distractor_candidates": json.dumps(distractors),
+        }
+
+    # ==================================================================
+    # CATEGORY II-A: Temporal Grounding → Spatial Snapshot
+    # ==================================================================
+    def _build_cat2a_snapshot(
+        self,
+        events: List[Dict[str, Any]],
+        frames_map: Dict[int, Dict[str, Any]],
+        sorted_idxs: List[int],
+        inst_ann: Dict[str, Any],
+        all_obj_ids: set,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Anchor to Event E1. Query spatial state S at E1.start or E1.end.
+        Template: "[Marker] [E1] occurs, what is to the [Direction] of [O1]?"
+        """
+        if not events:
+            return None
+
+        random.shuffle(events)
+        for anchor_event in events:
+            # Choose start or end of event
+            use_start = random.choice([True, False])
+            if use_start:
+                query_frame_idx = max(0, anchor_event["start_frame"] - self.TEMPORAL_BUFFER)
+                marker = "Right before"
+            else:
+                query_frame_idx = anchor_event["end_frame"] + self.TEMPORAL_BUFFER
+                marker = "Right after"
+
+            # Snap to nearest available frame
+            frame = frames_map.get(query_frame_idx)
+            if frame is None:
+                # Try nearby frames
+                for offset in range(-3, 4):
+                    frame = frames_map.get(query_frame_idx + offset)
+                    if frame is not None:
+                        query_frame_idx = query_frame_idx + offset
+                        break
+            if frame is None:
+                continue
+
+            rels, id_to_obj = self._get_spatial_rels_at_frame(frame)
+            if not rels:
+                continue
+
+            target_rel = random.choice(rels)
+            src_id = target_rel.get("source_id", "")
+            tgt_id = target_rel.get("target_id", "")
+            src_class = id_to_obj.get(src_id, {}).get("object_class", "unknown")
+            tgt_class = id_to_obj.get(tgt_id, {}).get("object_class", "unknown")
+            direction = target_rel.get("relationship_type", "").replace("_", " ")
+
+            anchor_desc = self._build_grounded_description(
+                anchor_event["obj_id"], anchor_event["class"], inst_ann
+            )
+            src_desc = self._build_grounded_description(src_id, src_class, inst_ann)
+            tgt_desc = self._build_grounded_description(tgt_id, tgt_class, inst_ann)
+
+            distractors = []
+            distractors.append(self._make_spatial_distractor(
+                target_rel.get("relationship_type", ""), src_desc, inst_ann
+            ))
+            distractors.append(self._make_existential_distractor(frame, all_obj_ids, inst_ann))
+            # Grab another object from the frame as a plausible wrong answer
+            other_objs = [
+                o for o in frame.get("objects", [])
+                if (o.get("object_id") or o.get("annotation_token", "")) not in {src_id, tgt_id}
+            ]
+            if other_objs:
+                o = random.choice(other_objs)
+                oid = o.get("object_id") or o.get("annotation_token", "")
+                distractors.append(self._build_grounded_description(
+                    oid, o.get("object_class", "unknown"), inst_ann
+                ))
+            else:
+                distractors.append("No other object is visible nearby.")
+
+            return {
+                "category_label": "Category II-A: Temporal Grounding → Spatial Snapshot",
+                "category_instructions": (
+                    "Use the temporal event as the anchor. The question should set a precise "
+                    "moment (start/end of an event) and query the spatial layout at that instant. "
+                    f"Template: '{marker} [E1] occurs, what is {direction} [O1]?'"
+                ),
+                "scene_token": "",
+                "grounding_anchor": (
+                    f"{marker} {anchor_desc} {anchor_event['activity']} "
+                    f"(event frames {anchor_event['start_frame']}-{anchor_event['end_frame']})"
+                ),
+                "target_query": (
+                    f"What is {direction} {src_desc} at frame {query_frame_idx}? "
+                    f"(Correct: {tgt_desc})"
+                ),
+                "spatial_context": f"{tgt_desc} is {direction} {src_desc} at frame {query_frame_idx}",
+                "temporal_context": (
+                    f"Event: {anchor_desc} {anchor_event['activity']} "
+                    f"(frames {anchor_event['start_frame']}-{anchor_event['end_frame']})"
+                ),
+                "distractor_candidates": json.dumps(distractors),
+            }
+
+        return None
+
+    # ==================================================================
+    # CATEGORY II-B: Temporal Grounding → Spatial Intermediary
+    # ==================================================================
+    def _build_cat2b_intermediary(
+        self,
+        events: List[Dict[str, Any]],
+        frames_map: Dict[int, Dict[str, Any]],
+        sorted_idxs: List[int],
+        inst_ann: Dict[str, Any],
+        all_obj_ids: set,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Define interval between E1 and E2. Sample a frame in the gap,
+        pick a spatial relationship from it, and ask about that relationship.
+        Template: "In between [E1] and [E2], what is [Direction] of [O1]?"
+        """
+        if len(events) < 2:
+            return None
+
+        # Find two non-overlapping events
+        shuffled = list(events)
+        random.shuffle(shuffled)
+
+        for i in range(len(shuffled)):
+            for j in range(i + 1, len(shuffled)):
+                e1, e2 = shuffled[i], shuffled[j]
+                # Ensure non-overlapping and proper order
+                if e1["end_frame"] >= e2["start_frame"]:
+                    e1, e2 = e2, e1
+                if e1["end_frame"] >= e2["start_frame"]:
+                    continue
+
+                gap_start = e1["end_frame"] + self.TEMPORAL_BUFFER
+                gap_end = e2["start_frame"] - self.TEMPORAL_BUFFER
+                if gap_start >= gap_end:
+                    continue
+
+                # Sample a random frame index in the gap and find spatial rels
+                gap_idxs = [
+                    fidx for fidx in range(gap_start, gap_end + 1)
+                    if fidx in frames_map
+                ]
+                if not gap_idxs:
+                    continue
+
+                random.shuffle(gap_idxs)
+                sampled_rel = None
+                sampled_fidx = None
+                sampled_id_to_obj = None
+
+                for fidx in gap_idxs:
+                    frame = frames_map[fidx]
+                    rels, id_to_obj = self._get_spatial_rels_at_frame(frame)
+                    # Filter to rels where neither object is part of e1/e2
+                    valid_rels = [
+                        r for r in rels
+                        if r.get("source_id", "") not in {e1["obj_id"], e2["obj_id"]}
+                        and r.get("target_id", "") not in {e1["obj_id"], e2["obj_id"]}
+                    ]
+                    if valid_rels:
+                        sampled_rel = random.choice(valid_rels)
+                        sampled_fidx = fidx
+                        sampled_id_to_obj = id_to_obj
+                        break
+
+                if sampled_rel is None:
+                    continue
+
+                # Build descriptions from the sampled relationship
+                src_id = sampled_rel.get("source_id", "")
+                tgt_id = sampled_rel.get("target_id", "")
+                src_class = sampled_id_to_obj.get(src_id, {}).get("object_class", "unknown")
+                tgt_class = sampled_id_to_obj.get(tgt_id, {}).get("object_class", "unknown")
+                direction = sampled_rel.get("relationship_type", "").replace("_", " ")
+
+                src_desc = self._build_grounded_description(src_id, src_class, inst_ann)
+                tgt_desc = self._build_grounded_description(tgt_id, tgt_class, inst_ann)
+
+                e1_desc = self._build_grounded_description(
+                    e1["obj_id"], e1["class"], inst_ann
+                )
+                e2_desc = self._build_grounded_description(
+                    e2["obj_id"], e2["class"], inst_ann
+                )
+
+                # Distractors
+                sampled_frame = frames_map[sampled_fidx]
+                distractors = [
+                    self._make_spatial_distractor(
+                        sampled_rel.get("relationship_type", ""), src_desc, inst_ann
+                    ),
+                    self._make_existential_distractor(sampled_frame, all_obj_ids, inst_ann),
+                ]
+                # Grab another object from the frame as a plausible wrong answer
+                other_objs = [
+                    o for o in sampled_frame.get("objects", [])
+                    if (o.get("object_id") or o.get("annotation_token", ""))
+                    not in {src_id, tgt_id, e1["obj_id"], e2["obj_id"]}
+                ]
+                if other_objs:
+                    o = random.choice(other_objs)
+                    oid = o.get("object_id") or o.get("annotation_token", "")
+                    distractors.append(self._build_grounded_description(
+                        oid, o.get("object_class", "unknown"), inst_ann
+                    ))
+                else:
+                    distractors.append("No other object is visible nearby.")
+
+                return {
+                    "category_label": "Category II-B: Temporal Grounding → Spatial Intermediary",
+                    "category_instructions": (
+                        "Use the interval between two temporal events as the anchor. "
+                        "Sample a moment in that gap and ask about a spatial relationship "
+                        "observed at that specific frame. Don't use any frame numbers in the question."
+                    ),
+                    "scene_token": "",
+                    "grounding_anchor": (
+                        f"Between {e1_desc} {e1['activity']} "
+                        f"(ends frame {e1['end_frame']}) and "
+                        f"{e2_desc} {e2['activity']} "
+                        f"(starts frame {e2['start_frame']})"
+                    ),
+                    "target_query": (
+                        f"In between {e1_desc} {e1['activity']} "
+                        f"and {e2_desc} {e2['activity']}, what is {src_desc} "
+                        f"{direction}? Answer: {tgt_desc}?"
+                    ),
+                    "spatial_context": (
+                        f"At frame {sampled_fidx}: {tgt_desc} is {direction} {src_desc}"
+                    ),
+                    "temporal_context": (
+                        f"E1: {e1_desc} {e1['activity']} (frames {e1['start_frame']}-{e1['end_frame']}). "
+                        f"E2: {e2_desc} {e2['activity']} (frames {e2['start_frame']}-{e2['end_frame']}). "
+                        f"Gap: frames {gap_start}-{gap_end}"
+                    ),
+                    "distractor_candidates": json.dumps(distractors),
+                }
+
+        return None
+
+    # ==================================================================
+    # CATEGORY II-C: Temporal Grounding → Spatial Comparative (Change)
+    # ==================================================================
+    def _build_cat2c_comparative(
+        self,
+        events: List[Dict[str, Any]],
+        frames_map: Dict[int, Dict[str, Any]],
+        sorted_idxs: List[int],
+        inst_ann: Dict[str, Any],
+        all_obj_ids: set,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Compare S(O1, R, O2) at t_pre vs t_post relative to E1.
+        Template: "How does the position of [O1] relative to [O2] change after [E1]?"
+        """
+        if not events:
+            return None
+
+        shuffled = list(events)
+        random.shuffle(shuffled)
+
+        for anchor_event in shuffled:
+            t_pre = max(0, anchor_event["start_frame"] - self.TEMPORAL_BUFFER)
+            t_post = anchor_event["end_frame"] + self.TEMPORAL_BUFFER
+
+            frame_pre = frames_map.get(t_pre)
+            frame_post = frames_map.get(t_post)
+
+            # Try nearby frames if exact ones don't exist
+            if frame_pre is None:
+                for offset in range(-3, 4):
+                    frame_pre = frames_map.get(t_pre + offset)
+                    if frame_pre is not None:
+                        t_pre = t_pre + offset
+                        break
+            if frame_post is None:
+                for offset in range(-3, 4):
+                    frame_post = frames_map.get(t_post + offset)
+                    if frame_post is not None:
+                        t_post = t_post + offset
+                        break
+
+            if frame_pre is None or frame_post is None:
+                continue
+
+            rels_pre, id_to_obj_pre = self._get_spatial_rels_at_frame(frame_pre)
+            rels_post, id_to_obj_post = self._get_spatial_rels_at_frame(frame_post)
+
+            if not rels_pre or not rels_post:
+                continue
+
+            # Find an object pair that has different spatial relationships pre vs post
+            pre_by_pair = {}
+            for r in rels_pre:
+                pair = (r.get("source_id", ""), r.get("target_id", ""))
+                pre_by_pair[pair] = r.get("relationship_type", "")
+
+            changed_pairs = []
+            for r in rels_post:
+                pair = (r.get("source_id", ""), r.get("target_id", ""))
+                post_rel = r.get("relationship_type", "")
+                pre_rel = pre_by_pair.get(pair)
+                if pre_rel and pre_rel != post_rel:
+                    changed_pairs.append({
+                        "src_id": pair[0],
+                        "tgt_id": pair[1],
+                        "pre_rel": pre_rel,
+                        "post_rel": post_rel,
+                    })
+
+            if not changed_pairs:
+                continue
+
+            change = random.choice(changed_pairs)
+            src_class_pre = id_to_obj_pre.get(change["src_id"], {}).get("object_class", "unknown")
+            tgt_class_pre = id_to_obj_pre.get(change["tgt_id"], {}).get("object_class", "unknown")
+            src_desc = self._build_grounded_description(change["src_id"], src_class_pre, inst_ann)
+            tgt_desc = self._build_grounded_description(change["tgt_id"], tgt_class_pre, inst_ann)
+            anchor_desc = self._build_grounded_description(
+                anchor_event["obj_id"], anchor_event["class"], inst_ann
+            )
+
+            pre_label = change["pre_rel"].replace("_", " ")
+            post_label = change["post_rel"].replace("_", " ")
+
+            distractors = [
+                f"{tgt_desc} remains {pre_label} {src_desc} throughout",
+                f"{src_desc} remain {post_label} {tgt_desc} throughout",
+                f"{tgt_desc} moves from {post_label} to {pre_label} {src_desc}",
+                f"{tgt_desc} is no longer visible after the event",
+            ]
+
+            return {
+                "category_label": "Category II-C: Temporal Grounding → Spatial Comparative",
+                "category_instructions": (
+                    "Use a temporal event as the anchor. Compare the spatial relationship "
+                    "between two objects BEFORE vs AFTER the event. Ask how the relative "
+                    "position changed. Don't indicate the frame numbers."
+                ),
+                "scene_token": "",
+                "grounding_anchor": (
+                    f"Event: {anchor_desc} {anchor_event['activity']} "
+                    f"(frames {anchor_event['start_frame']}-{anchor_event['end_frame']})"
+                ),
+                "target_query": (
+                    f"How does the position of {tgt_desc} relative to {src_desc} change "
+                    f"after this event? (Correct: from {pre_label} to {post_label})"
+                ),
+                "spatial_context": (
+                    f"Before (frame {t_pre}): {tgt_desc} is {pre_label} {src_desc}. "
+                    f"After (frame {t_post}): {tgt_desc} is {post_label} {src_desc}."
+                ),
+                "temporal_context": (
+                    f"Anchor event: {anchor_desc} {anchor_event['activity']} "
+                    f"(frames {anchor_event['start_frame']}-{anchor_event['end_frame']})"
+                ),
+                "distractor_candidates": json.dumps(distractors),
+            }
+
+        return None
+
+    # ==================================================================
+    # Prompt construction & generation
+    # ==================================================================
+    def load_prompts_from_disk(self) -> str:
+        prompts_dir = self.prompts_dir
+        prompt_path = prompts_dir / "spatio_temporal_v2.txt"
+        if not prompt_path.exists():
+            raise FileNotFoundError(
+                f"Prompt file not found at {prompt_path}. "
+                "Please ensure spatio_temporal_v2.txt exists."
+            )
+        return prompt_path.read_text()
+
+    def build_spatio_temporal_input(
+        self,
+        scene_info: Dict[str, Any],
+        prompt_template: str,
+        inst_ann: Dict[str, Any],
+    ) -> Tuple[str, str]:
+        """
+        Randomly pick a spatio-temporal category, build context, inject into prompt.
+        Returns (filled_prompt, chosen_category).
+        """
+        events = scene_info.get("events", [])
+        frames = scene_info.get("frames", [])
+        frames_map = self._build_frames_map(frames)
+        sorted_idxs = sorted(frames_map.keys())
+        all_obj_ids = self._collect_all_object_ids(frames)
+
+        if not events or not frames_map:
+            return "", ""
+
+        # Try categories in random order until one succeeds
+        categories = copy.deepcopy(list(self.CATEGORIES))
+        random.shuffle(categories)
+
+        context_data = None
+        chosen_category = ""
+
+        builders = {
+            "cat1a_sequential": self._build_cat1a_sequential,
+            "cat1b_in_between": self._build_cat1b_in_between,
+            "cat2a_snapshot": self._build_cat2a_snapshot,
+            "cat2b_intermediary": self._build_cat2b_intermediary,
+            "cat2c_comparative": self._build_cat2c_comparative,
+        }
+
+        
+        category_choice = random.choice(categories)
+        context_data = None
+        while context_data is None:
+            context_data = builders[category_choice](events, frames_map, sorted_idxs, inst_ann, all_obj_ids)
+            if context_data is not None:
+                chosen_category = category_choice
+                break
+            categories.remove(category_choice)
+            if not categories:
+                break
+            category_choice = random.choice(categories)
+
+        if context_data is None:
+            return "", ""
+
+        # Fill prompt template
+        filled = (
+            prompt_template
+            .replace("{category_label}", context_data["category_label"])
+            .replace("{category_instructions}", context_data["category_instructions"])
+            .replace("{scene_token}", context_data.get("scene_token", ""))
+            .replace("{grounding_anchor}", context_data["grounding_anchor"])
+            .replace("{target_query}", context_data["target_query"])
+            .replace("{spatial_context}", context_data["spatial_context"])
+            .replace("{temporal_context}", context_data["temporal_context"])
+            .replace("{distractor_candidates}", context_data["distractor_candidates"])
+        )
+        return filled, chosen_category, context_data
+        
+    def generate_for_scene(
+        self, scene_token: str, api_key: Optional[str] = None
+    ) -> Optional[QASample]:
+        # Load raw scene graph and instance annotations
+        scene_graph = self.load_scene_graph(scene_token)
+        if scene_graph is None:
+            return None
+
+        instance_annotations = self.load_instance_annotations(scene_token)
+        inst_ann = self._preprocess_instance_annotations(instance_annotations)
+
+        # Build scene info with events (from TemporalQAGenerator parent)
+        processed_annotations = self.preprocess_instance_annotations(
+            instance_annotations or {"annotations": []}
+        )
+        scene_info = self._extract_scene_info_from_dict(scene_graph, instance_annotations or {"annotations": []})
+        if scene_info is None:
+            return None
+
+        prompt_template = self.load_prompts_from_disk()
+        filled_prompt, chosen_category, context_data = self.build_spatio_temporal_input(
+            scene_info, prompt_template, inst_ann
+        )
+
+        if not filled_prompt:
+            return None
+
+        # Fill scene_token into the prompt
+        filled_prompt = filled_prompt.replace("{scene_token}", scene_token)
+
+        raw_response = self.gpt(
+            filled_prompt,
+            api_key=api_key,
+            scene_token=scene_token,
+            question_type=f"spatio_temporal_{chosen_category}",
+        )
+
+        # Parse JSON from response
+        response_text = raw_response.strip()
+        if "```" in response_text:
+            start = response_text.find("{")
+            end = response_text.rfind("}") + 1
+            if start >= 0 and end > start:
+                response_text = response_text[start:end]
+        try:
+            parsed = json.loads(response_text)
+        except json.JSONDecodeError:
+            parsed = {
+                "question": raw_response[:500],
+                "options": {},
+                "correct_option": "",
+                "rationale": raw_response,
+            }
+
+        question = parsed.get("question", "")
+        answer = {
+            "options": parsed.get("options", {}),
+            "correct_option": parsed.get("correct_option", ""),
+            "rationale": parsed.get("rationale", ""),
+        }
+        metadata = {
+            "num_frames": scene_info.get("num_frames", 0),
+            "object_counts": scene_info.get("object_counts", {}),
+            "spatio_temporal_category": chosen_category,
+            "num_events": len(scene_info.get("events", [])),
+            "context_data": context_data,
+        }
+        return self.construct_qa_sample(
+            scene_token=scene_token,
+            question_type="spatio_temporal",
+            question=question,
+            answer=answer,
+            metadata=metadata,
+        )
 
 def extract_scene_info(scene_graph: str) -> Dict[str, Any]:
     """
@@ -1735,7 +2529,7 @@ def process_questions(
         qa_sample = qa_generator.generate_for_scene(scene_token, api_key=api_key)
         if qa_sample is None:
             if verbose:
-                print(f"  Skipped (no scene graph found)")
+                print(f"  Skipped (no scene graph or context or meta data found )")
             continue
         qa_samples.append(qa_sample)
         if output_file is not None:
@@ -1817,7 +2611,7 @@ def main():
     elif args.question_type == "event_ordering":
         qa_generator = EventOrderingQAGenerator(prompts_dir=args.prompts_dir, scene_graphs_dir=args.scene_graphs_dir, instance_annotations_dir=args.instance_annotations_dir)
     elif args.question_type == "spatio_temporal":
-        qa_generator = SpatialQAGenerator(**gen_kwargs)
+        qa_generator = SpatioTemporalQAGenerator(prompts_dir=args.prompts_dir, scene_graphs_dir=args.scene_graphs_dir, instance_annotations_dir=args.instance_annotations_dir, gpt_logs_dir=gpt_logs_dir)
     elif args.question_type == "summarization":
         qa_generator = SummarizationQAGenerator(**gen_kwargs)
     else:

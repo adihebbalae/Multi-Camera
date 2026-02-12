@@ -1,0 +1,92 @@
+SPATIO-TEMPORAL CATEGORY: {category_label}
+
+CATEGORY-SPECIFIC INSTRUCTIONS: {category_instructions}
+
+GENERAL GUIDELINES:
+1. Anchor the Question: Every question must revolve around the GROUNDING ANCHOR (the known context) to query the TARGET (the unknown answer).
+2. Grounded Descriptions: Do not use bare labels like "the car." Use the full descriptions provided, including appearance and activity (e.g., "the sedan (silver, parked on the curb with hazard lights on)").
+3. Incorporate Activity: Use the activity/behavior of the objects (e.g., "waiting," "merging," "accelerating") to distinguish between multiple objects of the same class.
+4. Logical Distractors: Generate four options (A-D) where exactly one is correct. Use three distractor types:
+   - Spatial Distractor: Correct timeframe, but wrong direction or proximity.
+   - Temporal Distractor: Action occurs in the video, but at the wrong time relative to the anchor.
+   - Existential Distractor: Refers to an object not present in the relevant segment.
+5. Output Format: Return ONLY a JSON object with the fields: question, options, correct_option, and rationale.
+
+REFINED IN-CONTEXT EXAMPLES:
+
+Example 1 (Category I-A: Spatial Grounding → Temporal Sequential):
+{{
+  "question": "What happens after the red pickup truck is driving on the road with a yellow car to its left?",
+  "options": {{
+    "A": "The yellow car accelerates past the pickup truck.",
+    "B": "A pedestrian crosses in front of the pickup truck.",
+    "C": "The pickup truck merges into the left lane.",
+    "D": "A blue sedan parks behind the pickup truck."
+  }},
+  "correct_option": "B",
+  "rationale": "After the spatial state where the yellow car is left of the red pickup truck (frames 15-22), the pedestrian crossing event occurs in frames 23-28."
+}}
+
+Example 2 (Category I-B: Spatial Grounding → Temporal In-Between):
+{{
+  "question": "What happens in between the pedestrian entering the building and the cyclist on the road with a white pedestrian behind them?",
+  "options": {{
+    "A": "A delivery van parks at the curb.",
+    "B": "The traffic light changes to green.",
+    "C": "A bus arrives at the stop.",
+    "D": "The ego-vehicle makes a U-turn."
+  }},
+  "correct_option": "C",
+  "rationale": "Spatial state S1 (pedestrian entering building) ends at frame 10. Spatial state S2 (cyclist with white pedestrian behind) begins at frame 25. The bus arrival event occupies frames 14-20, fitting inside the gap."
+}}
+
+Example 3 (Category II-A: Temporal Grounding → Spatial Snapshot):
+{{
+  "question": "Right before the pedestrian enters the building, what is to the left of the red pickup truck?",
+  "options": {{
+    "A": "A yellow sedan waiting at the intersection.",
+    "B": "A blue motorcycle parked on the sidewalk.",
+    "C": "A white delivery van unloading packages.",
+    "D": "A green traffic cone marking construction."
+  }},
+  "correct_option": "A",
+  "rationale": "At the start frame of the 'pedestrian enters building' event (frame 12), the spatial relationship shows the yellow sedan is to the left of the red pickup truck."
+}}
+
+Example 4 (Category II-B: Temporal Grounding → Spatial Intermediary):
+{{
+  "question": "In between the car parking and the bus arriving, there is a cyclist visible; what is the cyclist closer to?",
+  "options": {{
+    "A": "The parked silver SUV on the roadside.",
+    "B": "The traffic light at the intersection.",
+    "C": "The red mailbox on the sidewalk.",
+    "D": "The cyclist is not visible during this interval."
+  }},
+  "correct_option": "A",
+  "rationale": "Between E1 (car parking, ends frame 8) and E2 (bus arriving, starts frame 18), the cyclist appears in frames 10-15 at 3.2m from the SUV and 8.7m from the traffic light."
+}}
+
+Example 5 (Category II-C: Temporal Grounding → Spatial Comparative):
+{{
+  "question": "How does the position of the white sedan relative to the blue bus change after the pedestrian crosses the road?",
+  "options": {{
+    "A": "The sedan moves from behind the bus to in front of it.",
+    "B": "The sedan remains to the left of the bus throughout.",
+    "C": "The sedan moves from the left side to the right side of the bus.",
+    "D": "The sedan and bus maintain the same relative position."
+  }},
+  "correct_option": "A",
+  "rationale": "Before the pedestrian crossing (frame 10), the sedan is behind the bus. After the crossing completes (frame 18), the sedan has moved in front of the bus."
+}}
+
+INPUTS:
+- Scene token: {scene_token}
+- Grounding anchor: {grounding_anchor}
+- Target query: {target_query}
+- Supporting spatial context: {spatial_context}
+- Supporting temporal context: {temporal_context}
+- Distractor candidates: {distractor_candidates}
+
+NOW GENERATE ONE MCQ:
+- Follow the guidelines and use the provided grounded descriptions.
+- Return ONLY the JSON object.
