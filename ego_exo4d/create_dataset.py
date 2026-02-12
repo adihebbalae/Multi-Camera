@@ -1,8 +1,7 @@
-from llm import *
 import json
 import glob
+import os
 
-llm = LLM()
 
 DATASET_PATH = "/nas/mars/dataset/Ego-Exo4D"
 
@@ -28,6 +27,20 @@ def read_dataset():
         atomic_descriptions_val = json.load(f)
     atomic_descriptions_data = atomic_descriptions_train["annotations"] | atomic_descriptions_val["annotations"]
 
+    def get_parent_hierarchy(node_id, taxonomy_for_scenario):
+        node_info = taxonomy_for_scenario.get(str(node_id))
+        if not node_info:
+            return None
+        current_node = {
+            "node_id": node_info["id"],
+            "node_name": node_info["name"],
+        }
+        if node_info["parent_id"] is not None:
+            current_node["parent"] = get_parent_hierarchy(node_info["parent_id"], taxonomy_for_scenario)
+        else:
+            current_node["parent"] = None
+        return current_node
+
     for take in takes:
         if take["validated"] and take["is_narrated"]:
             # organize keystep
@@ -45,10 +58,7 @@ def read_dataset():
                                 "category": keystep_take["scenario"],
                                 "is_essential": s["is_essential"],
                                 "description": s["step_description"],
-                                "node_id": keystep_taxonomy_data[keystep_take["scenario"]][str(s["step_id"])]["id"],
-                                "node_name": keystep_taxonomy_data[keystep_take["scenario"]][str(s["step_id"])]["name"],
-                                "parent_id": keystep_taxonomy_data[keystep_take["scenario"]][str(s["step_id"])]["parent_id"],
-                                "parent_name": keystep_taxonomy_data[keystep_take["scenario"]][str(s["step_id"])]["parent_name"],
+                                "node": get_parent_hierarchy(s["step_id"], keystep_taxonomy_data[keystep_take["scenario"]]),
                             }
                         )
 
@@ -87,7 +97,6 @@ def read_dataset():
 
 
 def main():
-    print("--- Reading Data ---")
     data = read_dataset()
     print(json.dumps(data, indent=4))
 

@@ -207,8 +207,63 @@ def event_ordering(data, num_questions_per_video=2):
     with open(output_file_path, "w") as f:
         json.dump(all_generated_questions, f, indent=2)
 
-def causal(data):
-    pass
+def causal(data, num_questions_per_video=2):
+    with open("prompts/causal.txt", "r") as f:
+        prompt_template = f.read()
+
+    all_generated_questions = []
+
+    for video_id, video_data in tqdm(data.items(), desc="Generating causal questions for videos"):
+        keystep_annotations = video_data.get("keystep_annotations")
+        if not keystep_annotations:
+            continue
+
+        num_to_generate = min(num_questions_per_video, len(keystep_annotations))
+        selected_keysteps = random.sample(keystep_annotations, num_to_generate)
+
+        for keystep in selected_keysteps:
+            parent_hierarchy = []
+            curr_node = keystep["node"]
+            while curr_node:
+                parent_hierarchy.append(curr_node["node_name"])
+                curr_node = curr_node["parent"]
+            parent_hierarchy_str = ""
+            for name in parent_hierarchy:
+                parent_hierarchy_str += f"- {name}\n"
+
+            prompt = prompt_template.format(
+                description=keystep["description"],
+                parent_hierarchy=parent_hierarchy_str
+            )
+            llm = LLM()
+            response = llm.prompt(prompt)
+            if response.startswith("```json"):
+                response = response[7:-4]
+            
+            try:
+                qa_pair = json.loads(response)
+            except json.JSONDecodeError as e:
+                continue
+
+            formatted_question = {
+                "video_id": video_id,
+                "question_type": "causal",
+                "question": json.dumps(qa_pair),
+                "answer": None,
+                "metadata": {
+                    "keystep_description": keystep["description"],
+                    "keystep_start_time": keystep["start_time"],
+                    "keystep_end_time": keystep["end_time"],
+                    "keystep_category": keystep["category"],
+                    "node_hierarchy": keystep["node"]
+                }
+            }
+            all_generated_questions.append(formatted_question)
+
+    output_file_path = os.path.join(OUTPUT_DIRECTORY, "qa_causal.json")
+    os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
+    with open(output_file_path, "w") as f:
+        json.dump(all_generated_questions, f, indent=2)
 
 def camera(data, num_questions_per_video=2):
     with open("prompts/camera.txt", "r") as f:
