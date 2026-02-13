@@ -105,8 +105,21 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Export a single video with all camera views stitched in panoramic order (front-left → front → front-right → back-right → back → back-left)"
     )
-    
-    return parser.parse_args()
+    parser.add_argument(
+        "--no-annotations",
+        action="store_true",
+        help="Export raw video only: no bounding boxes, labels, properties, or frame info overlay"
+    )
+
+    args = parser.parse_args()
+    if args.no_annotations:
+        args.show_bbox = False
+        args.show_labels = False
+        args.show_properties = False
+        args.show_frame_info = False
+    else:
+        args.show_frame_info = True
+    return args
 
 
 # Camera order for panoramic stitch (left-to-right = clockwise around vehicle)
@@ -389,16 +402,17 @@ def render_frame_for_camera(
             continue
 
     caption = captions.get(frame["sample_token"]) if captions else None
-    draw_frame_info(
-        image,
-        camera,
-        frame_idx,
-        total_frames,
-        len(visible_objects),
-        args.font_scale,
-        args.thickness,
-        caption,
-    )
+    if getattr(args, "show_frame_info", True):
+        draw_frame_info(
+            image,
+            camera,
+            frame_idx,
+            total_frames,
+            len(visible_objects),
+            args.font_scale,
+            args.thickness,
+            caption,
+        )
     return image
 
 
