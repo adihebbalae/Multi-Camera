@@ -26,6 +26,7 @@ try:
     from .generate_temporal import generate_temporal_qa
     from .generate_spatial import generate_spatial_qa
     from .generate_perception import generate_perception_qa
+    from .generate_counting import generate_counting_qa
     from .utils.mevid import find_mevid_persons_for_slot, get_mevid_stats
 except ImportError:
     # Direct script execution
@@ -36,6 +37,7 @@ except ImportError:
     from scripts.v6.generate_temporal import generate_temporal_qa
     from scripts.v6.generate_spatial import generate_spatial_qa
     from scripts.v6.generate_perception import generate_perception_qa
+    from scripts.v6.generate_counting import generate_counting_qa
     from scripts.v6.utils.mevid import find_mevid_persons_for_slot, get_mevid_stats
 
 
@@ -43,9 +45,9 @@ except ImportError:
 # Configuration
 # ============================================================================
 
-OUTPUT_DIR = Path("/home/ah66742/data/qa_pairs")
+OUTPUT_DIR = Path("/nas/neurosymbolic/multi-cam-dataset/meva/qa_pairs")
 RANDOM_SEED = 42
-TARGET_PER_CATEGORY = 3  # 3 temporal + 3 spatial + 3 perception = 9 total
+TARGET_PER_CATEGORY = 3  # 3 temporal + 3 spatial + 3 perception + 3 counting = 12 total
 
 
 # ============================================================================
@@ -89,6 +91,11 @@ def is_duplicate_within_slot(new_q: dict, existing_qs: list) -> bool:
                     return True
                 elif qt == "multi_camera_confirmation" and v_new.get("activity") == v_old.get("activity"):
                     return True
+        
+        elif cat == "counting":
+            # Same activity = duplicate
+            if v_new.get("activity") == v_old.get("activity"):
+                return True
     
     return False
 
@@ -161,6 +168,30 @@ def validate_perception(q: dict) -> List[str]:
     return errors
 
 
+def validate_counting(q: dict) -> List[str]:
+    """Validate a counting question."""
+    errors = []
+    v = q.get("verification", {})
+    
+    correct_count = v.get("correct_count")
+    activity = v.get("activity")
+    
+    if correct_count is None:
+        errors.append("Missing correct_count in verification")
+    elif correct_count < 0:
+        errors.append(f"Invalid correct_count: {correct_count} (must be >= 0)")
+    
+    if not activity:
+        errors.append("Missing activity in verification")
+    
+    # Check that correct answer matches correct_count
+    correct_answer = q.get("correct_answer")
+    if correct_answer and str(correct_count) != correct_answer:
+        errors.append(f"correct_answer ({correct_answer}) doesn't match correct_count ({correct_count})")
+    
+    return errors
+
+
 def validate_all(qa_pairs: List[dict]) -> Dict[str, List[str]]:
     """
     Validate all QA pairs and return errors by question_id.
@@ -169,6 +200,7 @@ def validate_all(qa_pairs: List[dict]) -> Dict[str, List[str]]:
         "temporal": validate_temporal,
         "spatial": validate_spatial,
         "perception": validate_perception,
+        "counting": validate_counting,
     }
     
     issues = {}
@@ -198,7 +230,8 @@ def run_pipeline(slot: str, verbose: bool = False,
         4. Generate temporal questions (3 per slot)
         5. Generate spatial questions (3 per slot)
         6. Generate perception questions (3 per slot)
-        7. Validate and output
+        7. Generate counting questions (3 per slot)
+        8. Validate and output
     
     Args:
         slot: Slot name e.g. "2018-03-11.11-25-00.school"
@@ -233,9 +266,9 @@ def run_pipeline(slot: str, verbose: bool = False,
         print(f"\nStep 3: Resolving entities...")
     resolved = resolve_entities(sg, verbose=verbose)
     
-    # Step 4-6: Generate QA pairs
+    # Step 4-7: Generate QA pairs
     if verbose:
-        print(f"\nStep 4-6: Generating questions...")
+        print(f"\nStep 4-7: Generating questions...")
     
     temporal_qa = generate_temporal_qa(sg, resolved, rng, 
                                         count=TARGET_PER_CATEGORY, verbose=verbose)
@@ -243,8 +276,10 @@ def run_pipeline(slot: str, verbose: bool = False,
                                      count=TARGET_PER_CATEGORY, verbose=verbose)
     perception_qa = generate_perception_qa(sg, resolved, rng,
                                             count=TARGET_PER_CATEGORY, verbose=verbose)
+    counting_qa = generate_counting_qa(sg, resolved, rng,
+                                       count=TARGET_PER_CATEGORY, verbose=verbose)
     
-    all_qa = temporal_qa + spatial_qa + perception_qa
+    all_qa = temporal_qa + spatial_qa + perception_qa + counting_qa
     
     # Deduplication
     unique_qa = []
@@ -254,7 +289,7 @@ def run_pipeline(slot: str, verbose: bool = False,
     
     # Validation
     if verbose:
-        print(f"\nStep 7: Validating...")
+        print(f"\nStep 8: Validating...")
     issues = validate_all(unique_qa)
     if verbose:
         if issues:
@@ -289,6 +324,7 @@ def run_pipeline(slot: str, verbose: bool = False,
             "temporal": sum(1 for q in unique_qa if q["category"] == "temporal"),
             "spatial": sum(1 for q in unique_qa if q["category"] == "spatial"),
             "perception": sum(1 for q in unique_qa if q["category"] == "perception"),
+            "counting": sum(1 for q in unique_qa if q["category"] == "counting"),
         },
         "validation_issues": len(issues),
         "generation_time_sec": round(time.time() - t0, 2),
@@ -301,6 +337,7 @@ def run_pipeline(slot: str, verbose: bool = False,
         print(f"  Temporal:   {output['category_counts']['temporal']}")
         print(f"  Spatial:    {output['category_counts']['spatial']}")
         print(f"  Perception: {output['category_counts']['perception']}")
+        print(f"  Counting:   {output['category_counts']['counting']}")
         print(f"  Cameras:    {cameras_in_slot}")
         print(f"  Events:     {len(events)}")
         print(f"  Entities:   {len(sg.entities)}")

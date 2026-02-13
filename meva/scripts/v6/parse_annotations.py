@@ -19,7 +19,7 @@ MEVA_ROOT = Path("/nas/mars/dataset/MEVA")
 ANNOTATION_BASE = MEVA_ROOT / "meva-data-repo" / "annotation" / "DIVA-phase-2" / "MEVA"
 KITWARE_ROOT = ANNOTATION_BASE / "kitware"
 KITWARE_TRAINING_ROOT = ANNOTATION_BASE / "kitware-meva-training"
-SLOT_INDEX_PATH = Path("/home/ah66742/data/slot_index.json")
+SLOT_INDEX_PATH = Path("/nas/neurosymbolic/multi-cam-dataset/meva/slot_index.json")
 KITWARE_TRAINING_ROOT = ANNOTATION_BASE / "kitware-meva-training"
 
 DEFAULT_FRAMERATE = 30.0
