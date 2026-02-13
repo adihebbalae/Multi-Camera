@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data (local only, not committed)
+output/
+data/qa_pairs/
+*.log
+
+# Allow these specific preprocessing files
+!data/annotated_activity_slots.txt
+!data/slot_index.json
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# Local configuration (copy from config_template.py)
+config.py

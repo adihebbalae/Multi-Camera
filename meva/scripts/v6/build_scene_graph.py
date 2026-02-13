@@ -1,0 +1,212 @@
+"""
+V6 build_scene_graph.py — Step 2: Entity-based scene graph with IoU matching.
+
+Builds an entity-based scene graph from parsed events + geom.yml bounding boxes.
+Each entity = (camera_id, actor_id) with time span, keyframe bboxes, and events.
+"""
+
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple
+from collections import defaultdict
+from dataclasses import dataclass, asdict, field
+
+from .parse_annotations import Event, find_clips_for_slot, DEFAULT_FRAMERATE
+from .utils.yaml_stream import get_actor_keyframe_bboxes, get_actor_frame_range
+from .utils.krtd import load_camera_model, CameraModel, INDOOR_CAMERAS
+from .utils.iou import compute_iou
+
+
+# ============================================================================
+# Data Structures
+# ============================================================================
+
+@dataclass
+class Entity:
+    """An entity (person/vehicle) tracked on one camera."""
+    entity_id: str           # "{camera_id}_actor_{actor_id}"
+    camera_id: str
+    actor_id: int
+    entity_type: str         # "person" or "vehicle"
+    first_frame: int
+    last_frame: int
+    first_sec: float
+    last_sec: float
+    keyframe_bboxes: Dict[int, List[int]]  # {frame: [x1,y1,x2,y2]}
+    events: List[str]        # event_ids this entity participates in
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
+class CameraNode:
+    """Camera metadata for scene graph."""
+    camera_id: str
+    is_indoor: bool
+    has_krtd: bool
+    position_enu: Optional[Tuple[float, float, float]]
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass  
+class SceneGraph:
+    """Complete scene graph for one slot."""
+    slot: str
+    cameras: Dict[str, CameraNode]
+    entities: Dict[str, Entity]       # {entity_id: Entity}
+    events: List[Event]
+    events_by_camera: Dict[str, List[Event]]
+
+    def to_dict(self) -> dict:
+        return {
+            "slot": self.slot,
+            "cameras": {k: v.to_dict() for k, v in self.cameras.items()},
+            "entities": {k: v.to_dict() for k, v in self.entities.items()},
+            "events": [e.to_dict() for e in self.events],
+            "events_by_camera": {
+                k: [e.to_dict() for e in v]
+                for k, v in self.events_by_camera.items()
+            },
+        }
+
+
+# ============================================================================
+# Scene Graph Builder
+# ============================================================================
+
+def build_scene_graph(slot: str, events: List[Event], 
+                      verbose: bool = False) -> SceneGraph:
+    """
+    Build an entity-based scene graph from parsed events.
+    
+    Steps:
+        1. Build camera nodes with KRTD info
+        2. Extract entities from events + geom.yml bboxes
+        3. Link events to entities
+    
+    Args:
+        slot: Slot name
+        events: Parsed Event objects from parse_annotations
+        verbose: Print progress
+    
+    Returns:
+        SceneGraph with entities and events
+    """
+    if verbose:
+        print(f"Building scene graph for {slot}")
+
+    # Collect unique cameras
+    camera_ids = sorted(set(e.camera_id for e in events))
+    
+    # 1. Build camera nodes
+    cameras: Dict[str, CameraNode] = {}
+    for cam_id in camera_ids:
+        model = load_camera_model(cam_id)
+        is_indoor = cam_id in INDOOR_CAMERAS
+        cameras[cam_id] = CameraNode(
+            camera_id=cam_id,
+            is_indoor=is_indoor,
+            has_krtd=model is not None,
+            position_enu=tuple(model.camera_center.tolist()) if model else None,
+        )
+
+    # 2. Extract entities: collect unique (camera, actor) pairs from events
+    # Also collect actor_ids per camera for geom.yml lookup
+    entity_actor_ids: Dict[str, Set[int]] = defaultdict(set)  # cam -> actor_ids
+    entity_types: Dict[str, Dict[int, str]] = defaultdict(dict)  # cam -> {aid: type}
+    entity_events: Dict[str, Dict[int, List[str]]] = defaultdict(lambda: defaultdict(list))
+    
+    for evt in events:
+        for actor in evt.actors:
+            aid = actor["actor_id"]
+            entity_actor_ids[evt.camera_id].add(aid)
+            entity_types[evt.camera_id][aid] = actor.get("entity_type", "unknown")
+            entity_events[evt.camera_id][aid].append(evt.event_id)
+
+    # 3. Try to get keyframe bboxes from geom.yml (stream-parsed)
+    clips = find_clips_for_slot(slot)
+    clip_by_camera = {c["camera_id"]: c for c in clips}
+    
+    entity_bboxes: Dict[str, Dict[int, Dict[int, List[int]]]] = {}  # cam -> {aid: {frame: bbox}}
+    entity_frame_ranges: Dict[str, Dict[int, tuple]] = {}  # cam -> {aid: (first, last)}
+    
+    for cam_id, actor_ids in entity_actor_ids.items():
+        if cam_id not in clip_by_camera:
+            continue
+        clip = clip_by_camera[cam_id]
+        geom_path = Path(clip["activities_file"]).with_name(
+            Path(clip["activities_file"]).name.replace(".activities.yml", ".geom.yml")
+        )
+        if geom_path.exists():
+            try:
+                bboxes = get_actor_keyframe_bboxes(geom_path, actor_ids, sample_every=30)
+                entity_bboxes[cam_id] = bboxes
+                
+                # Also get frame ranges
+                ranges = get_actor_frame_range(geom_path)
+                entity_frame_ranges[cam_id] = ranges
+                
+                if verbose:
+                    print(f"  {cam_id}: streamed geom.yml — {len(bboxes)} actors with bboxes")
+            except Exception as e:
+                if verbose:
+                    print(f"  {cam_id}: geom.yml parse error: {e}")
+
+    # 4. Build entity objects
+    entities: Dict[str, Entity] = {}
+    framerate = DEFAULT_FRAMERATE
+    
+    for cam_id, actor_ids in entity_actor_ids.items():
+        cam_ranges = entity_frame_ranges.get(cam_id, {})
+        cam_bboxes = entity_bboxes.get(cam_id, {})
+        
+        for aid in actor_ids:
+            entity_id = f"{cam_id}_actor_{aid}"
+            
+            # Frame range from geom.yml if available, else from events
+            if aid in cam_ranges:
+                first_frame, last_frame = cam_ranges[aid]
+            else:
+                # Estimate from events
+                actor_events = [e for e in events 
+                               if e.camera_id == cam_id 
+                               and any(a["actor_id"] == aid for a in e.actors)]
+                if actor_events:
+                    first_frame = min(e.start_frame for e in actor_events)
+                    last_frame = max(e.end_frame for e in actor_events)
+                else:
+                    first_frame, last_frame = 0, 0
+            
+            entities[entity_id] = Entity(
+                entity_id=entity_id,
+                camera_id=cam_id,
+                actor_id=aid,
+                entity_type=entity_types.get(cam_id, {}).get(aid, "unknown"),
+                first_frame=first_frame,
+                last_frame=last_frame,
+                first_sec=round(first_frame / framerate, 2),
+                last_sec=round(last_frame / framerate, 2),
+                keyframe_bboxes=cam_bboxes.get(aid, {}),
+                events=entity_events.get(cam_id, {}).get(aid, []),
+            )
+
+    # Group events by camera
+    events_by_camera: Dict[str, List[Event]] = defaultdict(list)
+    for evt in events:
+        events_by_camera[evt.camera_id].append(evt)
+
+    sg = SceneGraph(
+        slot=slot,
+        cameras=cameras,
+        entities=entities,
+        events=events,
+        events_by_camera=dict(events_by_camera),
+    )
+
+    if verbose:
+        print(f"  Total: {len(entities)} entities, {len(events)} events, "
+              f"{len(cameras)} cameras")
+
+    return sg
