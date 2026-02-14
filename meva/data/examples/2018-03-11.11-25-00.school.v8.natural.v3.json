@@ -1,0 +1,840 @@
+{
+  "slot": "2018-03-11.11-25-00.school",
+  "version": "v8_natural_v3",
+  "generator": "naturalize_v8_qa_v2.py",
+  "preprocessor": "v3_preprocess",
+  "model": "gpt-4o-mini",
+  "temperature": 0.95,
+  "total_tokens": 10558,
+  "total_questions": 9,
+  "failures": 0,
+  "cameras": [
+    "G299",
+    "G328",
+    "G330",
+    "G336",
+    "G419",
+    "G420",
+    "G421",
+    "G423"
+  ],
+  "mevid_supported": true,
+  "mevid_persons_in_slot": 21,
+  "category_counts": {
+    "temporal": 2,
+    "spatial": 2,
+    "perception": 2,
+    "re_identification": 2,
+    "scene_summary": 1
+  },
+  "v8_stats": {
+    "entities_with_mevid_descriptions": 132,
+    "entities_with_geom_descriptions": 352,
+    "entities_with_fallback_descriptions": 442,
+    "attribute_verification_questions": 1,
+    "reid_questions": 2,
+    "scene_summary_questions": 1,
+    "questions_with_debug_info": 9
+  },
+  "qa_pairs": [
+    {
+      "question_id": "v8_temporal_001",
+      "category": "temporal",
+      "difficulty": "easy",
+      "question_template": "Consider two events in this multi-camera scene: (1) A person wearing a gray top and green pants, carrying a black backpack, entering a scene through a structure. (2) A person in a blue top and green pants, interacting with a person. Which event occurred first?",
+      "options": [
+        "Entering a scene through a structure (camera G421) occurred first",
+        "Interacting with a person (camera G330) occurred first",
+        "They occurred simultaneously",
+        "Cannot be determined"
+      ],
+      "correct_answer_index": 0,
+      "correct_answer": "Entering a scene through a structure (camera G421) occurred first",
+      "requires_cameras": [
+        "G330",
+        "G421"
+      ],
+      "requires_multi_camera": true,
+      "verification": {
+        "event_a": {
+          "activity": "person_enters_scene_through_structure",
+          "camera": "G421",
+          "start_sec": 0.33,
+          "end_sec": 2.4,
+          "actor_ids": [
+            1367451520919019547
+          ],
+          "description": "a person wearing a gray top and green pants, and they are carrying a black backpack enters scene through structure on camera G421"
+        },
+        "event_b": {
+          "activity": "hand_interacts_with_person",
+          "camera": "G330",
+          "start_sec": 6.1,
+          "end_sec": 9.27,
+          "actor_ids": [
+            7001363839426372650,
+            4592107427582189901
+          ],
+          "description": "a person in a blue top and green pants interacts with person on camera G330"
+        },
+        "gap_sec": 3.7,
+        "entity_link": "mevid_validated",
+        "same_person": true
+      },
+      "debug_info": {
+        "event_a": {
+          "camera": "G421",
+          "activity": "person_enters_scene_through_structure",
+          "actor_ids": [
+            1367451520919019547
+          ],
+          "frame_range": [
+            10,
+            72
+          ],
+          "timestamp": "0.33-2.40s",
+          "fps": 30.0,
+          "clip_file": "2018-03-11.11-25-00.11-30-01.school.G421.mp4",
+          "entity_description": "a person wearing a gray top and green pants, and they are carrying a black backpack"
+        },
+        "event_b": {
+          "camera": "G330",
+          "activity": "hand_interacts_with_person",
+          "actor_ids": [
+            7001363839426372650,
+            4592107427582189901
+          ],
+          "frame_range": [
+            183,
+            278
+          ],
+          "timestamp": "6.10-9.27s",
+          "fps": 30.0,
+          "clip_file": "2018-03-11.11-25-00.11-30-00.school.G330.mp4",
+          "entity_description": "a person in a blue top and green pants"
+        },
+        "gap_sec": 3.7,
+        "connection_type": "same_entity_cluster",
+        "connection_strength": "strong",
+        "connection_score": 5.0,
+        "relationship": null,
+        "cluster_id": "cluster_0",
+        "mevid_validated": true,
+        "mevid_person_id": 97
+      },
+      "original_template": "a person wearing a gray top and green pants, and they are carrying a black backpack enters scene through structure on camera G421 and a person in a blue top and green pants interacts with person on camera G330 -- which occurred first?",
+      "original_options": [
+        "The event on camera G421 occurred first",
+        "The event on camera G330 occurred first",
+        "They occurred simultaneously",
+        "Cannot be determined"
+      ],
+      "naturalized_question": "Can you identify which event took place first: the individual in gray who had a black backpack enter the scene through a structure, or the interaction involving the person dressed in blue with green pants?",
+      "naturalized_options": [
+        "Entering a scene through a structure (camera G421) occurred first",
+        "Interacting with a person (camera G330) occurred first",
+        "They occurred simultaneously",
+        "Cannot be determined"
+      ],
+      "reasoning": "The timeline shows that the individual in gray entered first, followed by the interaction with the person in blue.",
+      "grammar_checked": true
+    },
+    {
+      "question_id": "v8_temporal_002",
+      "category": "temporal",
+      "difficulty": "easy",
+      "question_template": "Consider two events in this multi-camera scene: (1) A person in a blue top and blue pants, entering a scene through a structure. (2) A person wearing a gray top and green pants, carrying a black backpack, opening a facility door. Which event occurred first?",
+      "options": [
+        "Entering a scene through a structure (camera G420) occurred first",
+        "Opening a facility door (camera G328) occurred first",
+        "They occurred simultaneously",
+        "Cannot be determined"
+      ],
+      "correct_answer_index": 1,
+      "correct_answer": "Opening a facility door (camera G328) occurred first",
+      "requires_cameras": [
+        "G328",
+        "G420"
+      ],
+      "requires_multi_camera": true,
+      "verification": {
+        "event_a": {
+          "activity": "person_opens_facility_door",
+          "camera": "G328",
+          "start_sec": 36.67,
+          "end_sec": 39.33,
+          "actor_ids": [
+            3798246005989942289
+          ],
+          "description": "a person wearing a gray top and green pants, and they are carrying a black backpack opens facility door on camera G328"
+        },
+        "event_b": {
+          "activity": "person_enters_scene_through_structure",
+          "camera": "G420",
+          "start_sec": 42.43,
+          "end_sec": 45.07,
+          "actor_ids": [
+            8966895575790985284
+          ],
+          "description": "a person in a blue top and blue pants enters scene through structure on camera G420"
+        },
+        "gap_sec": 3.1,
+        "entity_link": "mevid_validated",
+        "same_person": false
+      },
+      "debug_info": {
+        "event_a": {
+          "camera": "G328",
+          "activity": "person_opens_facility_door",
+          "actor_ids": [
+            3798246005989942289
+          ],
+          "frame_range": [
+            1100,
+            1180
+          ],
+          "timestamp": "36.67-39.33s",
+          "fps": 30.0,
+          "clip_file": "2018-03-11.11-25-00.11-30-00.school.G328.mp4",
+          "entity_description": "a person wearing a gray top and green pants, and they are carrying a black backpack"
+        },
+        "event_b": {
+          "camera": "G420",
+          "activity": "person_enters_scene_through_structure",
+          "actor_ids": [
+            8966895575790985284
+          ],
+          "frame_range": [
+            1273,
+            1352
+          ],
+          "timestamp": "42.43-45.07s",
+          "fps": 30.0,
+          "clip_file": "2018-03-11.11-25-00.11-30-00.school.G420.mp4",
+          "entity_description": "a person in a blue top and blue pants"
+        },
+        "gap_sec": 3.1,
+        "connection_type": "related_activities_causal",
+        "connection_strength": "medium",
+        "connection_score": 4.0,
+        "relationship": "causal",
+        "cluster_id": null,
+        "mevid_validated": true,
+        "mevid_person_id": 41
+      },
+      "original_template": "a person in a blue top and blue pants enters scene through structure on camera G420 and a person wearing a gray top and green pants, and they are carrying a black backpack opens facility door on camera G328 -- which occurred first?",
+      "original_options": [
+        "The event on camera G420 occurred first",
+        "The event on camera G328 occurred first",
+        "They occurred simultaneously",
+        "Cannot be determined"
+      ],
+      "naturalized_question": "Can you identify which event took place first: a person in a blue top and blue pants walking through a structure, or an individual with a gray top and green pants who is opening a door while carrying a black backpack?",
+      "naturalized_options": [
+        "Entering a scene through a structure (camera G420) occurred first",
+        "Opening a facility door (camera G328) occurred first",
+        "They occurred simultaneously",
+        "Cannot be determined"
+      ],
+      "reasoning": "The person in blue entered the scene before the gray-clad individual opened the door, as there is a 3.1-second gap between the events.",
+      "grammar_checked": true
+    },
+    {
+      "question_id": "v8_spatial_003",
+      "category": "spatial",
+      "difficulty": "easy",
+      "question_template": "How close are a person wearing a blue top and blue pants, with a black hoodie featuring a graphic design on the back and a person wearing a blue top and blue pants in the scene?",
+      "options": [
+        "They are near each other (within a few meters)",
+        "They are at a moderate distance (5-15 meters)",
+        "They are far apart (more than 15 meters)",
+        "They are at the same location"
+      ],
+      "correct_answer_index": 0,
+      "correct_answer": "They are near each other (within a few meters)",
+      "requires_cameras": [
+        "G328"
+      ],
+      "requires_multi_camera": false,
+      "verification": {
+        "entity_a": "G328_actor_1613855842107762240",
+        "entity_b": "G328_actor_2828636302242128936",
+        "entity_a_desc": "a person wearing a blue top and blue pants, with a black hoodie featuring a graphic design on the back",
+        "entity_b_desc": "a person wearing a blue top and blue pants",
+        "world_pos_a_enu": [
+          150.56448736717743,
+          -36.15586021380905,
+          0.0
+        ],
+        "world_pos_b_enu": [
+          151.81478939723144,
+          -38.632104952473,
+          -8.881784197001252e-16
+        ],
+        "distance_meters": 2.77,
+        "proximity": "near",
+        "projection_method": "krtd_bbox_foot"
+      },
+      "debug_info": {
+        "entity_a": {
+          "entity_id": "G328_actor_1613855842107762240",
+          "camera": "G328",
+          "description": "a person wearing a blue top and blue pants, with a black hoodie featuring a graphic design on the back",
+          "bbox": [
+            716,
+            588,
+            730,
+            618
+          ],
+          "frame": 3003,
+          "timestamp": "98.97-101.23s",
+          "world_pos_enu": [
+            150.56448736717743,
+            -36.15586021380905,
+            0.0
+          ]
+        },
+        "entity_b": {
+          "entity_id": "G328_actor_2828636302242128936",
+          "camera": "G328",
+          "description": "a person wearing a blue top and blue pants",
+          "bbox": [
+            721,
+            587,
+            735,
+            617
+          ],
+          "frame": 3065,
+          "timestamp": "101.30-103.03s",
+          "world_pos_enu": [
+            151.81478939723144,
+            -38.632104952473,
+            -8.881784197001252e-16
+          ]
+        },
+        "distance_meters": 2.77,
+        "proximity": "near",
+        "projection_method": "krtd_bbox_foot"
+      },
+      "original_template": "How close are a person wearing a blue top and blue pants, with a black hoodie featuring a graphic design on the back and a person wearing a blue top and blue pants in the scene visible on camera G328?",
+      "naturalized_question": "Can you estimate the distance between the individual dressed in a blue top and blue pants with a black graphic hoodie and another person also sporting a blue top and blue pants in the same scene?",
+      "naturalized_options": [
+        "They are near each other (within a few meters)",
+        "They are at a moderate distance (5-15 meters)",
+        "They are far apart (more than 15 meters)",
+        "They are at the same location"
+      ],
+      "reasoning": "The footage indicates they are approximately 2.77 meters apart, placing them close together.",
+      "grammar_checked": true
+    },
+    {
+      "question_id": "v8_spatial_004",
+      "category": "spatial",
+      "difficulty": "easy",
+      "question_template": "How close are a person wearing a blue top and blue pants, carrying a bottle and a person wearing a white hoodie with a Puma logo, camouflage pants, and a camouflage cap in the scene?",
+      "options": [
+        "They are near each other (within a few meters)",
+        "They are at a moderate distance (5-15 meters)",
+        "They are far apart (more than 15 meters)",
+        "They are at the same location"
+      ],
+      "correct_answer_index": 1,
+      "correct_answer": "They are at a moderate distance (5-15 meters)",
+      "requires_cameras": [
+        "G328"
+      ],
+      "requires_multi_camera": false,
+      "verification": {
+        "entity_a": "G328_actor_2837885804119270893",
+        "entity_b": "G328_actor_4132231753295701202",
+        "entity_a_desc": "a person wearing a blue top and blue pants, and is carrying a bottle",
+        "entity_b_desc": "a person wearing a white hoodie with a Puma logo, camouflage pants, and a camouflage cap",
+        "world_pos_a_enu": [
+          154.83853886241715,
+          -42.80160684490623,
+          0.0
+        ],
+        "world_pos_b_enu": [
+          157.95625593288253,
+          -47.64936259629016,
+          0.0
+        ],
+        "distance_meters": 5.76,
+        "proximity": "moderate",
+        "projection_method": "krtd_bbox_foot"
+      },
+      "debug_info": {
+        "entity_a": {
+          "entity_id": "G328_actor_2837885804119270893",
+          "camera": "G328",
+          "description": "a person wearing a blue top and blue pants, and is carrying a bottle",
+          "bbox": [
+            722,
+            585,
+            736,
+            615
+          ],
+          "frame": 2985,
+          "timestamp": "98.97-100.07s",
+          "world_pos_enu": [
+            154.83853886241715,
+            -42.80160684490623,
+            0.0
+          ]
+        },
+        "entity_b": {
+          "entity_id": "G328_actor_4132231753295701202",
+          "camera": "G328",
+          "description": "a person wearing a white hoodie with a Puma logo, camouflage pants, and a camouflage cap",
+          "bbox": [
+            728,
+            589,
+            738,
+            613
+          ],
+          "frame": 1149,
+          "timestamp": "36.67-39.93s",
+          "world_pos_enu": [
+            157.95625593288253,
+            -47.64936259629016,
+            0.0
+          ]
+        },
+        "distance_meters": 5.76,
+        "proximity": "moderate",
+        "projection_method": "krtd_bbox_foot"
+      },
+      "original_template": "How close are a person wearing a blue top and blue pants, and is carrying a bottle and a person wearing a white hoodie with a Puma logo, camouflage pants, and a camouflage cap in the scene visible on camera G328?",
+      "naturalized_question": "What would you say is the distance between the individual dressed in blue with a bottle and the one in a white Puma hoodie and camo pants?",
+      "naturalized_options": [
+        "They are near each other (within a few meters)",
+        "They are at a moderate distance (5-15 meters)",
+        "They are far apart (more than 15 meters)",
+        "They are at the same location"
+      ],
+      "reasoning": "The two individuals are approximately 5.76 meters apart in the scene.",
+      "grammar_checked": true
+    },
+    {
+      "question_id": "v8_perception_005",
+      "category": "perception",
+      "difficulty": "easy",
+      "question_template": "Which camera captures carrying a heavy object?",
+      "options": [
+        "G336",
+        "G299",
+        "G421",
+        "G419"
+      ],
+      "correct_answer_index": 1,
+      "correct_answer": "G299",
+      "requires_cameras": [
+        "G299",
+        "G330"
+      ],
+      "requires_multi_camera": true,
+      "verification": {
+        "question_type": "which_camera",
+        "activity": "person_carries_heavy_object",
+        "activity_alias": "carries heavy object",
+        "cameras_with_activity": [
+          "G299",
+          "G330"
+        ],
+        "total_cameras_in_slot": 8
+      },
+      "debug_info": {
+        "question_type": "which_camera",
+        "activity": "person_carries_heavy_object",
+        "activity_alias": "carries heavy object",
+        "correct_camera": "G299",
+        "cameras_with_activity": [
+          "G299",
+          "G330"
+        ],
+        "representative_event": {
+          "camera": "G299",
+          "frame_range": [
+            0,
+            202
+          ],
+          "timestamp": "0.00-6.73s",
+          "clip_file": "2018-03-11.11-25-00.11-30-00.school.G299.mp4"
+        }
+      },
+      "original_template": "Which camera captures a carries heavy object event?",
+      "naturalized_question": "Can you tell me which camera shows someone carrying a heavy object?",
+      "naturalized_options": [
+        "G336",
+        "G299",
+        "G421",
+        "G419"
+      ],
+      "reasoning": "The footage from camera G336 depicts an individual struggling with a heavy item.",
+      "grammar_checked": true
+    },
+    {
+      "question_id": "v8_perception_006",
+      "category": "perception",
+      "subcategory": "attribute_verification",
+      "difficulty": "medium",
+      "question_template": "A person is visible on camera G423. What color are they wearing on their lower body?",
+      "options": [
+        "Gray",
+        "Navy",
+        "Blue",
+        "Brown"
+      ],
+      "correct_answer_index": 2,
+      "correct_answer": "Blue",
+      "requires_cameras": [
+        "G423"
+      ],
+      "requires_multi_camera": false,
+      "verification": {
+        "question_type": "attribute_verification",
+        "mevid_person_id": "0008",
+        "attribute_type": "lower_color",
+        "correct_value": "blue",
+        "camera": "G423",
+        "person_description": "a person wearing a blue top and blue pants, with a black hoodie featuring a graphic design on the back"
+      },
+      "debug_info": {
+        "question_type": "attribute_verification",
+        "mevid_person_id": "0008",
+        "camera": "G423",
+        "person_description": "a person wearing a blue top and blue pants, with a black hoodie featuring a graphic design on the back",
+        "gpt_description": "The person is wearing a blue upper body garment and blue lower body clothing, with a black hoodie featuring a graphic design on the back.",
+        "attribute_type": "lower_color",
+        "correct_value": "blue",
+        "all_cameras_for_person": [
+          "G299",
+          "G328",
+          "G330",
+          "G336",
+          "G419",
+          "G420",
+          "G421",
+          "G423"
+        ],
+        "source": "MEVID YOLO+GPT person database"
+      },
+      "naturalized_question": "On camera G423, can you identify the color of the person's pants?",
+      "naturalized_options": [
+        "Gray",
+        "Navy",
+        "Blue",
+        "Brown"
+      ],
+      "reasoning": "The individual seen on G423 is wearing blue on their lower half.",
+      "grammar_checked": true
+    },
+    {
+      "question_id": "v8_re_identification_007",
+      "category": "re_identification",
+      "difficulty": "medium",
+      "question_template": "On camera G419, a person wearing a blue top and blue pants, with a black hoodie featuring a graphic design on the back is visible. Which other camera also shows this same person?",
+      "options": [
+        "G423",
+        "G299",
+        "G328",
+        "None of these cameras"
+      ],
+      "correct_answer_index": 0,
+      "correct_answer": "G423",
+      "requires_cameras": [
+        "G419",
+        "G423"
+      ],
+      "requires_multi_camera": true,
+      "verification": {
+        "question_type": "which_camera_reid",
+        "mevid_person_id": "0008",
+        "person_description": "a person wearing a blue top and blue pants, with a black hoodie featuring a graphic design on the back",
+        "source_camera": "G419",
+        "correct_target_camera": "G423",
+        "all_person_cameras": [
+          "G299",
+          "G328",
+          "G330",
+          "G336",
+          "G419",
+          "G420",
+          "G421",
+          "G423"
+        ]
+      },
+      "debug_info": {
+        "question_type": "which_camera_reid",
+        "mevid_person_id": "0008",
+        "source_camera": "G419",
+        "target_camera": "G423",
+        "all_person_cameras": [
+          "G299",
+          "G328",
+          "G330",
+          "G336",
+          "G419",
+          "G420",
+          "G421",
+          "G423"
+        ],
+        "person_description": "a person wearing a blue top and blue pants, with a black hoodie featuring a graphic design on the back"
+      },
+      "naturalized_question": "A person is spotted on camera G419 dressed in a blue top and blue pants, complemented by a black hoodie that has a graphic design on the back. Can you identify the same individual on another camera?",
+      "naturalized_options": [
+        "G423",
+        "G299",
+        "G328",
+        "None of these cameras"
+      ],
+      "reasoning": "The unique graphic on the hoodie makes it identifiable, and this person is seen on both G419 and G423.",
+      "grammar_checked": true
+    },
+    {
+      "question_id": "v8_re_identification_008",
+      "category": "re_identification",
+      "difficulty": "medium",
+      "question_template": "A person wearing a blue top and blue pants, with short dark hair and glasses is observed on camera G419. Is this the same person visible on camera G420?",
+      "options": [
+        "Yes, it is the same person",
+        "No, they are different people",
+        "Cannot be determined from the footage",
+        "The person is not visible on the second camera"
+      ],
+      "correct_answer_index": 0,
+      "correct_answer": "Yes, it is the same person",
+      "requires_cameras": [
+        "G419",
+        "G420"
+      ],
+      "requires_multi_camera": true,
+      "verification": {
+        "question_type": "same_person_confirmation",
+        "mevid_person_id": "0010",
+        "person_description": "a person wearing a blue top and blue pants, with short dark hair and glasses",
+        "camera_a": "G419",
+        "camera_b": "G420",
+        "all_person_cameras": [
+          "G299",
+          "G328",
+          "G330",
+          "G336",
+          "G419",
+          "G420",
+          "G421",
+          "G423"
+        ],
+        "ground_truth": "same_person"
+      },
+      "debug_info": {
+        "question_type": "same_person_confirmation",
+        "mevid_person_id": "0010",
+        "camera_a": "G419",
+        "camera_b": "G420",
+        "all_person_cameras": [
+          "G299",
+          "G328",
+          "G330",
+          "G336",
+          "G419",
+          "G420",
+          "G421",
+          "G423"
+        ],
+        "person_description": "a person wearing a blue top and blue pants, with short dark hair and glasses"
+      },
+      "naturalized_question": "On camera G419, there's an individual in a blue top and blue pants, sporting short dark hair and wearing glasses. Do we see this same person on camera G420 as well?",
+      "naturalized_options": [
+        "A) Yes, it is the same person",
+        "B) No, they are different people",
+        "C) Cannot be determined from the footage",
+        "D) The person is not visible on the second camera"
+      ],
+      "reasoning": "The person's distinct features help verify their presence on both cameras.",
+      "grammar_checked": true
+    },
+    {
+      "question_id": "v8_scene_summary_009",
+      "category": "scene_summary",
+      "difficulty": "hard",
+      "question_template": "Considering all 8 camera feeds in this slot, which description best characterizes the overall scene?",
+      "options": [
+        "An empty scene with minimal activity, captured on 5 cameras",
+        "A vehicle-focused scene with mostly parking and driving activity",
+        "A single-camera scene showing only indoor activities",
+        "A pedestrian-dominant scene across 8 cameras, primarily featuring puts down object activity"
+      ],
+      "correct_answer_index": 3,
+      "correct_answer": "A pedestrian-dominant scene across 8 cameras, primarily featuring puts down object activity",
+      "requires_cameras": [
+        "G299",
+        "G328",
+        "G330",
+        "G336",
+        "G419",
+        "G420",
+        "G421",
+        "G423"
+      ],
+      "requires_multi_camera": true,
+      "verification": {
+        "question_type": "scene_characterization",
+        "total_events": 733,
+        "num_cameras": 8,
+        "person_events": 683,
+        "vehicle_events": 5,
+        "scene_type": "pedestrian-dominant",
+        "top_activity": "person_puts_down_object",
+        "top_activity_count": 115
+      },
+      "debug_info": {
+        "question_type": "scene_characterization",
+        "scene_analysis": {
+          "total_events": 733,
+          "unique_activities": 20,
+          "activity_counts": {
+            "hand_interacts_with_person": 45,
+            "person_carries_heavy_object": 90,
+            "person_talks_to_person": 66,
+            "person_transfers_object": 14,
+            "person_enters_scene_through_structure": 108,
+            "person_picks_up_object": 104,
+            "person_puts_down_object": 115,
+            "person_opens_facility_door": 28,
+            "person_sits_down": 53,
+            "person_texts_on_phone": 21,
+            "person_exits_scene_through_structure": 45,
+            "vehicle_turns_left": 4,
+            "person_stands_up": 19,
+            "person_embraces_person": 11,
+            "person_talks_on_phone": 5,
+            "person_closes_facility_door": 1,
+            "vehicle_stops": 1,
+            "person_opens_vehicle_door": 1,
+            "person_exits_vehicle": 1,
+            "person_closes_vehicle_door": 1
+          },
+          "camera_event_counts": {
+            "G299": 277,
+            "G330": 274,
+            "G419": 36,
+            "G423": 81,
+            "G421": 9,
+            "G420": 35,
+            "G328": 13,
+            "G336": 8
+          },
+          "num_cameras": 8,
+          "duration_sec": 300.3,
+          "person_event_count": 683,
+          "vehicle_event_count": 5,
+          "cross_camera_activities": {
+            "hand_interacts_with_person": [
+              "G299",
+              "G330"
+            ],
+            "person_carries_heavy_object": [
+              "G299",
+              "G330"
+            ],
+            "person_talks_to_person": [
+              "G299",
+              "G328",
+              "G330",
+              "G419",
+              "G420",
+              "G423"
+            ],
+            "person_transfers_object": [
+              "G299",
+              "G330"
+            ],
+            "person_enters_scene_through_structure": [
+              "G299",
+              "G328",
+              "G330",
+              "G419",
+              "G420",
+              "G421",
+              "G423"
+            ],
+            "person_picks_up_object": [
+              "G299",
+              "G330"
+            ],
+            "person_puts_down_object": [
+              "G299",
+              "G330"
+            ],
+            "person_opens_facility_door": [
+              "G299",
+              "G328",
+              "G330",
+              "G419",
+              "G420",
+              "G421"
+            ],
+            "person_sits_down": [
+              "G299",
+              "G330"
+            ],
+            "person_texts_on_phone": [
+              "G299",
+              "G330",
+              "G423"
+            ],
+            "person_exits_scene_through_structure": [
+              "G299",
+              "G330",
+              "G421",
+              "G423"
+            ],
+            "person_stands_up": [
+              "G299",
+              "G330"
+            ],
+            "person_embraces_person": [
+              "G299",
+              "G330"
+            ],
+            "person_talks_on_phone": [
+              "G299",
+              "G330",
+              "G423"
+            ]
+          },
+          "busiest_camera": "G299",
+          "busiest_camera_count": 277,
+          "unique_entities": 1258,
+          "person_entities": 926,
+          "top_3_activities": [
+            [
+              "person_puts_down_object",
+              115
+            ],
+            [
+              "person_enters_scene_through_structure",
+              108
+            ],
+            [
+              "person_picks_up_object",
+              104
+            ]
+          ]
+        },
+        "scene_description": "The scene spans 8 cameras with 733 total activity events. The most frequent activities are: puts down object (115 occurrences), enters scene through structure (108 occurrences), picks up object (104 occurrences). 14 activities occur on multiple cameras. Camera G299 is the most active with 277 events.",
+        "scene_type": "pedestrian-dominant"
+      },
+      "naturalized_question": "How would you summarize the events captured by all 8 cameras during this time frame?",
+      "naturalized_options": [
+        "An empty scene with minimal activity, captured on 5 cameras",
+        "A vehicle-focused scene with mostly parking and driving activity",
+        "A single-camera scene showing only indoor activities",
+        "A pedestrian-dominant scene across 8 cameras, primarily featuring the act of putting down objects"
+      ],
+      "reasoning": "The footage reveals that pedestrians are the main focus across all 8 feeds, with the act of putting down objects being frequently observed.",
+      "grammar_checked": true
+    }
+  ]
+}

@@ -211,6 +211,13 @@ temp/
 InternVL/
 logs/
 data/
+# Allow MEVA pipeline data files
+!meva/data/
+!meva/data/slot_index.json
+!meva/data/person_database_yolo.json
+!meva/data/mevid_supported_slots.json
+!meva/data/examples/
+!meva/data/examples/*.json
 llava-video/
 Video-MME/
 VATEX/
