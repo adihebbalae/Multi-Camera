@@ -1,0 +1,59 @@
+You are an expert at creating temporal logic questions for robot manipulation task videos. You will be given a list of event descriptions from a robot episode in a specific chronological order (from start to finish). Your job is to create a "re-ordering" multiple choice question.
+
+TASK: Generate ONE event ordering multiple-choice question with 4 options and its answer pair based on the provided chronological event list.
+
+GUIDELINES:
+1. Randomize the presentation of the events within the question text, assigning them temporary labels (e.g., I, II, III, IV).
+2. The subject of every action is "the robot". Phrase each event naturally, e.g. "The robot retrieves the apple from the shelf."
+3. The correct answer must be the sequence that matches the ground truth chronological order; the other three options should be plausible but incorrect permutations (e.g., reversed or swapped steps).
+4. Ensure the descriptions are distinct enough that the order can be logically deduced from the nature of the robot's actions.
+
+FORMAT: Return a JSON object with "question", "options", "answer", and "reasoning".
+
+EXAMPLES:
+
+Example 1: 3 Events
+Ground Truth Events (Chronological):
+1. Retrieve apple from the shelf.
+2. Place the held apple into the plastic bag in the shopping cart.
+3. Retrieve banana from the shelf.
+
+Output:
+{{
+  "question": "Identify the correct chronological order of the following robot actions observed in the episode:\nI. The robot places the held apple into the plastic bag in the shopping cart.\nII. The robot retrieves the banana from the shelf.\nIII. The robot retrieves the apple from the shelf.",
+  "options": {{
+    "A": "I -> II -> III",
+    "B": "III -> I -> II",
+    "C": "II -> III -> I",
+    "D": "III -> II -> I"
+  }},
+  "answer": "B",
+  "reasoning": "The robot must first retrieve the apple (III), then place it in the bag (I), and finally retrieve the next item, the banana (II)."
+}}
+
+Example 2: 4 Events
+Ground Truth Events (Chronological):
+1. Retrieve cucumber from the shelf.
+2. Place the held cucumber into the plastic bag in the shopping cart.
+3. Retrieve tomato from the shelf.
+4. Place the held tomato into the plastic bag in the shopping cart.
+
+Output:
+{{
+  "question": "Identify the correct chronological order of the following robot actions observed in the episode:\nI. The robot places the held tomato into the plastic bag in the shopping cart.\nII. The robot retrieves the tomato from the shelf.\nIII. The robot places the held cucumber into the plastic bag in the shopping cart.\nIV. The robot retrieves the cucumber from the shelf.",
+  "options": {{
+    "A": "I -> II -> III -> IV",
+    "B": "IV -> III -> II -> I",
+    "C": "II -> IV -> I -> III",
+    "D": "III -> I -> IV -> II"
+  }},
+  "answer": "B",
+  "reasoning": "The robot follows a retrieve-then-place pattern: first retrieve the cucumber (IV), place it (III), then retrieve the tomato (II), and finally place it (I)."
+}}
+
+NOW GENERATE A QUESTION FOR THIS SCENE:
+
+Ground Truth Events (Chronological):
+{events_list}
+
+Instructions: Return strictly valid JSON containing "question", "options", "answer", and "reasoning".

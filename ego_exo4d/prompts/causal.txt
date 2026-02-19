@@ -5,8 +5,9 @@ TASK: Generate ONE causal multiple-choice question with 4 options and its answer
 GUIDELINES:
 1. The question should inquire about the cause or reason for the specific action.
 2. The question should be phrased naturally, e.g., "Why did the person..." or "What was the reason for...".
-3. The correct answer (one of the options) should be a concise and detailed explanation of the cause, derived directly from the provided parent hierarchy. It should explain that the action was performed to achieve the goals of its parent steps, and its wording should blend naturally with other answer choices.
+3. The correct answer (one of the options) should be a concise and detailed explanation of the cause, derived directly from the provided parent hierarchy. It should explain that the action was performed to achieve the goals of its parent steps, and its wording should blend naturally with other answer choices. CRITICAL: The correct answer must NOT repeat or paraphrase the specific action mentioned in the question — it should explain the broader goal or purpose, not restate what was done.
 4. Generate three plausible but incorrect options (distractors). The distractors should be related to the task but not directly explain the *specific cause described by the hierarchy*.
+5. All four answer choices must be balanced: similar in length, grammatical structure, and level of specificity so that no single option stands out as obviously correct or incorrect based on phrasing alone.
 5. Ensure the output is strictly valid JSON.
 
 FORMAT: Return a JSON object with "question", "options", "answer", and "reasoning".
@@ -22,13 +23,13 @@ Output:
 {{
   "question": "Why did the person get a socket wrench from the work table?",
   "options": {{
-    "A": "To obtain the appropriate wrenches for getting the tools and supplies ready to remove the wheel.",
-    "B": "The person wanted to clean the work table before proceeding.",
-    "C": "The socket wrench was needed for a different task, not related to wheel removal.",
-    "D": "The previous wrench broke, and a new one was required."
+    "A": "To have the right equipment prepared before starting the wheel removal process.",
+    "B": "To clean and organize the work table before the task begins.",
+    "C": "To replace a broken tool that was no longer functioning correctly.",
+    "D": "To measure the diameter of the wheel before proceeding."
   }},
   "answer": "A",
-  "reasoning": "Getting a socket wrench is done to obtain the appropriate wrenches, which is a step in getting tools ready to remove the wheel. Option A comprehensively explains the cause based on the hierarchy."
+  "reasoning": "According to the task hierarchy, getting a socket wrench is a step under 'Get appropriate wrenches', which falls under 'Get the tools and supplies ready' for 'Remove a Wheel'. The action is performed to ensure the necessary equipment is available before the wheel removal begins."
 }}
 
 NOW GENERATE A QUESTION FOR THE FOLLOWING:

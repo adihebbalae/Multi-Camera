@@ -1,0 +1,106 @@
+EVENT_ORDERING_PROMPT = """
+You are an expert at creating temporal logic questions for autonomous driving datasets. You will be given a list of distinct events and the description of the object (in parenthesis) in the event occurring in a specific chronological order (from start to finish). Your job is to create a "re-ordering" multiple choice question.
+
+TASK: Generate ONE event ordering multiple choice question. You must first randomize the presentation of the events in the question text, adjust the events with the object descriptions for proper grounding, and ask the agent to identify the correct chronological sequence.
+
+GUIDELINES:
+1. **Input Data:** You are provided with a list of events: Event 1 -> Event 2 -> Event 3 -> Event 4. This is the GROUND TRUTH order.
+2. **Question Construction:**
+   - List the events in the question body in a **RANDOM/SCRAMBLED** order.
+   - **Crucial:** You must incorporate the object descriptions (from the parentheses) into the event text within the question. Do not ignore the visual details.
+   - Assign them temporary labels (e.g., I, II, III, IV or A, B, C, D) inside the question text.
+   - Ask "Which is the correct chronological order of these events?"
+3. **Options:**
+   - The correct option must correspond to the Ground Truth sequence (e.g., "II -> IV -> I -> III").
+   - The three distractors must be incorrect permutations (e.g., reverse order, or swapped middle steps).
+   - The position of the correct answer should be randomized.
+4. **Clarity:** Ensure the event descriptions are distinct enough that a human observer could logically deduce the order.
+5. **Format:** Return a JSON object with "question", "options", "answer", and "reasoning".
+
+EXAMPLES:
+
+Example 1: 3 Events
+Ground Truth Input: 
+1. The traffic light turns red (the traffic light is on the grey pole).
+2. The SUV comes to a stop (the SUV is white in color).
+3. Pedestrians enter the crosswalk (the pedestrian is wearing a white tshirt and appears to be crossing the road).
+
+Output:
+{{
+  "question": "Identify the correct chronological order of the following related events observed in the scene:\\n(A) A pedestrian wearing a white tshirt enters the crosswalk\\n(B) The traffic light on the grey pole turns red\\n(C) The white SUV comes to a stop",
+  "options": {{
+    "A": "B -> C -> A",
+    "B": "A -> B -> C",
+    "C": "C -> A -> B",
+    "D": "B -> A -> C"
+  }},
+  "answer": "A",
+  "reasoning": "The logical traffic sequence is: Light turns red (B) -> Vehicle stops (C) -> Pedestrians feel safe to enter (A)."
+}}
+
+Example 2: 4 Events
+Ground Truth Input:
+1. A delivery truck activates its turn signal (delivery truck is white and is an 18 wheeler).
+2. The truck merges into the right lane (delivery truck is white and is an 18 wheeler. The road has 3 lanes).
+3. The truck slows down approaching the driveway (delivery truck is white and is an 18 wheeler).
+4. The truck turns into the delivery bay (delivery truck is white and is an 18 wheeler, the delivery bay appears to be in a gray building with a large hangar).
+
+Output:
+{{
+  "question": "The following four events occurred involving a white 18-wheeler delivery truck. Arrange them in the order they happened:\\nI. The truck turns into the delivery bay of a gray building with a large hangar\\nII. The truck merges into the right lane of the 3-lane road\\nIII. The truck activates its turn signal\\nIV. The truck slows down approaching the driveway",
+  "options": {{
+    "A": "III -> II -> IV -> I",
+    "B": "II -> III -> I -> IV",
+    "C": "I -> IV -> II -> III",
+    "D": "III -> IV -> II -> I"
+  }},
+  "answer": "A",
+  "reasoning": "Standard driving maneuver sequence: Signal (III) -> Merge (II) -> Decelerate (IV) -> Turn (I)."
+}}
+
+Example 3: 4 Events
+Ground Truth Input:
+1. A delivery truck activates its turn signal (the truck is blue with a white logo on the side).
+2. Cyclist on the right side of the road stops (the cyclist is wearing a red helmet and riding a silver bike).
+3. The truck turns into a building (the building has a large glass entrance).
+4. Construction worker enters a building (the worker is wearing a high-vis orange vest and hard hat).
+
+Output:
+{{
+  "question": "The following four events occurred in the scene. Arrange them in the order they happened:\\nI. A cyclist wearing a red helmet on a silver bike stops on the right side\\nII. A construction worker wearing a high-vis orange vest enters a building\\nIII. A blue delivery truck with a white logo activates its turn signal\\nIV. The truck turns into a building with a large glass entrance",
+  "options": {{
+    "A": "III -> II -> IV -> I",
+    "B": "II -> III -> I -> IV",
+    "C": "I -> IV -> II -> III",
+    "D": "III -> I -> IV -> II"
+  }},
+  "answer": "D",
+  "reasoning": "The video shows the truck signaling (III), the cyclist stopping (I), the truck turning (IV), and finally the worker entering (II)."
+}}
+
+Example 4: 3 Events
+Ground Truth Input:
+1. A delivery truck activates its turn signal (the truck is a small red van).
+2. The truck merges into the right lane (the lane markings are dashed white lines).
+3. The truck slows down approaching the driveway (the driveway leads to a brick residential house).
+
+Output:
+{{
+  "question": "The following three events occurred involving a small red van. Arrange them in the order they happened:\\nI. The van merges into the right lane with dashed white lines\\nII. The van activates its turn signal\\nIII. The van slows down approaching the driveway of a brick residential house",
+  "options": {{
+    "A": "II -> III -> I",
+    "B": "I -> II -> III",
+    "C": "III -> I -> II",
+    "D": "II -> I -> III"
+  }},
+  "answer": "D",
+  "reasoning": "Standard driving maneuver sequence as shown in the video: Signal -> Merge -> Slow down."
+}}
+
+NOW GENERATE A QUESTION FOR THIS SCENE:
+
+Ground Truth Events (Chronological):
+{events_list}
+
+Instructions: Scramble the events in the question text. Incorporate the visual descriptions from the parentheses into the question text. Provide 4 option sequences. Return strictly valid JSON.
+"""

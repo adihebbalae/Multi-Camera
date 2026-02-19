@@ -1,0 +1,2002 @@
+{
+    "upenn_0727_Partner_Dance_3_1_4_camera_654": {
+        "question": "This video shows the camera-wearer and the man X engaging in an intricate dance routine involving various steps, spins, and hand-holding movements. Which camera angle best captures this entire scene?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_14_01_6_camera_114": {
+        "question": "Which camera best captures the camera-wearer cutting the spring onion into smaller pieces with a big knife, followed by cutting the spring onion stem into smaller pieces?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_10_camera_25": {
+        "question": "Which camera best captures the person holding the rear derailleur cable tension with his left hand?",
+        "predicted_answer": "a",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_music_03_5_camera_281": {
+        "question": "This video shows the camera-wearer interacting with a man, handling and adjusting music sheets, and playing the piano. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_12_3_camera_250": {
+        "question": "Which camera best shows the camera-wearer holding the tire with his right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_04_2_camera_228": {
+        "question": "This video shows the camera-wearer handling rubber gloves and loosening various bicycle nuts using a wrench while also interacting with parts of a bicycle. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_07_8_camera_142": {
+        "question": "Which camera best shows the person picking the solution tube on the table with her right hand and then inserting the nose swab in the solution tube with her right hand?",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_09_01_6_camera_104": {
+        "question": "Which camera best captures the person placing the cookery sheet on an island and then removing pieces of ginger from the knife with his left hand?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "utokyo_pcr_2001_30_8_camera_692": {
+        "question": "Which camera best shows the camera-wearer picking the test tube from the table with her right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0710_Cooking_4_2_camera_558": {
+        "question": "Which camera best captures the event where the person passes the pack of tomatoes to her right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_12_10_camera_89": {
+        "question": "Which camera angle best captures the entire scene depicted in the video?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_7_2_camera_604": {
+        "question": "Which camera best captures the moment when the camera-wearer moves the cut tomato on the chopping board with the knife in his right hand?",
+        "predicted_answer": "e",
+        "correct_answer": "e",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_basketball_11_42_camera_432": {
+        "question": "Which camera best captures the sequence where the camera-wearer holds the ball with his right hand and then rebounds the ball with both hands?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_17_camera_32": {
+        "question": "This video shows the camera-wearer performing various actions involved in repairing and inflating a bicycle wheel, including spinning, pressing, and installing components. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_16_camera_30": {
+        "question": "Which camera best captures the person removing the chain from the wheel with his right hand and then holding the wheel with both hands?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_18_12_camera_95": {
+        "question": "Which camera best captures the person holding the right pedal with his left hand?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_60_4_camera_223": {
+        "question": "Which camera best shows the camera-wearer picking a cucumber from the fridge and then closing the fridge?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_06_3_camera_238": {
+        "question": "Which camera best captures the sequence where the person removes the dust cap from the inner tube valve stem and then fits the valve into the bike pump nozzle?",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0629_Dance_2_6_camera_517": {
+        "question": "This video shows the camera-wearer adjusting the camera before performing a dance routine, including clapping, spinning, and waving hands. Which camera angle best captures this entire scene?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0720_Dance_2_4_camera_616": {
+        "question": "Which camera best captures the events of the camera-wearer stepping sideways while reaching out with her hands and then stepping in place while putting her hands on her shoulders?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_12_camera_27": {
+        "question": "Which camera best shows the camera-wearer turning the bicycle pedal with his right hand and then pressing the gear lever with his right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_6_4_camera_574": {
+        "question": "This video shows the camera-wearer preparing a salad by handling various ingredients like cucumbers and tomatoes and performing tasks such as chopping, dicing, and mixing. Which camera angle best captures this entire scene?",
+        "predicted_answer": "e",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_42_1_camera_203": {
+        "question": "Which camera best shows the camera-wearer covering the container with its lid and then placing the garlic powder container on the countertop with her right hand?",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_4_2_4_camera_665": {
+        "question": "Which camera best captures the person placing his right hand around the waist of the woman and the woman wrapping her left hand around the person's shoulder?",
+        "predicted_answer": "e",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "utokyo_pcr_2001_38_8_camera_697": {
+        "question": "This video shows the camera-wearer conducting a covid 19 test, including unpacking test kits, following instructions, and using various components. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_basketball_10_41_camera_429": {
+        "question": "This video shows the camera-wearer performing basketball drills on the court, including dribbling and repeatedly shooting layups. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_63_6_camera_225": {
+        "question": "This video involves the execution of an unspecified task. Which camera angle best captures the overall scene?",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_cooking031_9_camera_459": {
+        "question": "Which camera best captures the person placing a bowl on the countertop with her left hand and then stirring tomato in the skillet with a spatula in her right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_6_2_camera_603": {
+        "question": "Which camera best shows the camera-wearer passing the bottle of peanut oil from their right hand to their left hand?",
+        "predicted_answer": "e",
+        "correct_answer": "e",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_music_04_5_camera_284": {
+        "question": "Which camera best shows the person removing the violin from their left shoulder with their left hand and then flipping a musical booklet with their right hand?",
+        "predicted_answer": "a",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_2_camera_6": {
+        "question": "Which camera best captures the person loosening the axle nut of the bicycle with his right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_16_10_camera_163": {
+        "question": "Which camera best shows the camera-wearer placing the instruction manual on the table with both of her hands and then picking up the test device package with her right hand?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "utokyo_pcr_2001_31_8_camera_694": {
+        "question": "Which camera best shows the person holding the COVID-19 test box flap with their right hand and then removing the COVID-19 test tube lid with their left hand?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_43_4_camera_348": {
+        "question": "Which camera best captures the person placing the sterile swab package on the table with the right hand and then removing the sterile swab from the solution tube with the right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0730_Partner_Dance_1_1_7_camera_677": {
+        "question": "Which camera best captures the event where the man uses his left hand to move the camera-wearer's hand across his head?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_13_10_camera_159": {
+        "question": "Which camera best captures the moment the camera-wearer passes the instruction manual on the table from his right hand to his left hand?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_60_2_camera_220": {
+        "question": "Which camera angle best captures the person adjusting the stove knob with their right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_041_2_camera_344": {
+        "question": "Which camera best shows the person placing her right foot on the gray foothold?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "utokyo_salad_12_1018_4_camera_699": {
+        "question": "Which camera best captures the camera-wearer moving the diced egg white on the chopping board with both hands?",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_18_12_camera_94": {
+        "question": "Which camera angle best captures the camera-wearer wiping the chain with the cloth in his left hand at approximately 164.86 seconds?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_cpr_46_1_camera_389": {
+        "question": "Which camera best captures the camera-wearer bending his head towards the face of the CPR mannequin?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_19_10_camera_99": {
+        "question": "Which camera best shows the person holding the rag on the bike chain with his left hand?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_54_1_camera_367": {
+        "question": "This video shows the camera-wearer performing a Covid test by preparing and using the test kit, including handling various components such as the test box, nasal swab, and extraction buffer tube. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_45_1_camera_352": {
+        "question": "Which camera best shows the camera-wearer lifting the test kits in the Covid test box with his right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0720_Dance_2_5_camera_618": {
+        "question": "This video shows the camera-wearer performing a series of dance movements, including stepping, kicking, and extending arms in various directions. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_17_4_camera_270": {
+        "question": "This video depicts the camera-wearer completing a task. Which camera angle best captures the entire scene?",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_10_camera_44": {
+        "question": "Which camera best shows the camera-wearer rolling the rim with their left hand?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_covid_001_12_camera_470": {
+        "question": "Which camera best captures the person placing the test tube holder on the table with his left hand?",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0707_Dance_3_5_camera_549": {
+        "question": "This video captures the overall scene. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "e",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_03_14_camera_127": {
+        "question": "This video shows the camera-wearer conducting a COVID test by handling, opening, and using various components of the test kit methodically. Which camera angle best captures this entire scene?",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_cpr_44_4_camera_387": {
+        "question": "Which camera best captures the moment when the camera-wearer touches the CPR manikin's right shoulder with her right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_07_12_camera_80": {
+        "question": "Which camera best captures the camera-wearer twisting the quick release with her left hand?",
+        "predicted_answer": "a",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_2_2_camera_565": {
+        "question": "Which camera best shows the person slicing the spring onion on the chopping board with the knife in his right hand?",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_010_2_camera_300": {
+        "question": "Which camera best shows the person holding the door of the cabinet with his right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_2_1_2_camera_643": {
+        "question": "Which camera best captures the woman swaying her body sideways?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0720_Dance_4_4_camera_633": {
+        "question": "This video shows the camera-wearer dancing with a series of different movements including stomping, jumping, and swinging her hands. Which camera angle best captures this entire dance scene?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_56_1_camera_370": {
+        "question": "Which camera best shows the camera-wearer moving the Covid test box on the table with her right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0713_Dance_3_3_camera_591": {
+        "question": "This video shows the camera-wearer performing a dance sequence that includes hopping sideways and swinging her foot. Which camera angle best captures this entire dance performance?",
+        "predicted_answer": "e",
+        "correct_answer": "e",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_27_1_camera_196": {
+        "question": "Which camera best captures the moment the camera-wearer removes the spoon from the sugar container with her right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_04_10_camera_71": {
+        "question": "This video shows the camera-wearer engaging in a comprehensive process of removing and replacing a bicycle tube, including deflating the tire, handling various tools, and inflating a new tube. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_2_camera_46": {
+        "question": "Which camera best captures the sequence in which the person moves his right hand through the bicycle tire in his left hand and then sets the tire on the bicycle rim with his left hand?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_05_3_camera_233": {
+        "question": "This video shows the camera-wearer participating in a specific activity. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_music_14_5_camera_296": {
+        "question": "Which camera best captures the person putting their left hand on the piano and then shifting it down the keyboard?",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_07_8_camera_81": {
+        "question": "Which camera best captures the person holding the quick release with her right hand?",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "utokyo_omelet_6_1001_4_camera_689": {
+        "question": "Which camera best captures the moment when the person places the bowl on the cutting board with her right hand?",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_06_02_4_camera_103": {
+        "question": "Which camera best shows the person placing the cutting board on the countertop with his right hand and then pouring soy sauce from a spoon into the stainless bowl with his left hand?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_4_2_4_camera_666": {
+        "question": "This video shows the camera-wearer leading a dance routine with woman X, involving spins, steps, and coordinated movements. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0730_Dance_2_3_camera_672": {
+        "question": "Which camera best shows the camera-wearer raising her right knee while moving her hands in a spiral-like motion?",
+        "predicted_answer": "e",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_cooking_005_6_camera_464": {
+        "question": "Which camera best shows the camera-wearer moving towards the kitchen countertop and then towards the cabinet?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_57_1_camera_373": {
+        "question": "Which camera best shows the camera-wearer rotating the COVID-19 swab in their nose and then picking the COVID-19 test device from the table?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_18_12_camera_166": {
+        "question": "Which camera best shows the person dropping the test cassette pack on the table with their right hand and then dipping their right hand into the test tube pack?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_60_1_camera_379": {
+        "question": "Which camera best captures the person opening the COVID-19 test kit box with their left hand?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_52_1_camera_363": {
+        "question": "Which camera best shows the person displacing the test plate on the table with their left hand and then placing the test tube into the nylon packaging?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_57_2_camera_214": {
+        "question": "Which camera best captures the person adding water to the milk pot at the specified timestamp?",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_20_2_camera_273": {
+        "question": "This video shows the camera-wearer preparing chai tea by filling a cup, pouring ingredients into a saucepan, and adjusting the heat on the stove. Which camera angle best captures this entire cooking scene?",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_04_12_camera_73": {
+        "question": "Which camera best captures the events where the camera-wearer first holds the wheel with both hands and then with just the left hand?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0720_Dance_3_14_camera_623": {
+        "question": "This video shows the camera-wearer performing a dance routine with various movements such as hopping, extending arms, and stepping in different directions. Which camera angle best captures this entire dance scene?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_116_2_camera_175": {
+        "question": "Which camera best shows the camera-wearer picking up a bowl from underneath the cabinet with his left hand and then dropping the onion into the orange bowl on the countertop with his right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0706_Dance_5_4_camera_546": {
+        "question": "This video shows the camera-wearer performing a series of complex footwork and body movements, including crossing feet, body rolls, and swinging hands while dancing stationary and around a studio. Which camera angle best captures this entire dance sequence?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "utokyo_salad_4_1018_4_camera_702": {
+        "question": "Which camera best captures the person turning off the tap handle with his left hand?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_18_4_camera_167": {
+        "question": "Which camera best captures the person opening a dust flap on the Covid-19 kit with their right hand?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_covid_001_6_camera_473": {
+        "question": "Which camera best captures the person picking up the Covid-19 pack on the table with their left hand?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_cpr_46_1_camera_388": {
+        "question": "This video shows the camera-wearer performing CPR on a mannequin by positioning hands, tapping, and compressing the chest. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_22_3_camera_276": {
+        "question": "This video shows the camera-wearer preparing a salad by chopping and grating various vegetables, mixing them with seasonings, and cleaning the kitchen workspace. Which camera angle best captures this entire scene?",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_6_2_camera_570": {
+        "question": "Which camera best captures the person chopping the sliced onions on the chopping board with the knife in his right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_63_2_camera_224": {
+        "question": "This video shows the camera-wearer performing a series of tasks. Which camera angle best captures the overall sequence of actions?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_030_28_camera_332": {
+        "question": "Which camera best captures the moment when the person grabs the top of the bouldering wall with his right hand?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_2_camera_57": {
+        "question": "Which camera best shows the camera-wearer pulling the inner tube out of the rim with his right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_05_5_camera_234": {
+        "question": "This video depicts the camera-wearer engaging in an activity that involves a series of tasks requiring attention to detail. Which camera angle best captures this entire scene?",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "utokyo_pcr_2001_31_8_camera_693": {
+        "question": "Which camera best shows the camera-wearer holding the COVID-19 test device with both hands?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_022_14_camera_323": {
+        "question": "This video shows the camera-wearer climbing a bouldering wall, grabbing various red and gray hand and foot holds before jumping off. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_basketball_03_78_camera_410": {
+        "question": "Which camera best shows the person passing the ball from their left hand to their right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_21_2_camera_274": {
+        "question": "Which camera best shows the camera-wearer taking the small container from the countertop with her left hand and then putting the small bowl with ginger on the countertop with her left hand?",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_cooking_07_2_camera_67": {
+        "question": "Which camera best captures the person passing the pepper from their right hand to their left hand?",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_57_4_camera_216": {
+        "question": "This video shows the camera-wearer preparing a salad by washing, peeling, chopping vegetables, and mixing them with seasonings. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0712_Cooking_1_3_camera_580": {
+        "question": "This video shows the camera-wearer preparing a meal by handling kitchen tools, ingredients, and cooking on a stove. Which camera angle best captures this entire cooking scene?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_022_14_camera_322": {
+        "question": "Which camera best shows the camera-wearer grabbing a round red hand hold with their left hand and then grabbing a gray hand hold with their left hand?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_57_4_camera_217": {
+        "question": "Which camera best shows the camera-wearer moving a jar of salt on the countertop forward with her left hand and then placing the cutting board with the yellow knife into the kitchen sink?",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0407_Violin_1_5_camera_511": {
+        "question": "Which camera best captures the person transferring the bow from his right hand to his left hand, followed by turning the pages of the music booklet on the music stand with his right hand?",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_basketball_03_75_camera_405": {
+        "question": "Which camera best shows the basketball entering the net and then bouncing on the court?",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_cooking_009_7_camera_469": {
+        "question": "This video shows the camera-wearer preparing chai tea by following a detailed cooking process in the kitchen. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_09_10_camera_146": {
+        "question": "Which camera best shows the camera-wearer passing the nasal swab from her right hand to her left hand?",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_19_2_camera_271": {
+        "question": "This video shows the camera-wearer engaging in an activity where a specific process takes place. Which camera angle best captures this entire scene?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "utokyo_salad_12_1018_4_camera_700": {
+        "question": "Which camera best shows the camera-wearer cutting the cucumber on the chopping board with the knife in her right hand?",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_12_4_camera_252": {
+        "question": "Which camera best captures the person first touching the bicycle wheel on the ground with his left hand and then holding it with his right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "utokyo_omelet_4_1001_4_camera_685": {
+        "question": "Which camera best shows the person cracking the egg in his right hand on the countertop?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0707_Guitar_2_10_camera_551": {
+        "question": "Which camera best captures the camera-wearer adjusting the sheet of music on the stand?",
+        "predicted_answer": "b",
+        "correct_answer": "f",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_16_3_camera_269": {
+        "question": "Which camera best shows the camera-wearer taking the spatula from the strainer bowl on the countertop with her left hand during both events?",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_2_3_camera_598": {
+        "question": "This video shows the camera-wearer preparing a meal, involving multiple actions like handling cooking equipment, ingredients, and mixing sauces. Which camera angle best captures this entire scene?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_cooking017_2_camera_438": {
+        "question": "Which camera best captures the person picking up the knife from the chopping board with their right hand and then arranging the sliced cucumbers with their left hand while holding the knife in their right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_basketball_03_77_camera_408": {
+        "question": "This video shows the camera-wearer practicing basketball by shooting and catching the ball with both hands. Which camera angle best captures this entire sequence?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_2_2_3_camera_650": {
+        "question": "This video shows the camera-wearer performing a series of dance moves, including kicks, spins, and synchronized steps with another person. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "e",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0720_Dance_3_10_camera_621": {
+        "question": "Which camera best shows the camera-wearer turning towards her right while sweeping her hands towards her right?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_07_12_camera_141": {
+        "question": "Which camera best captures the events of the camera-wearer dropping the nasal swab pack on the table and then dropping the nozzle cap on the table?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0701_Piano_1_7_camera_521": {
+        "question": "This video shows the camera-wearer performing a series of actions that involve interacting with various objects in different parts of the room. Which camera angle best captures the entirety of this scene?",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0331_Guitar_2_5_camera_505": {
+        "question": "Which camera best shows the person scanning through the manuscript on the manuscript holder with his left finger?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_18_10_camera_93": {
+        "question": "This video shows the camera-wearer performing bicycle maintenance by applying chain lube and cleaning the chain with a white towel. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_4_camera_48": {
+        "question": "This video shows the camera-wearer performing a comprehensive process of inspecting and repairing a bicycle wheel, including using tools and checking the tire for punctures. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_13_02_2_camera_112": {
+        "question": "This video shows the camera-wearer preparing a dish by chopping, grating, and mixing various ingredients such as cilantro, carrot, pepper, and onion, and then combining them into a bowl with dressing. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_12_9_camera_156": {
+        "question": "This video shows the camera-wearer performing a COVID-19 test by handling test kits, swabbing, and reading results. Which camera angle best captures this entire process?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0730_Partner_Dance_1_1_6_camera_675": {
+        "question": "Which camera best captures the events of the camera-wearer and the man turning clockwise while holding hands, followed by them turning anticlockwise?",
+        "predicted_answer": "d",
+        "correct_answer": "e",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0730_Dance_2_4_camera_674": {
+        "question": "Which camera best shows the camera-wearer moving her right arm up slowly and then leaning her body to the left while moving her arms in a spiraling pattern?",
+        "predicted_answer": "e",
+        "correct_answer": "e",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_cooking_05_4_camera_65": {
+        "question": "This video shows the camera-wearer preparing a meal by boiling noodles, stirring them, adding oil and spices, and finally serving the dish. Which camera angle best captures this entire cooking process?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_cpr_49_1_camera_394": {
+        "question": "This video shows the camera-wearer engaging in an activity from a first-person perspective. Which camera angle best captures this entire scene?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_cpr_47_1_camera_390": {
+        "question": "Which camera best captures the moment when the camera-wearer lowers his head towards the manikin on the floor?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_covid_006_6_camera_479": {
+        "question": "This video shows the camera-wearer performing a series of actions related to setting up and conducting a covid antigen test, including handling various components like the test tube rack, swab, and manual. Which camera angle best captures this entire sequence of actions?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0706_Dance_2_4_camera_541": {
+        "question": "Which camera best shows the camera-wearer stepping her feet sideways while flapping her hands?",
+        "predicted_answer": "e",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_03_2_camera_257": {
+        "question": "This video shows the camera-wearer preparing a meal by performing actions such as washing hands, cracking eggs, mixing ingredients, and cooking on a gas stove. Which camera angle best captures this entire scene?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_3_2_camera_566": {
+        "question": "Which camera best shows the person placing the knife on the garlic clove with his right hand and then transferring the soy sauce bottle from his left hand to his right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_4_camera_11": {
+        "question": "Which camera best captures the moment when the camera-wearer presses the brake lever of the bicycle with his right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_02_12_camera_117": {
+        "question": "Which camera best captures the person unfolding the test manual with her hands?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_3_2_4_camera_658": {
+        "question": "Which camera best captures the person turning to his right while stepping his right foot to the right?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0720_Dance_3_9_camera_632": {
+        "question": "Which camera best shows the camera-wearer doing chest pumps with her hands in front of her torso and then continuing other actions?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0730_Dance_2_4_camera_673": {
+        "question": "Which camera best captures the person sliding left with a long step while spreading their left arm, then stretching their left foot forward while moving their hands in a swirl pattern?",
+        "predicted_answer": "e",
+        "correct_answer": "e",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "utokyo_sushi_6_1008_4_camera_705": {
+        "question": "Which camera best shows the camera-wearer holding the sushi on the chopping board with her left hand?",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_3_1_4_camera_653": {
+        "question": "Which camera best shows the camera-wearer and the man moving backward while holding each other's shoulder?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_cooking024_2_camera_445": {
+        "question": "This video lacks specific descriptions but asks for the best overall camera angle to capture presumed actions. Which camera angle best captures this scene?",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_13_8_camera_161": {
+        "question": "Which camera best shows the person placing the sachet of puffer tubes on the table with their left hand?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0721_Piano_2_6_camera_638": {
+        "question": "Which camera best shows the camera-wearer putting both hands on the piano and then playing a trill with the right hand?",
+        "predicted_answer": "a",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_15_camera_3": {
+        "question": "Which camera best captures the moment when the camera-wearer lifts the bike wheel from the floor with his left hand?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_2_3_camera_599": {
+        "question": "Which camera best captures both events where the person holds the saucepan with both hands and then holds the fridge door with her left hand?",
+        "predicted_answer": "d",
+        "correct_answer": "f",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0407_Violin_2_5_camera_512": {
+        "question": "Which camera best captures the person placing her chin on the chinrest of the violin in her left hand?",
+        "predicted_answer": "e",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_16_1_camera_182": {
+        "question": "Which camera best captures the moment when the camera-wearer throws the eggshell in the bin?",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0630_Cooking_4_3_camera_519": {
+        "question": "This video shows the person engaging in a series of tasks that likely involve a step-by-step process. Which camera angle best captures this entire scene?",
+        "predicted_answer": "f",
+        "correct_answer": "e",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_10_02_4_camera_108": {
+        "question": "This video shows the camera-wearer cooking a meal, including steps like filling a pot with water, preparing and cutting ingredients, and stirring pasta. Which camera angle best captures this entire scene?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_023_4_camera_305": {
+        "question": "Which camera best captures the person moving the bowl on the kitchen table with her left hand and then picking up the salt container on the kitchen countertop with her right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_1_2_camera_563": {
+        "question": "Which camera best shows the camera-wearer peeling the onion into the trash bin with his right hand?",
+        "predicted_answer": "a",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "utokyo_omelet_12_1001_4_camera_684": {
+        "question": "Which camera best captures the person adding tomato sauce into the bowl on the countertop with his right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0713_Dance_1_4_camera_587": {
+        "question": "Which camera best captures the person hopping to the left at 20.64017 seconds?",
+        "predicted_answer": "e",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_63_1_camera_382": {
+        "question": "This video asks which camera best captures an unspecified scene because no annotations are provided. Which camera angle best captures this unspecified scene?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_18_12_camera_165": {
+        "question": "Which camera best shows the camera-wearer touching the test tube with his left hand and then dropping the test tube pack on the table?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0707_Guitar_2_10_camera_552": {
+        "question": "Which camera best captures the person adjusting the sheet of music on the stand and then squeezing his right-hand fingers?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0706_Dance_4_4_camera_543": {
+        "question": "This video shows the camera-wearer performing a dance routine with various stepping and hand movements. Which camera angle best captures this entire scene?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_14_camera_0": {
+        "question": "Which camera best captures the person holding the socket wrench with both hands and then holding the rear wheel of the bicycle with their right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_022_22_camera_331": {
+        "question": "Which camera best shows the camera-wearer placing their right foot on a yellow foothold and then grabbing a yellow handhold with their right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "e",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0317_Violin_3_10_camera_500": {
+        "question": "This video shows the camera-wearer engaging in various actions related to playing and adjusting a violin, as well as interacting with a manuscript on a sheet stand. Which camera angle best captures this entire scene?",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_02_2_camera_19": {
+        "question": "Which camera best captures the person placing their left hand on the handlebars of the bicycle and then walking towards the bicycle?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_6_3_camera_572": {
+        "question": "Which camera best shows the sequence of the camera-wearer dropping the knife on the chopping board with his right hand and then cutting the tissue paper with his right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_56_1_camera_371": {
+        "question": "This video shows the camera-wearer conducting a Covid test, including handling and checking various components like the nasal swab, extraction buffer tube, and test manual. Which camera angle best captures this entire process?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_050_2_camera_314": {
+        "question": "Which camera best shows the camera-wearer opening the trash bin with her left hand and then closing the refrigerator door with her right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_10_3_camera_245": {
+        "question": "Which camera best captures the person placing the dust cap and the tire lever on the work table with his right hand?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_4_camera_59": {
+        "question": "Which camera best captures the moment when the camera-wearer picks the wheel from the floor with his left hand?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_10_3_camera_246": {
+        "question": "Which camera best captures the camera-wearer rotating the tire with both hands?",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_3_2_3_camera_655": {
+        "question": "Which camera angle best captures the moment when the person turns clockwise while holding the man's hand?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_09_9_camera_87": {
+        "question": "This video shows the camera-wearer repairing a bicycle tire by placing, manipulating, and reassembling various components. Which camera angle best captures this entire scene?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "uniandes_dance_013_13_camera_497": {
+        "question": "Which camera best captures the person performing a ball change step at timestamp 45.20405?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_cooking_09_8_camera_70": {
+        "question": "This video covers different scenes and actions without explicit description. Which camera angle best captures the entire video sequence?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_04_10_camera_128": {
+        "question": "Which camera best captures the camera-wearer picking the pack of the sterile swab from the table with his left hand at the specified timestamp?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_04_12_camera_131": {
+        "question": "Which camera best captures the moment when the camera-wearer passes the solution tube from his right hand to his left hand?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_covid_010_6_camera_486": {
+        "question": "This video shows the camera-wearer conducting a comprehensive Covid-19 testing procedure including handling the test materials, performing the swab, and waiting for the test result. Which camera angle best captures this entire scene?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_18_8_camera_169": {
+        "question": "This video shows the camera-wearer conducting a covid antigen test, involving multiple steps such as unboxing, using, and reading test components. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "utokyo_pcr_2001_32_8_camera_695": {
+        "question": "This video shows the camera-wearer performing a series of actions to inspect and use a covid-19 home test kit on a table. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_basketball_11_44_camera_433": {
+        "question": "Which camera best captures the person bouncing the ball on the floor with both hands at timestamp 0.77631?",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0717_Piano_1_5_camera_612": {
+        "question": "Which camera best captures the person supporting the sheet music with his left hand?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_43_1_camera_205": {
+        "question": "Which camera best captures the person rotating the bowl with the picker?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_061_2_camera_319": {
+        "question": "Which camera best shows the camera-wearer moving the egg crate in the refrigerator with her left hand and then opening the cabinet door with her right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_1_5_camera_596": {
+        "question": "Which camera best shows the person placing their right hand on the bowl on the countertop and then adjusting their camera glasses with their hands?",
+        "predicted_answer": "e",
+        "correct_answer": "e",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0710_Cooking_4_2_camera_557": {
+        "question": "Which camera best shows the person rinsing the cucumber with tap water using her hands?",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_cooking026_2_camera_448": {
+        "question": "Which camera best captures the person turning the oil in his left hand into the pan on the electric burner?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_cooking_002_7_camera_462": {
+        "question": "Which camera best shows the camera-wearer closing a fridge door with his right hand and then opening the fridge?",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_03_10_camera_123": {
+        "question": "This video shows the camera-wearer conducting a COVID-19 test by handling various test components, reading the manual, and applying the test swab. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_12_4_camera_253": {
+        "question": "This video shows the camera-wearer assembling and inflating a bicycle wheel, involving picking, adjusting, and inspecting various components. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_04_3_camera_230": {
+        "question": "This video shows the camera-wearer repairing a bicycle wheel, including inflating the tube, adjusting and assembling the components, and bouncing it to check for defects. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0713_Dance_1_3_camera_584": {
+        "question": "Which camera best captures the camera-wearer taking two steps backward at 63.25307 seconds?",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_37_4_camera_346": {
+        "question": "Which camera best captures the camera-wearer opening the swap pack with both hands?",
+        "predicted_answer": "a",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_02_3_camera_21": {
+        "question": "Which camera best captures the person pumping the bike tube with the air pump and then placing the bike wheel on the floor with his left hand?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_06_2_camera_235": {
+        "question": "Which camera best captures the person loosening the nut with their hands?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0730_Partner_Dance_1_2_7_camera_680": {
+        "question": "This video shows the camera-wearer performing a series of tasks that are best viewed from an optimal angle. Which camera angle best captures this entire scene?",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_2_camera_7": {
+        "question": "Which camera angle best captures the moment when the camera-wearer holds the wheel of the bicycle with their left hand?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_04_10_camera_72": {
+        "question": "Which camera best captures the person tightening the valve with a valve cap in his right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_6_camera_60": {
+        "question": "Which camera best shows the camera-wearer picking the wheel from the floor with his left hand and then holding the tire to the wheel with his right hand?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_4_1_4_camera_662": {
+        "question": "Which camera best shows the person holding the right hand of the woman with his left hand while pulling her close?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_cooking_07_4_camera_69": {
+        "question": "Which camera best captures the person lifting a celery stalk and then picking a bell pepper from the sink with his left hand?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0720_Dance_2_4_camera_617": {
+        "question": "Which camera best captures the person raising her left leg while folding her hands together?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_033_16_camera_338": {
+        "question": "Which camera best captures the moment when the person places their right hand on the bouldering wall?",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "utokyo_omelet_6_1001_4_camera_688": {
+        "question": "Which camera best captures the person wiping the countertop with the dishcloth in her right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_11_2_camera_263": {
+        "question": "This video shows a sequence of events where the camera-wearer demonstrates a complex task step by step. Which camera angle best captures this entire process?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_02_8_camera_121": {
+        "question": "Which camera best captures the person passing the extraction tube to her left hand?",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0730_Partner_Dance_1_1_7_camera_678": {
+        "question": "Which camera best shows the man spinning the camera-wearer to her right while holding hands across her head, followed by stepping forward and backward with the man while holding hands?",
+        "predicted_answer": "e",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_033_20_camera_342": {
+        "question": "This video shows the camera-wearer climbing a bouldering wall by using various hand and foot holds, and then jumping off the wall. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_10_4_camera_248": {
+        "question": "Which camera best shows the person rolling the pedal with his left hand?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_10_02_4_camera_109": {
+        "question": "Which camera best captures the person holding the handle of the pot on the stovetop with his left hand and then hitting the spatula in the skillet on the stovetop with his right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0720_Dance_3_5_camera_630": {
+        "question": "Which camera best captures the camera-wearer stepping forward while clapping his hands?",
+        "predicted_answer": "d",
+        "correct_answer": "e",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0720_Dance_1_4_camera_613": {
+        "question": "This video shows the camera-wearer performing an activity, which although unspecified, has been visually captured by several cameras. Which camera angle best captures this entire scene?",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_1_3_camera_595": {
+        "question": "Which camera best shows the camera-wearer holding the egg on the table with his right hand?",
+        "predicted_answer": "b",
+        "correct_answer": "e",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_covid_006_6_camera_478": {
+        "question": "Which camera best captures the person moving their right hand on the manual and then adjusting the swab pack on the table with their right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_cooking028_12_camera_451": {
+        "question": "Which camera best captures the person placing the lemon bottle on the countertop with his right hand?",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_music_12_5_camera_292": {
+        "question": "This video shows the camera-wearer organizing music sheets on and around the piano and playing a sequence of complex melodies and chords. Which camera angle best captures this entire scene?",
+        "predicted_answer": "a",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_music_14_5_camera_295": {
+        "question": "Which camera best captures the person shifting up his left hand on the keyboard?",
+        "predicted_answer": "c",
+        "correct_answer": "e",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_06_5_camera_242": {
+        "question": "Which camera best shows the camera-wearer cleaning the bike chain with the brush in her right hand at two different times?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_03_12_camera_124": {
+        "question": "Which camera best shows the camera-wearer placing the test tube lid on the table with her right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_cpr_54_1_camera_401": {
+        "question": "Which camera best shows the camera-wearer touching the CPR mannequin with both hands and then placing her left hand on the shoulder of the CPR mannequin?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0717_Piano_1_5_camera_611": {
+        "question": "This video shows the camera-wearer engaging in a series of piano playing activities interspersed with gestures, adjustments of sheet music, and demonstrations with hands. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_basketball_03_80_camera_413": {
+        "question": "This video shows the camera-wearer navigating through a bustling marketplace, examining various stalls and interacting with vendors. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_50_2_camera_208": {
+        "question": "This video shows the person engaging in various activities throughout the scene. Which camera angle best captures the entirety of the person's actions?",
+        "predicted_answer": "a",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_18_15_camera_97": {
+        "question": "Which camera best captures the person touching the right bike pedal with their left hand?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0713_Dance_2_3_camera_589": {
+        "question": "Which camera best captures the camera-wearer stepping sideways while swinging her arms and then stepping backward and forward with her right foot?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_4_camera_49": {
+        "question": "Which camera best shows the camera-wearer passing the tube from his right hand to his left hand and then picking the tube from the table with his right hand?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_033_12_camera_337": {
+        "question": "Which camera best shows the camera-wearer jumping off the bouldering wall at the given timestamp?",
+        "predicted_answer": "a",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0730_Dance_1_4_camera_670": {
+        "question": "Which camera best captures the person stepping towards the right with their hands in front of their torso and tapping their left foot on the floor?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_16_1_camera_181": {
+        "question": "This video shows the camera-wearer preparing an omelet by gathering ingredients, mixing them, and cooking the mixture on a stovetop. Which camera angle best captures this entire process in the kitchen?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_3_3_camera_533": {
+        "question": "Which camera best shows the camera-wearer picking a tea pack from the kitchen cabinet and then placing the tea bag in the waste bin?",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_53_2_camera_210": {
+        "question": "This video shows a scene captured by various camera angles. Which camera angle would most comprehensively capture the entire scene?",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_06_4_camera_239": {
+        "question": "This video shows the camera-wearer assembling a bicycle wheel by placing it into the frame, tightening nuts, and using a wrench. Which camera angle best captures this entire scene?",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_cooking022_2_camera_442": {
+        "question": "Which camera best captures the moment when the camera-wearer moves the cucumber pieces on the cutting board with her left hand?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0721_Piano_2_6_camera_637": {
+        "question": "Which camera best shows the camera-wearer playing higher with a single hand and then placing his left hand on the piano?",
+        "predicted_answer": "c",
+        "correct_answer": "e",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "utokyo_omelet_4_1001_4_camera_686": {
+        "question": "Which camera best shows the camera-wearer lifting up the pan in his left hand from the gas cooker?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0730_Dance_1_4_camera_669": {
+        "question": "Which camera best captures the moment when the camera-wearer starts dancing?",
+        "predicted_answer": "e",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_031_8_camera_334": {
+        "question": "Which camera best captures the moment when the camera-wearer grabs the black hand hold with his right hand?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_022_22_camera_330": {
+        "question": "This video shows the camera-wearer climbing a bouldering wall by using various yellow handholds and footholds, then jumping off the wall and landing on a mat. Which camera angle best captures this entire scene?",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_6_camera_50": {
+        "question": "Which camera best shows the person pulling the sidewall of the tire with his left hand and then observing the bike's wheel in his hands?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_16_camera_31": {
+        "question": "This video shows the camera-wearer performing a series of actions to remove a bicycle wheel, including loosening components and holding the wheel with both hands. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_43_3_camera_206": {
+        "question": "Which camera best shows the camera-wearer dropping the salt container on the kitchen countertop with her right hand and then dropping the black pepper container in the kitchen cabinet with her left hand?",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_57_1_camera_372": {
+        "question": "Which camera best shows the person picking the COVID-19 test tube with the dropper lid with his right hand and then placing the COVID-19 test box on the instruction sheet with his left hand?",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_10_1_camera_173": {
+        "question": "Which camera best shows the person picking the gas lighter with her right hand and then picking the tong from the countertop with her right hand?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_basketball_03_78_camera_409": {
+        "question": "Which camera best captures the person catching the ball with his right hand and then passing it to his left hand?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_cooking022_2_camera_441": {
+        "question": "Which camera best shows the camera-wearer picking a tomato from the transparent bowl with her left hand?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_10_camera_55": {
+        "question": "This video shows the camera-wearer repairing a wheel by manipulating the tire, using an air pump, and adjusting the tube. Which camera angle best captures this entire scene?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_3_2_4_camera_657": {
+        "question": "This video shows the camera-wearer and others engaging in a complex dance routine involving various steps, spins, and hand-holding sequences. Which camera angle best captures this entire scene?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_19_10_camera_98": {
+        "question": "Which camera best shows the camera-wearer moving the brake tube from the bike cog set with his left hand and then rubbing his right thumb and index finger against each other?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "uniandes_cooking_009_2_camera_491": {
+        "question": "Which camera best shows the camera-wearer picking up the cup on the countertop with his left hand?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0720_Dance_1_5_camera_614": {
+        "question": "This video captures the overall activity depicted in the scene. Which camera angle best captures the entirety of this scene?",
+        "predicted_answer": "e",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_04_2_camera_229": {
+        "question": "Which camera best captures the person loosening the axle nut with the silver wrench in his left hand?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_2_2_2_camera_647": {
+        "question": "This video shows the camera-wearer and man X dancing together with coordinated movements and frequent turns, as they hold hands and adjust positions by stepping sideways, forward, and backward. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_covid_009_8_camera_485": {
+        "question": "This video shows the camera-wearer opening and preparing a COVID test by interacting with the test pack, kits bag, instruction sheet, sterile swab, and test cassette. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0713_Dance_3_3_camera_590": {
+        "question": "Which camera best captures the person stepping forward and backward?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "upenn_0407_Guitar_2_5_camera_508": {
+        "question": "This video shows the camera-wearer performing a task using an object and completing a series of actions. Which camera angle best captures this entire scene?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "indiana_bike_06_2_camera_236": {
+        "question": "Which camera best shows the person loosening the axle nut with his hand and then dropping the nut on the table?",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_cooking_009_7_camera_468": {
+        "question": "Which camera best captures the person picking the garlic container on the kitchen countertop with her left hand?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "camera",
+        "strategy": "stitched"
+    },
+    "sfu_cooking025_2_camera_447": {
+        "question": "Which camera best shows the camera-wearer dropping the sliced tomato in the mixing bowl with his left hand while holding a knife in his right hand?",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "camera",
+        "strategy": "stitched"
+    }
+}

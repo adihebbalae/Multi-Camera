@@ -106,8 +106,8 @@ def temporal(data, num_questions_per_video=2):
             formatted_question = {
                 "video_id": video_id,
                 "question_type": "temporal",
-                "question": json.dumps(qa_pair),
-                "answer": None,
+                **qa_pair,
+                "video_paths": video_data["video_files"],
                 "metadata": {
                     "grounding": [
                         {
@@ -189,8 +189,8 @@ def event_ordering(data, num_questions_per_video=2):
             formatted_question = {
                 "video_id": video_id,
                 "question_type": "event_ordering",
-                "question": json.dumps(qa_pair),
-                "answer": None,
+                **qa_pair,
+                "video_paths": video_data["video_files"],
                 "metadata": {
                     "ordered_events": [
                         {
@@ -248,8 +248,8 @@ def causal(data, num_questions_per_video=2):
             formatted_question = {
                 "video_id": video_id,
                 "question_type": "causal",
-                "question": json.dumps(qa_pair),
-                "answer": None,
+                **qa_pair,
+                "video_paths": video_data["video_files"],
                 "metadata": {
                     "keystep_description": keystep["description"],
                     "keystep_start_time": keystep["start_time"],
@@ -278,28 +278,58 @@ def camera(data, num_questions_per_video=2):
             return f"camera {int(cam_id_raw[2:])}"
 
     for video_id, video_data in tqdm(data.items(), desc="Generating camera questions for videos"):
-        print(video_id)
         annotations = [ann for sublist in video_data["annotations"] for ann in sublist]
-        
+        annotations.sort(key=lambda x: x['timestamp'])
+
         camera_ids_set = set()
         for path in video_data["video_files"]:
             cam_id_raw = os.path.basename(path).split('.')[0]
             camera_ids_set.add(_format_camera_name(cam_id_raw))
-        
+
         all_camera_options = sorted(list(camera_ids_set), key=lambda x: int(x.split()[-1]))
 
         if not all_camera_options:
             continue
 
-        if "best_camera" in video_data and video_data["best_camera"] != None:
-            best_camera_scene = _format_camera_name(video_data["best_camera"])
-            incorrect_options = [cam for cam in all_camera_options if cam != best_camera_scene]
-            
-            if len(incorrect_options) >= 3:
+        # Pre-compute eligibility flags
+        scene_eligible = (
+            "best_camera" in video_data and video_data["best_camera"] is not None
+            and len([c for c in all_camera_options if c != _format_camera_name(video_data["best_camera"])]) >= 3
+        )
+        suitable_annotations = [ann for ann in annotations if "best_camera" in ann and ann["best_camera"] is not None]
+        remaining_annotations = list(suitable_annotations)
+
+        scene_used = False
+
+        for _ in range(num_questions_per_video):
+            # Build the eligible subtype pool for this iteration
+            current_eligible = []
+
+            if scene_eligible and not scene_used:
+                current_eligible.append("best_camera_scene")
+
+            cam_groups = {}
+            if remaining_annotations:
+                current_eligible.append("best_camera_single_event")
+                for ann in remaining_annotations:
+                    cam_groups.setdefault(ann["best_camera"], []).append(ann)
+                if any(len(anns) >= 2 for anns in cam_groups.values()):
+                    current_eligible.append("best_camera_multiple_events")
+
+            if not current_eligible:
+                break
+
+            chosen = random.choice(current_eligible)
+
+            # --- best_camera_scene ---
+            if chosen == "best_camera_scene":
+                scene_used = True
+                best_camera_scene = _format_camera_name(video_data["best_camera"])
+                annotations_list = "".join(f"- {ann['text']}\n" for ann in annotations)
 
                 prompt = prompt_template.format(
                     question_type="Best camera angle for the scene",
-                    description="N/A",
+                    description=f"Annotations:\n{annotations_list}",
                     best_camera=best_camera_scene,
                     all_cameras=", ".join(all_camera_options)
                 )
@@ -308,69 +338,110 @@ def camera(data, num_questions_per_video=2):
                 response = llm.prompt(prompt)
                 if response.startswith("```json"):
                     response = response[7:-4]
-                
+
                 try:
                     qa_pair = json.loads(response)
-                except json.JSONDecodeError as e:
+                except json.JSONDecodeError:
                     continue
 
-                formatted_question = {
+                all_generated_questions.append({
                     "video_id": video_id,
                     "question_type": "camera",
-                    "question": json.dumps(qa_pair),
-                    "answer": qa_pair.get("answer"),
+                    **qa_pair,
+                    "video_paths": video_data["video_files"],
                     "metadata": {
+                        "camera_question_subtype": "best_camera_scene",
                         "best_camera_scene": video_data["best_camera"]
                     }
-                }
-                all_generated_questions.append(formatted_question)
+                })
 
-        suitable_annotations = [ann for ann in annotations if "best_camera" in ann and ann["best_camera"] != None]
-        if suitable_annotations:
-            num_event_questions_to_generate = num_questions_per_video
-            if "best_camera" in video_data:
-                 num_event_questions_to_generate = max(0, num_questions_per_video - 1)
+            # --- best_camera_multiple_events ---
+            elif chosen == "best_camera_multiple_events":
+                eligible_cams = [cam for cam, anns in cam_groups.items() if len(anns) >= 2]
+                cam_key = random.choice(eligible_cams)
+                selected_pair = random.sample(cam_groups[cam_key], 2)
+                selected_pair.sort(key=lambda x: x['timestamp'])
+                event1, event2 = selected_pair
 
-            for _ in range(num_event_questions_to_generate): 
-                if not suitable_annotations:
-                    break
+                remaining_annotations = [ann for ann in remaining_annotations if ann not in selected_pair]
 
-                selected_annotation = random.choice(suitable_annotations)
-                suitable_annotations.remove(selected_annotation)
-                best_camera_event = _format_camera_name(selected_annotation["best_camera"])
+                best_camera_event = _format_camera_name(cam_key)
+                if len([c for c in all_camera_options if c != best_camera_event]) < 3:
+                    continue
 
-                incorrect_options = [cam for cam in all_camera_options if cam != best_camera_event]
-                
-                if len(incorrect_options) >= 3:
-                    prompt = prompt_template.format(
-                        question_type="Best camera angle for a specific event",
-                        description=f"{selected_annotation['text']} (timestamp={selected_annotation['timestamp']})",
-                        best_camera=best_camera_event,
-                        all_cameras=", ".join(all_camera_options)
-                    )
+                prompt = prompt_template.format(
+                    question_type="Best camera angle for multiple events",
+                    description=(
+                        f"Event 1: {event1['text']} (timestamp={event1['timestamp']}); "
+                        f"Event 2: {event2['text']} (timestamp={event2['timestamp']})"
+                    ),
+                    best_camera=best_camera_event,
+                    all_cameras=", ".join(all_camera_options)
+                )
 
-                    llm = LLM()
-                    response = llm.prompt(prompt)
-                    if response.startswith("```json"):
-                        response = response[7:-4]
-                    
-                    try:
-                        qa_pair = json.loads(response)
-                    except json.JSONDecodeError as e:
-                        continue
+                llm = LLM()
+                response = llm.prompt(prompt)
+                if response.startswith("```json"):
+                    response = response[7:-4]
 
-                    formatted_question = {
-                        "video_id": video_id,
-                        "question_type": "camera",
-                        "question": json.dumps(qa_pair),
-                        "answer": qa_pair.get("answer"),
-                        "metadata": {
-                            "event_description": selected_annotation["text"],
-                            "event_timestamp": selected_annotation["timestamp"],
-                            "best_camera_event": selected_annotation["best_camera"]
-                        }
+                try:
+                    qa_pair = json.loads(response)
+                except json.JSONDecodeError:
+                    continue
+
+                all_generated_questions.append({
+                    "video_id": video_id,
+                    "question_type": "camera",
+                    **qa_pair,
+                    "video_paths": video_data["video_files"],
+                    "metadata": {
+                        "camera_question_subtype": "best_camera_multiple_events",
+                        "event1_description": event1["text"],
+                        "event1_timestamp": event1["timestamp"],
+                        "event2_description": event2["text"],
+                        "event2_timestamp": event2["timestamp"],
+                        "best_camera_event": cam_key
                     }
-                    all_generated_questions.append(formatted_question)
+                })
+
+            # --- best_camera_single_event ---
+            else:
+                selected_annotation = random.choice(remaining_annotations)
+                remaining_annotations.remove(selected_annotation)
+
+                best_camera_event = _format_camera_name(selected_annotation["best_camera"])
+                if len([c for c in all_camera_options if c != best_camera_event]) < 3:
+                    continue
+
+                prompt = prompt_template.format(
+                    question_type="Best camera angle for a specific event",
+                    description=f"{selected_annotation['text']} (timestamp={selected_annotation['timestamp']})",
+                    best_camera=best_camera_event,
+                    all_cameras=", ".join(all_camera_options)
+                )
+
+                llm = LLM()
+                response = llm.prompt(prompt)
+                if response.startswith("```json"):
+                    response = response[7:-4]
+
+                try:
+                    qa_pair = json.loads(response)
+                except json.JSONDecodeError:
+                    continue
+
+                all_generated_questions.append({
+                    "video_id": video_id,
+                    "question_type": "camera",
+                    **qa_pair,
+                    "video_paths": video_data["video_files"],
+                    "metadata": {
+                        "camera_question_subtype": "best_camera_single_event",
+                        "event_description": selected_annotation["text"],
+                        "event_timestamp": selected_annotation["timestamp"],
+                        "best_camera_event": selected_annotation["best_camera"]
+                    }
+                })
 
     output_file_path = os.path.join(OUTPUT_DIRECTORY, "qa_camera.json")
     os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
@@ -424,7 +495,9 @@ def summarization(data, num_summaries_per_video=1):
             formatted_summary = {
                 "video_id": video_id,
                 "question_type": "summarization",
-                "summary": summary_data.get("summary", ""),
+                "question": "Provide a very comprehensive, well thought-out summary of the ego-actor's interactions across all views. Make it a couple sentences and around 500-1000 characters",
+                "answer": summary_data["summary"],
+                "video_paths": video_data["video_files"],
                 "metadata": {
                     "annotations": [
                         {

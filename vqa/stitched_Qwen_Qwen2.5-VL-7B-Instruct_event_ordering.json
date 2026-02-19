@@ -1,0 +1,2002 @@
+{
+    "sfu_covid_001_12_event_ordering_418": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person holds the test plate pack with his left hand.\\nII. The person picks the collection swab ziploc bag from the covid 19 antigen test box on the table with his right hand.\\nIII. The person opens the collection swab ziploc bag with both hands.\\nIV. The person holds the test tube cap ziploc bag with his left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_55_1_event_ordering_334": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer holds the test plate pack with her left hand.\\nII. The man shifts the pair of scissors on the table with her left hand.\\nIII. The camera-wearer presses the used test materials in the waste pouch with her hands.\\nIV. The camera-wearer passes the test tube to her right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_cooking_005_6_event_ordering_412": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer picks the half cut cucumber with his left hand.\nII. The camera-wearer covers the spice bottle with the lid from his right hand.\nIII. The camera-wearer opens the unspecified seasoning in his left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_031_8_event_ordering_302": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer grabs the black hand hold with his right hand.\nII. The camera-wearer grabs a blue hand hold with his right hand.\nIII. The camera-wearer grabs the blue hand hold with his left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0722_Piano_1_7_event_ordering_567": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person folds her left hand up the piano.\nII. The person plays higher with her hands on the piano.\nIII. The person puts her right hand on the piano.\nIV. The person puts both hands on the piano.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_05_10_event_ordering_130": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer inspects the result on the COVID test strip.\\nII. The camera-wearer spreads the test manual on the table with both hands.\\nIII. The camera-wearer drops the COVID test strip on the test manual.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_56_2_event_ordering_196": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer washes green pepper.\nII. The camera-wearer drops down the trash into the trash bin with her right hand.\nIII. The camera-wearer picks up a plate from the plates rack with her right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_covid_009_14_event_ordering_430": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer presses the covid test pack on the table with her left hand.\\nII. The camera-wearer swirls the sterile swab in her nostril with her right hand.\\nIII. The camera-wearer puts the disposable swab with package on the table with her right hand.\\nIV. The camera-wearer pulls the seal of the buffer tube in her left hand with her right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_cooking017_2_event_ordering_388": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person cuts the wrapper on the cut cucumber in his left hand with the knife in his right hand.\\nII. The person arranges the sliced tomatoes on the chopping board with his left hand and the knife in his right hand.\\nIII. The person picks a knife from the chopping board with his right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_22_1_event_ordering_178": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person adds the turmeric powder into the egg mixture with his right hand.\\nII. The person adds oil to the frying pan with the spoon in his right hand.\\nIII. The person picks some grounded pepper from the jar with his right hand.\\nIV. The person transfers the lid of the jar of seasoning from his right hand to his left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_3_2_4_event_ordering_582": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer steps his feet backward with the man X while holding each other.\\nII. The camera-wearer turns to his right with the man X while holding each other.\\nIII. The camera-wearer steps backward while holding hands with the man O.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_033_18_event_ordering_308": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer grabs a big teal handhold with his left hand.\nII. The camera-wearer places his left foot on the small teal foothold.\nIII. The camera-wearer grabs a small teal handhold with his right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_cooking_007_7_event_ordering_415": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places his right hand on the Lipton tag.\\nII. The camera-wearer squeezes the Lipton bag.\\nIII. The camera-wearer grabs the spoon from the cup with his right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0720_Dance_4_4_event_ordering_561": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer swings their right hand to slam their left hand.\\nII. The camera-wearer swings both arms forward while jumping forwards and backwards.\\nIII. The camera-wearer jumps on the spot while kicking her right leg upwards.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_14_event_ordering_0": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer loosens the axle nut of the wheel with the socket wrench in their left hand.\\nII. The camera-wearer loosens the axle nut of the wheel with the socket wrench in their hands.\\nIII. The camera-wearer passes the auxiliary wrench from their right hand to their left hand.\\nIV. The camera-wearer presses the rear wheel of the bicycle with their left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_041_2_event_ordering_311": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places her right foot on the gray foothold.\\nII. The camera-wearer grabs the gray handhold with her right hand.\\nIII. The camera-wearer places her left foot on the gray foothold (first occurrence).\\nIV. The camera-wearer places her left foot on the gray foothold (second occurrence).",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_022_18_event_ordering_293": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer grabs a big black handhold with his right hand.\nII. The camera-wearer rubs his hands together in the chalk bag.\nIII. The camera-wearer adjusts his grip on a big dark grey handhold with his right hand.\nIV. The camera-wearer points to the bouldering wall with the finger in his left hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_bike_06_4_event_ordering_215": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer places the wheel in the bicycle frame.\nII. The camera-wearer tightens the nut to the bicycle with his hand.\nIII. The camera-wearer turns the bicycle frame.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "uniandes_cooking_009_4_event_ordering_440": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer transfers the sachet of cinnamon sticks from her right hand to her left hand.\nII. The camera-wearer pours the coffee grounds from the spoon into the cloth strainer with her right hand.\nIII. The camera-wearer picks the orange dish cloth from the countertop with her right hand.\nIV. The camera-wearer picks the orange dish cloth from the countertop with her right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0728_Guitar_1_6_event_ordering_593": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person shifts his left hand up on the fretboard of the guitar.\nII. The person places his right hand on the sides of the guitar body.\nIII. The person places the guitar on his laps with both hands.\nIV. The person places his left hand on the body of the guitar.",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_53_1_event_ordering_329": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person holds the covid-19 test kit on the table with his left hand.\nII. The person picks the instruction manual on the table with his left hand.\nIII. The person opens the testing plate bag in his right hand with his left hand.\nIV. The person reads the instruction on the collection swab bag.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_4_2_event_ordering_476": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person moves the chopped tomato on the chopping board with her left hand.\\nII. The person picks the frying pan from the electric stove with her left hand.\\nIII. The person discards the egg shell into the waste bin with her left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0331_Guitar_2_5_event_ordering_452": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person holds the manuscript holder with his left hand.\\nII. The person scans through the manuscript on the manuscript holder with his left finger.\\nIII. The person moves the manuscript on the manuscript holder with his left finger.\\nIV. The person scans through the manuscript on the manuscript holder with his left finger again.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "utokyo_omelet_11_1001_4_event_ordering_605": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person wipes the skillet with the tissue paper in his left hand.\nII. The person picks the onion stem end from the sliced onion with his right hand.\nIII. The person places the onion on the chopping board with his right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_bike_06_5_event_ordering_218": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places the towel on the table with her right hand.\\nII. The camera-wearer places the wrench on the table with her left hand.\\nIII. The camera-wearer moves the chain by backpedaling slowly with the brush in her right hand.\\nIV. The camera-wearer places the degreaser on the table with her left hand.",
+        "predicted_answer": "a",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0713_Dance_2_3_event_ordering_523": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer steps in place while shimmying her shoulder.\\nII. The camera-wearer steps left while swinging her arms.\\nIII. The camera-wearer steps sideways while swinging her arms.\\nIV. The camera-wearer steps backward and forward with her right foot while swinging her arms.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0706_Dance_4_4_event_ordering_484": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer steps his feet forward.\nII. The camera-wearer moves sideways while moving his hands in a circular motion.\nIII. The camera-wearer turns to his right.\nIV. The camera-wearer steps his feet in places to his right.",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_17_1_event_ordering_173": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer pours the oil into the bowl of cucumber and tomato.\\nII. The camera-wearer takes out some herb with her left hand.\\nIII. The camera-wearer opens a drawer.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_09_9_event_ordering_86": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer holds the tube in her right hand with her left hand.\nII. The camera-wearer sets the tire on the rim with both hands.\nIII. The camera-wearer holds the wheel with her left hand.",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_022_14_event_ordering_290": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person places his left foot on a small red foot hold.\nII. The person grabs a big red hand hold with his left hand.\nIII. The person grabs a round red hand hold with his left hand.\nIV. The person places his right foot on a large red foot hold.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0713_Dance_4_3_event_ordering_527": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer steps backward and forward while extending his left hand upward.\nII. The camera-wearer steps backwards and forward while turning around with his hands sideways.\nIII. The camera-wearer hops forward while extending his hands forward.",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_60_1_event_ordering_343": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person opens the nasal swab package with her right hand.\\nII. The person drops the broken top of the nasal swab in her right hand inside the nylon zip bag.\\nIII. The person places the solution tube inside an opening on the test kit package with her right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_19_10_event_ordering_95": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer moves the brake tube from the bike cog set with his left hand.\\nII. The camera-wearer holds the bottle of chain lubricant with both hands.\\nIII. The camera-wearer rotates the bike pedal with his right hand.\\nIV. The camera-wearer holds the rag on the bike chain with his left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_16_3_event_ordering_240": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person stirs the noodles in the boiling pan with the spatula in her left hand.\nII. The person takes a soy sauce bottle from the cabinet with her right hand.\nIII. The person fits the lid on the oyster sauce bottle with her right hand.\nIV. The person puts the boiling pan in the sink with her right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_45_1_event_ordering_317": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer holds the extraction buffer tube pack with his left hand.\\nII. The camera-wearer puts the test manual in the Covid test box with his right hand.\\nIII. The camera-wearer moves the test strip on the test packs with his left hand.\\nIV. The camera-wearer swirls the nasal in the extraction buffer tube with his right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_bike_12_5_event_ordering_230": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer examines the wheel with his right hand.\\nII. The camera-wearer places the wheel on the floor with his left hand.\\nIII. The camera-wearer inserts the tire lever into the rim with his right hand.\\nIV. The camera-wearer moves the wheel on the floor with his left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_60_2_event_ordering_203": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person adjusts the stove knob with his right hand.\\nII. The person regulates the heat of the stove with his right hand.\\nIII. The person places the sugar in the kitchen cabinet with his right hand.\\nIV. The person passes the cup from his right hand to his left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_13_10_event_ordering_150": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person places the test device on the table with his right hand.\nII. The person picks the instruction manual from the covid antigen box with his right hand.\nIII. The person picks the test plate pack from the table with his right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_10_event_ordering_25": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer tightens the rear derailleur with the screwdriver in his right hand.\nII. The camera-wearer touches the bicycle cassette with his left hand.\nIII. The camera-wearer rotates the bike's pedals with his left hand.\nIV. The camera-wearer touches the derailleur with his left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_2_event_ordering_47": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer turns the bicycle tube in his right hand with his left hand.\\nII. The camera-wearer holds the bicycle tire with his right hand.\\nIII. The camera-wearer moves his left hand through the bicycle tire in his right hand.\\nIV. The camera-wearer picks the bicycle wheel from the floor with his left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_27_2_event_ordering_250": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer adjusts the heat of the table cooker on the countertop with his left hand.\\nII. The camera-wearer carries the mini container with his left hand.\\nIII. The camera-wearer places the oyster-flavored sauce bottle on the countertop with his right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0706_Dance_5_4_event_ordering_486": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person crosses his right foot over his left foot.\\nII. The person steps his feet backward.\\nIII. The person steps his left foot in places over the right foot.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_04_8_event_ordering_74": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer holds the bicycle wheel with their right hand.\\nII. The camera-wearer adjusts the bicycle wheel with their left hand.\\nIII. The camera-wearer walks towards a bicycle on the floor.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_1_3_event_ordering_466": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer drops the tomato omelet into the kitchen sink with the chopsticks in her right hand.\\nII. The camera-wearer holds the tomato on the cutting board with her left hand.\\nIII. The camera-wearer packs the omelet from the frying pan with the spatula in her right hand.\\nIV. The camera-wearer places the chopsticks on the white bowl with her right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_covid_005_6_event_ordering_424": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person transfers the sachet of nasal swab from her left hand to her right hand.\nII. The person turns the Covid test kit pack in her left hand.\nIII. The person turns the Covid test kit pack with both hands.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_57_4_event_ordering_199": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer drops the bowl on the kitchen countertop with her left hand.\\nII. The camera-wearer transfers the yellow knife from her right hand to her left hand.\\nIII. The camera-wearer picks the cup on the kitchen countertop with her left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_cooking022_2_event_ordering_393": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer picks a cucumber slice from the cutting board with her left hand.\nII. The camera-wearer picks the knife on the chopping board with her right hand.\nIII. The camera-wearer moves the unsliced cucumber on the cutting board with her left hand.",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_6_3_event_ordering_506": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places the tomato in his left hand on the chopping board.\\nII. The camera-wearer holds the skillet with his left hand.\\nIII. The camera-wearer passes the fork from his right hand to his left hand.\\nIV. The camera-wearer picks the spatula from the stovetop with his right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_cooking_001_8_event_ordering_409": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer moves the scrambled eggs in the skillet with chopsticks in his right hand.\nII. The camera-wearer picks the egg shell in his left hand with his right hand.\nIII. The camera-wearer packs the leek slices on the chopping board with his left hand and the knife in his right hand.\nIV. The camera-wearer pours soy sauce into the egg in the bowl from the soy sauce bottle in his left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_27_2_event_ordering_249": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer cleans the wooden spatula with the stainless steel spoon using his right hand.\\nII. The camera-wearer puts garlic on the cutting board with his right hand.\\nIII. The camera-wearer drops the measuring spoon on the countertop with his left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_13_8_event_ordering_151": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer passes the extraction buffer tube to his right hand.\\nII. The camera-wearer swabs his right nostrils with the nasal swab in his right hand.\\nIII. The camera-wearer picks a sachet of nasal swab from the table with his left hand.\\nIV. The camera-wearer places the seal of the puffer tube on the table with his right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_16_event_ordering_5": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person touches the brake cable with his left hand.\\nII. The person fixes the chain on the wheel hub with his right hand.\\nIII. The person tightens the axle nut with the wrench in his right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_14_01_6_event_ordering_109": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person covers the bottle with the lid in her right hand.\\nII. The person opens the oil bottle with her right hand.\\nIII. The person places the fork into the bowl with her right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_covid_010_6_event_ordering_435": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person opens the seal on the test tube using her right hand.\\nII. The person removes the swab from the test tube using her right hand.\\nIII. The person checks and waits for the result on the testing plate.\\nIV. The person gets the collection swab from the table using her right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_bike_10_4_event_ordering_224": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person brushes the chain with the toothbrush in his right hand.\nII. The person transfers the toothbrush from his left hand to his right hand.\nIII. The person dips the toothbrush into the soapy water in the mixing bowl with his right hand.\nIV. The person places the toothbrush on the work table with his right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_23_1_event_ordering_180": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer holds the yellow bowl with his right hand.\nII. The camera-wearer arranges the three cucumber rings with both hands.\nIII. The camera-wearer opens the butter cap.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_1_5_event_ordering_530": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person waits for the water to boil in the electric kettle.\nII. The person opens the tap with his left hand.\nIII. The person picks the milk container on the countertop with his right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_3_3_event_ordering_475": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person washes the knife with his right hand.\nII. The camera-wearer holds the kitchen cabinet handle with his left hand.\nIII. The person closes the refrigerator with his left hand.",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_6_event_ordering_51": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person inspects the bike's wheel in his hands.\\nII. The person grabs the bike's wheel on the floor with his right hand.\\nIII. The person removes the bike's inner tube from the wheel with his right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_music_09_5_event_ordering_255": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer removes his hands from the piano.\\nII. The camera-wearer plays chords with his left hand.\\nIII. The camera-wearer moves his left hand on the piano.\\nIV. The camera-wearer removes his left hand from the piano.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_04_10_event_ordering_124": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer extracts the sterile swab from their nostril with their right hand.\\nII. The camera-wearer passes the packaged sterile swab from their right hand to their left hand.\\nIII. The camera-wearer holds the packaged test device with both hands.\\nIV. The camera-wearer dips the sterile swab into the solution tube with their right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_1_3_event_ordering_467": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer passes the spatula from her left hand to her right hand.\nII. The camera-wearer picks tomato omelet from the electric cooker with the chopsticks in her right hand.\nIII. The camera-wearer turns the faucet handle of the kitchen tap with her right hand.\nIV. The camera-wearer picks the chopsticks from the white bowl with her right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_07_12_event_ordering_136": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer swirls the nasal swab around in her right nose.\nII. The camera-wearer holds the COVID test box with her two left fingers.\nIII. The camera-wearer removes the extraction buffer tube from the extraction buffer tube stand with her right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_2_1_3_event_ordering_570": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer steps forward with the woman while holding hands.\\nII. The camera-wearer steps side by side with both legs while Woman X steps forward to her left.\\nIII. The camera-wearer steps side by side with both legs while Woman X steps backward to her right.",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0715_Dance_1_7_event_ordering_543": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer moves forward while sweeping out her arms.\\nII. The camera-wearer spins to her right while moving her arms in a circular motion.\\nIII. The camera-wearer turns to her right with her extended arms.\\nIV. The camera-wearer spins to the right while moving her arms in a circular motion.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_50_1_event_ordering_324": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person folds the instruction manual with his hands.\\nII. The person picks the solution bottle from the table with his right hand.\\nIII. The person picks the instruction manual on the table with his left hand.\\nIV. The person places the transparent container in the Covid-19 box with his right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0331_Guitar_2_5_event_ordering_453": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer scans through the manuscript on the manuscript holder with his left hand.\nII. The camera-wearer shifts his left hand on the fretboard.\nIII. The camera-wearer holds the manuscript on the manuscript holder with his right finger.\nIV. The camera-wearer touches the manuscript on the manuscript holder with his left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0712_Cooking_4_3_event_ordering_516": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer holds the fridge knob with his right hand.\nII. The camera-wearer stirs the tomatoes in the skillet with the back of the ladle in his right hand.\nIII. The camera-wearer picks the ladle in the skillet with cooked egg with his right hand.\nIV. The camera-wearer holds the skillet with his left hand.",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_covid_012_5_event_ordering_436": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places the micro test tube on the table with her left hand.\\nII. The camera-wearer pours solution from the solution tube to the micro test tube in her left hand.\\nIII. The camera-wearer rotates the swab in her right nostril with her right hand.\\nIV. The camera-wearer adjusts the test cassette on the table with her right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0407_Violin_1_5_event_ordering_456": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person adjusts the desk of the music stand with his right hand.\\nII. The person places the bow on the violin with his right hand.\\nIII. The person turns the pages of the music booklet on the music stand with his right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_08_1_event_ordering_162": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer picks up the onion with her left hand.\\nII. The camera-wearer drops the mini knife on the table.\\nIII. The camera-wearer drops the small knife on the table with her right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_4_1_4_event_ordering_586": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer and the woman starts dancing.\\nII. The camera-wearer holds the right hand of the woman with his left hand while moving in a circular motion.\\nIII. The camera-wearer holds the right hand of the woman with his left hand while moving in a wave-like motion.\\nIV. The camera-wearer holds the right hand of the woman with his left hand while pulling her close.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0629_Dance_2_5_event_ordering_460": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person crosses his legs forward while his hands are bent downwards.\\nII. The person extends his right leg forward with his hands placed downward.\\nIII. The person steps to place while extending his left hand forward.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_music_15_5_event_ordering_265": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer plays a melodic tune on the piano with both hands.\nII. The person plays ascending scale with both hands.\nIII. The person plays a melodic tune on the piano with both hands.\nIV. The person plays descending scale with both hands.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_music_04_5_event_ordering_253": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer touches the manuscript with her right hand while talking with the man.\\nII. The camera-wearer lifts a musical booklet with her right hand.\\nIII. The camera-wearer touches the music sheet on the music stand with her right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_060_2_event_ordering_283": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person stirs the egg in the skillet with the spatula in her right hand.\nII. The person opens the seal of the black pepper container in her left hand with her right hand.\nIII. The person presses the spatula against the skillet with her right hand.\nIV. The person picks an egg from the egg crate with her right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_2_3_event_ordering_533": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer passes the bottle of honey from her left hand to her right hand.\\nII. The camera-wearer pours noodles into the skillet with chopsticks in her right hand.\\nIII. The camera-wearer holds the bottle of oil with her left hand.\\nIV. The camera-wearer adjusts the camera on her head with her right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0710_Cooking_4_3_event_ordering_496": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer moves the spaghetti pack on the countertop with her left hand.\nII. The camera-wearer holds the mug with milk tea on the countertop with her left hand.\nIII. The camera-wearer pushes the refrigerator handle with her right hand.\nIV. The camera-wearer holds the sugar container with her left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_21_2_event_ordering_244": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person picks up the lid of the cardamom pod bottle from the countertop with her right hand.\\nII. The person moves the mesh sieve on the countertop with her left hand.\\nIII. The person transfers the big spoon from her right hand to her left hand.\\nIV. The person places the milk pack on the countertop in her left hand from her right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_050_2_event_ordering_281": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person cracks the egg in her right hand with the bowl on the table.\nII. The person places the spatula on the frying pan handle with her right hand.\nIII. The person places the bowl on the table with her right hand.\nIV. The person picks the fork from the table with her right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0324_Piano_1_5_event_ordering_450": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer adjusts the sheet music on the stand with her left hand.\\nII. The camera-wearer leans forward for emphasis.\\nIII. The camera-wearer plays a chord with her left hand.\\nIV. The camera-wearer plays a melodic tune on the piano with her left hand.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_07_12_event_ordering_79": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer holds the calipers with her left hand.\nII. The camera-wearer lifts the wheel off the floor with her hands.\nIII. The camera-wearer hangs the wheel in between the fork with her both hands.\nIV. The camera-wearer adjusts the cloth with her both hands.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_022_16_event_ordering_292": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer lands on the mat.\\nII. The camera-wearer places his left foot on the bouldering wall.\\nIII. The camera-wearer grabs a red hand hold with his left hand.\\nIV. The camera-wearer grabs a red hand hold with his right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0730_Dance_1_4_event_ordering_594": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer stops dancing.\\nII. The camera-wearer steps towards the left and towards the right while swaying his hands in front of his torso.\\nIII. The camera-wearer starts dancing.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_030_2_event_ordering_278": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person places the whisk in her right hand into the small stainless bowl in her left hand.\\nII. The person moves the egg crate on the countertop with her right hand.\\nIII. The person takes a container from the countertop with her left hand.",
+        "predicted_answer": "a",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0730_Dance_2_3_event_ordering_596": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer spins to her right side while placing her right leg on her left leg.\\nII. The camera-wearer moves both hands upward in a swing-like motion while standing on her left leg.\\nIII. The camera-wearer hops to the left.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_52_1_event_ordering_327": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer picks a box of covid-19 test kits from the table with his left hand.\\nII. The camera-wearer unpacks the covid-19 test kits with his right hand.\\nIII. The camera-wearer picks a test plate pack from the table with his right hand.\\nIV. The camera-wearer removes the nasal swab in his right hand from the test tube.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_09_11_event_ordering_82": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer fixes the wrench on the axle end cap with her left hand.\nII. The camera-wearer holds the chain stay with her left hand.\nIII. The camera-wearer adjusts the wheel in the fork with her right hand.\nIV. The camera-wearer holds the wheel with her right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_09_12_event_ordering_141": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer holds the nasal swab with both hands.\nII. The camera-wearer places the sachet of nasal swab on the table with her right hand.\nIII. The camera-wearer picks the sachet of nasal swab from the table with her right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_16_10_event_ordering_154": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer holds the sterile swab inside the solution tube in her left hand with her right hand.\nII. The camera-wearer picks a test device package from the covid-19 test kit package on the table with her left hand.\nIII. The camera-wearer unfolds the nasal swab sachet with her hands.\nIV. The camera-wearer holds the bottom of the test device package with her left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_12_2_event_ordering_236": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person adds the fresh ginger to the tea in the saucepan using his left hand.\\nII. The person simmers the tea over low heat.\\nIII. The person picks the set of measuring spoons from the countertop with his right hand.\\nIV. The person pours the tea through the fine mesh sieve into the white cup using his right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_cooking022_2_event_ordering_392": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer cuts the cucumber slice with the knife in her right hand.\nII. The camera-wearer moves the tomato pieces on the cutting board with her left hand.\nIII. The camera-wearer moves the tomato pieces on the cutting board with her left hand.\nIV. The camera-wearer cuts the cucumber slice with the knife in her right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_18_12_event_ordering_156": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person picks the test tube seal from the table with his right hand.\\nII. The person tears open the test cassette pack with his hands.\\nIII. The person brings out the test cassette from the pack with his right hand.\\nIV. The camera-wearer reads the instruction manual on the table.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_bike_10_2_event_ordering_219": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer transfers the wheel from his left hand to his right hand.\\nII. The camera-wearer picks the tube from the table with his right hand.\\nIII. The camera-wearer rolls the pedal with his left hand.\\nIV. The camera-wearer holds the wheel with his left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_cooking_05_4_event_ordering_65": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer pierces the peeled garlic with the knife in his right hand.\\nII. The camera-wearer moves the spring onions on the cutting board with the knife in his right hand.\\nIII. The camera-wearer picks the noodles from the bowl with his right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_3_2_4_event_ordering_583": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer steps forward and backward while holding hands with the man.\\nII. The camera-wearer steps backward while holding hand with the man.\\nIII. The camera-wearer turns the man to the right while placing his right hand on the waist of the man.\\nIV. The man turns the camera-wearer to the left while stepping to the right.",
+        "predicted_answer": "a",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_cooking_009_7_event_ordering_417": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person drains the tablespoon in her right hand.\\nII. The person stirs the pot of chai tea on the gas cooker with the tablespoon in her right hand.\\nIII. The person puts the garlic into the pot of chai tea on the gas cooker.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_57_1_event_ordering_338": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer moves the covid 19 test instruction sheet on the table with his right hand.\\nII. The camera-wearer studies the covid 19 test instruction sheet on the table.\\nIII. The camera-wearer picks the covid 19 test tube pack from the covid 19 test box with his left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_4_2_event_ordering_477": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person moves the tomato on the chopping board with the knife in her right hand.\\nII. The person places the chopsticks on the plastic sieve with her right hand.\\nIII. The person turns a knob of the electric stove.",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_covid_005_6_event_ordering_425": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person picks the test cassette from the test cassette sachet with her left hand.\nII. The person moves the test materials in the Covid test kit pack with her right hand.\nIII. The person turns the Covid test kit pack on the table with her left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_8_event_ordering_63": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer fixes the inflator in the air valve with his right hand.\\nII. The camera-wearer places the wheel by the table with his left hand.\\nIII. The camera-wearer inflates the tube with the inflator in his right hand.\\nIV. The camera-wearer fixes the air valve in the air valve hole of the wheel with his right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_bike_06_2_event_ordering_211": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer attempts to loosen the nut with a wrench.\\nII. The camera-wearer removes the axle nut from the bicycle.\\nIII. The camera-wearer removes the wheel from the bicycle frame.\\nIV. The camera-wearer loosens the axle nut with his hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "utokyo_salad_12_1018_4_event_ordering_620": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places the knife on the chopping board with her right hand.\\nII. The camera-wearer picks the cucumber in the transparent bag on the kitchen island with her left hand.\\nIII. The camera-wearer places the tomato on the chopping board with her left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_cooking026_2_event_ordering_398": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer rotates the pan in his left hand.\nII. The camera-wearer opens the bottle of thyme in his right hand with his left hand.\nIII. The camera-wearer turns the oil in his left hand into the pan on the electric burner.",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_02_3_event_ordering_20": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person inspects the bike wheel.\\nII. The person picks up the air pump with his right hand.\\nIII. The person inspects the bike tire with both hands.",
+        "predicted_answer": "a",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_cooking017_2_event_ordering_389": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer picks the sliced tomato from the chopping board with his left hand.\\nII. The camera-wearer removes the sliced cucumber from the knife onto the chopping board with his left hand.\\nIII. The camera-wearer places the chopped tomato on the chopping board with his left hand.",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0707_Guitar_2_10_event_ordering_488": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places his left hand on his left lap.\\nII. The camera-wearer stops playing the guitar.\\nIII. The camera-wearer starts playing the guitar.\\nIV. The camera-wearer touches his right shoulder with his left hand.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_2_event_ordering_6": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer removes the wheel from the fork with both hands.\\nII. The camera-wearer holds the wheel of the bicycle with his right hand.\\nIII. The camera-wearer loosens the brake cable with his left hand.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_cpr_52_1_event_ordering_360": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person bends her head down to the face of the manikin.\nII. The person pumps up and down her interlocked palms on the chest of the CPR manikin.\nIII. The person places her interlocked palms on the chest of the CPR manikin.",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_033_16_event_ordering_305": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person grabs the big lime green hand hold with his left hand.\\nII. The person observes the bouldering wall.\\nIII. The person grabs the big lime green hand hold with his right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_cooking026_2_event_ordering_399": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person passes the eggshell from his right hand to his left hand.\nII. The person covers the bottle of thyme with the lid in his left hand.\nIII. The person places the silicone spatula in his right hand in the pan in his left hand.\nIV. The person passes the bottle of tarragon from his left hand to his right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_covid_008_16_event_ordering_429": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer takes the test cassette with package from the table with his left hand.\\nII. The camera-wearer inserts the sterile swab in his nose with his right hand.\\nIII. The camera-wearer takes the test pack from the table with his right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_bike_12_3_event_ordering_225": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer touches the fork with his right hand.\nII. The camera-wearer pulls the tire with both hands.\nIII. The camera-wearer holds the nut with his left hand.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_1_2_event_ordering_499": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer picks the chopstick from the chopping board with his left hand.\nII. The camera-wearer transfers the electric heater from his right hand to his left hand.\nIII. The camera-wearer adjusts the skillet on the stovetop with his left hand.\nIV. The camera-wearer adds the diced onion to the skillet with both hands.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_2_2_2_event_ordering_573": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The man moves sideways with the camera-wearer while holding hands.\nII. The man places his right arm on the waist of the camera-wearer.\nIII. The man moves sideways while extending both arms forward.",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_032_4_event_ordering_279": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer moves the plate on the countertop with his left hand.\\nII. The camera-wearer removes the skillet from the gas stovetop with his left hand.\\nIII. The camera-wearer passes the container of milk from his left hand to his right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "uniandes_dance_013_18_event_ordering_446": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer spins to the left with her left hand bent backward.\\nII. The camera-wearer extends her body backwards with her right hand bent forward.\\nIII. The camera-wearer bends her feet inwards while her hands are placed downwards.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_23_4_event_ordering_248": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person opens the faucet lever with her left hand.\nII. The person holds the scoop with both hands.\nIII. The person moves the cutting board on the countertop with her left hand.",
+        "predicted_answer": "a",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_02_11_event_ordering_14": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person rotates the wheel with both hands.\\nII. The person passes the innertube to his right hand.\\nIII. The person places the rim on the mat with his left hand.\\nIV. The person flips the wheel with both hands.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "utokyo_pcr_2001_32_8_event_ordering_617": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places the empty test device package on the table with her right hand.\\nII. The camera-wearer inserts the nasal swab in her right hand into her nostril.\\nIII. The camera-wearer picks a buffer solution tube package with her right hand from the covid-19 test package.\\nIV. The camera-wearer adjusts an instruction manual on the table with her right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_16_1_event_ordering_172": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer closes the kitchen cabinet with her left hand.\\nII. The camera-wearer opens the cupboard with her left hand.\\nIII. The camera-wearer holds the white cup with the egg mixture on the stovetop with her left hand.",
+        "predicted_answer": "a",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_59_1_event_ordering_342": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person places the test instructions sheet on the table with his right hand.\\nII. The person places the covid-19 test box on the table with his left hand.\\nIII. The person picks the test cassette from the table with his right hand.\\nIV. The person places the test cassette into the biosafety bag in his left hand with his right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_cpr_44_4_event_ordering_347": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places her both hands on the chest of the CPR manikin.\\nII. The camera-wearer observes the CPR manikin.\\nIII. The camera-wearer kneels down on the floor beside CPR manikin.\\nIV. The camera-wearer presses the chest of the CPR manikin with her both hands.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_cooking_001_8_event_ordering_408": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places the chopsticks in the bowl with his right hand.\\nII. The camera-wearer picks the skillet from the stovetop with his left hand.\\nIII. The camera-wearer picks the skillet from the stovetop with his left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_bike_04_2_event_ordering_207": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person holds the bicycle fork with his left hand.\\nII. The person places the silver wrench on the bicycle nut with his right hand.\\nIII. The person wears the hand glove on his right hand with his left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_basketball_03_81_event_ordering_370": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person passes the basketball from his left hand to his right hand.\\nII. The person catches the basketball with his right hand.\\nIII. The person catches the basketball with his right hand.\\nIV. The person passes the basketball from his right hand to his left hand.",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_09_8_event_ordering_84": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places the head of the wrench in her right hand on the nut.\\nII. The camera-wearer picks the wrench in her left hand with her right hand.\\nIII. The camera-wearer holds the hammer with her left arm.\\nIV. The camera-wearer holds the wrench with both hands.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0713_Dance_3_3_event_ordering_525": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer swings her left foot forward.\\nII. The camera-wearer starts dancing.\\nIII. The camera-wearer hops sideways while stepping her right foot backward.\\nIV. The camera-wearer steps forward and backward.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_16_3_event_ordering_239": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer studies the paper recipe on the countertop.\\nII. The camera-wearer opens the lid of the crushed pepper container in her left hand with her right hand.\\nIII. The camera-wearer positions her left hand above the skillet on the cooker.\\nIV. The camera-wearer adds the garlic slices from the small bowl in her right hand into the skillet on the cooker.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_2_3_event_ordering_470": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer drops down the sponge on the cabinet with his right hand.\nII. The camera-wearer holds the crate of an egg with his left hand.\nIII. The camera-wearer picks up the chopping sticks from the plate with his right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0720_Dance_3_10_event_ordering_551": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer kicks her right leg forward while extending her hands forward.\\nII. The camera-wearer lifts herself from the floor while turning to her left.\\nIII. The camera-wearer extends an alternate foot forward while turning to the left with her right hand upwards.",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_45_1_event_ordering_318": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person opens the extraction buffer tube pack with both hands.\\nII. The person picks the nasal swab pack from the covid test box with his right hand.\\nIII. The person seals the extraction buffer tube pack with both hands.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_023_4_event_ordering_273": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person places her left hand on top of the skillet on the gas burner to check the heat of the skillet.\\nII. The camera-wearer picks up the bowl of scrambled eggs on the kitchen countertop with both hands.\\nIII. The camera-wearer puts the egg crate in the refrigerator with her right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_02_10_event_ordering_13": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person holds a gear selector with his left hand.\\nII. The person removes the internal gear link with his right hand.\\nIII. The person transfers the T handle hex key to his right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_1_2_event_ordering_464": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person opens the tap with her left hand.\\nII. The person places the half onion on the chopping board with her left hand.\\nIII. The person moves the skillet on the stove with her right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_59_2_event_ordering_201": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer adjusts the gas burner.\\nII. The camera-wearer places the knife on the chopping board with his right hand.\\nIII. The camera-wearer drops the knife on the chopping board.\\nIV. The camera-wearer picks the green pepper.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_033_12_event_ordering_303": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person grabs a white hand hold with her left hand.\\nII. The person places her right foot on a white foot hold.\\nIII. The person grabs the edge of the bouldering wall with her left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_074_2_event_ordering_288": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer places the dough on the cutting board with their right hand.\nII. The camera-wearer places their left hand on the dough on the countertop.\nIII. The camera-wearer moves the top of the bag of flour with their left hand.\nIV. The camera-wearer places the rolling pin on the countertop with their right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_58_1_event_ordering_339": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer drops the test tube on the table with her right hand.\nII. The camera-wearer opens the nasal swab pack with her right hand.\nIII. The camera-wearer drops the instruction manual on the table with her left hand.\nIV. The camera-wearer moves the waste bag on the table with her left hand.",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0710_Cooking_4_2_event_ordering_494": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places the tomato on the cutting board with her left hand.\\nII. The camera-wearer removes a container of tomatoes from the refrigerator with her right hand.\\nIII. The camera-wearer swirls the container of tomatoes under running water in the sink with both hands.",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_8_event_ordering_42": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person holds the rear derailleur of the bicycle with their left hand.\nII. The person pushes the jockey wheel of the bicycle with their left hand.\nIII. The person holds the rear brake cable of the bicycle with their left hand.\nIV. The person pushes the jockey wheel of the bicycle with their left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "utokyo_omelet_12_1001_4_event_ordering_607": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer whisks the egg mixture in the bowl with the chopstick in their right hand.\\nII. The camera-wearer picks an onion stalk on the cutting board with their left hand.\\nIII. The camera-wearer cleans the omelet on the plate with the tissue paper in their hands.",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_5_2_event_ordering_534": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer covers the nut bowl with the lid in her right hand.\\nII. The camera-wearer transfers the carrot slices into her left hand with her right hand.\\nIII. The camera-wearer moves the celery on the chopping board with her left hand.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_cooking_07_4_event_ordering_69": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer dices the carrot on the chopping board with the knife in his right hand.\\nII. The camera-wearer places the knife on the chopping board with his right hand.\\nIII. The camera-wearer holds the cilantro with both hands.\\nIV. The camera-wearer holds the carrot on the chopping board with his left hand.",
+        "predicted_answer": "a",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "uniandes_cooking_009_6_event_ordering_443": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer stirs the tea bag in the pot of milk.\\nII. The camera-wearer pours the milk tea from the pot into the cup on the countertop.\\nIII. The camera-wearer passes the spoon from his left hand to his right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_6_2_event_ordering_537": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer opens the waste bin with his right foot.\\nII. The camera-wearer removes the root from the garlic clove in his left hand with his right hand.\\nIII. The camera-wearer turns on the faucet with his right hand.\\nIV. The camera-wearer removes the garlic clove from the garlic bulb with his right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_18_15_event_ordering_93": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer holds the right bike pedal with his right hand.\\nII. The camera-wearer transfers the rag from his left hand to his right hand.\\nIII. The camera-wearer holds the rag on the bike chain with his left hand.\\nIV. The camera-wearer cleans his right index finger and thumb on the rag in his left hand.",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_4_2_3_event_ordering_589": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person steps backward while holding the Man X.\nII. The Man X steps his left foot forward while holding the camera-wearer.\nIII. The person steps forward while holding the Man X.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_07_10_event_ordering_133": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer places her left hand on the Covid 19 Antigen Self Test Kit pack on the table.\nII. The camera-wearer transfers the extraction buffer tube from her right hand to her left hand.\nIII. The camera-wearer pulls out the nasal swab from the nasal swab sachet with her right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_43_3_event_ordering_194": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person passes the tomato in her right hand to her left hand.\\nII. The person scoops out salt from the container.\\nIII. The person cuts the onion on the chopping board on the kitchen countertop with the knife in her right hand.\\nIV. The person picks up the salt container.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_116_4_event_ordering_167": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer moves the cucumber on the cutting board with a knife.\nII. The camera-wearer places the cucumber on the countertop.\nIII. The camera-wearer slices the cucumber into smaller pieces using a knife on the cutting board.",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_13_02_2_event_ordering_108": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person moves the recipe paper on the countertop with his right hand.\\nII. The person places a cilantro leaf on the cutting board with his left hand.\\nIII. The person rubs the top of the salt container in his right hand with his left hand.\\nIV. The person turns the grater with his left hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_03_2_event_ordering_232": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer cracks the egg in his right hand against the cutting board.\\nII. The camera-wearer places the bowl in his left hand on the countertop.\\nIII. The camera-wearer places the cell phone in his left hand on the countertop.\\nIV. The camera-wearer drops the stainless steel spatula into the skillet on the gas stove with his right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_1_3_event_ordering_529": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person opens the refrigerator with his right hand.\\nII. The person wipes his hands with the napkin.\\nIII. The person picks the plate from the countertop with his left hand.\\nIV. The person passes the cilantro from his left hand to his right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_6_3_event_ordering_507": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer moves the diced ingredients on the chopping board with the knife in his right hand.\\nII. The camera-wearer stirs the egg and tomatoes in the skillet with the grillzange in his right hand.\\nIII. The camera-wearer holds the celery pack with his left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0713_Dance_2_3_event_ordering_522": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer steps forward with her right foot while swinging her arms.\nII. The camera-wearer steps sideways while swinging her arms.\nIII. The camera-wearer steps to the right while swinging her hands.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0720_Dance_2_4_event_ordering_547": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person jumps while extending her hands to the side.\\nII. The person steps in place while clapping both hands together.\\nIII. The person makes circular movements with her torso.\\nIV. The person steps sideways while reaching out with her hands.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_5_2_event_ordering_478": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person picks up the knife from the chopping mat with her right hand.\\nII. The person places a clove of garlic on the chopping mat with her left hand.\\nIII. The camera-wearer places the spatula under the tap.\\nIV. The person picks pasta from the pot with the picker thong in her right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_09_12_event_ordering_142": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer adjusts the camera on her head with her left hand.\\nII. The camera-wearer places the instruction leaflet on the table with her right hand.\\nIII. The camera-wearer places the timer on the table with her left hand.\\nIV. The camera-wearer picks a timer from the table with her left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_basketball_11_44_event_ordering_385": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer shoots a jump shot into the hoop with his right hand.\nII. Man O catches the ball with his both hands.\nIII. The camera-wearer catches the ball with both hands.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_1_3_event_ordering_528": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person picks a pinch of salt from his left hand with his right hand.\\nII. The person picks the napkin from the table with his left hand.\\nIII. The person shakes the skillet with his right hand.\\nIV. The person picks the half tomato from the chopping board with his left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "utokyo_omelet_6_1001_4_event_ordering_610": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person places the plastic bag of onion on the countertop with her right hand.\nII. The person places the spoon in the bowl of sugar with her right hand.\nIII. The person presses the minced meat in the skillet with the spatula in her right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_05_10_event_ordering_129": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer disposes the extraction buffer tube and nasal swab packs into the carton with his right hand.\\nII. The camera-wearer drops the extraction buffer tube pack on the table.\\nIII. The camera-wearer drops the nozzle cap on the table with his right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_covid_006_6_event_ordering_427": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer holds a covid antigen box on a table with his left hand.\nII. The camera-wearer picks the solution bottle from the table with his right hand.\nIII. The camera-wearer picks the manual from the table with his right hand.\nIV. The camera-wearer picks the test tube from the bag with his right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_6_event_ordering_41": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer touches the rear brake cable of the bicycle with his right hand.\\nII. The camera-wearer loosens the nut on the bolt hole of the rear derailleur with the wrench in both hands.\\nIII. The camera-wearer presses the brake lever of the bicycle with his right hand.\\nIV. The camera-wearer takes the wrench from his right hand with his left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0717_Piano_1_5_event_ordering_544": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer squeezes his right hand in the air.\\nII. The camera-wearer opens the sheet music with his left hand.\\nIII. The camera-wearer folds his hands in the air.\\nIV. The camera-wearer plays the piano with his right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_3_event_ordering_9": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer lifts the bike wheel from the floor with both hands.\\nII. The camera-wearer pulls out the inner tube from the bike wheel with his right hand.\\nIII. The camera-wearer fits the bike inner tube into the bike wheel with both hands.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_basketball_11_42_event_ordering_383": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer catches the ball with both hands.\\nII. The camera-wearer holds the ball with his right hand.\\nIII. The camera-wearer bounces the ball with both hands.\\nIV. The camera-wearer catches the ball with both hands.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_024_2_event_ordering_276": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person places the bottle of oregano in her left hand on the island.\\nII. The person picks a bottle of lemon juice from the fridge with her right hand.\\nIII. The person holds the spoon in the glass cup with her right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_12_event_ordering_26": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person holds the handlebar with his right hand.\\nII. The person unscrews the rear derailleur screw with a spanner in his left hand.\\nIII. The person holds the chain holder with his left hand.\\nIV. The person pushes the rear derailleur with his left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_23_1_event_ordering_179": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer drops the knife on the countertop.\\nII. The camera-wearer holds the yellow bowl with their left hand.\\nIII. The camera-wearer picks the cucumber cuts with their right hand.\\nIV. The camera-wearer holds the tomato with their left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_02_14_event_ordering_114": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person takes a white tool from the kit with her left hand.\\nII. The person drops the manual on the table.\\nIII. The person takes a kit with her left hand.\\nIV. The person drops the test tube on the table with her right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_54_1_event_ordering_332": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person moves the test strip on the table with his right hand.\\nII. The person seals the extraction buffer tube pack with both hands.\\nIII. The person places the test strip on the table with his right hand.\\nIV. The person picks the extraction buffer tube pack from the table with his left hand.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_18_event_ordering_35": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer spins the quick release lever with their left hand.\\nII. The camera-wearer inserts the wheel in between the forks with their left hand.\\nIII. The camera-wearer holds the right axle nut with their right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0712_Cooking_4_3_event_ordering_517": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places the spatula on the countertop with his right hand.\\nII. The camera-wearer lifts the lid of the bottle with his left hand.\\nIII. The camera-wearer shakes his hands.\\nIV. The camera-wearer dips the fork in his right hand in the bowl of egg sauce.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_55_1_event_ordering_333": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person flips the COVID 19 test box with her left hand.\\nII. The person shifts the nasal swab sachet to the left with her right hand.\\nIII. The person opens the COVID 19 test box with her right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0730_Partner_Dance_1_1_7_event_ordering_602": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The man spins the camera-wearer to her right while holding hands across her head.\\nII. The camera-wearer steps forward with the man while holding hands.\\nIII. The man spins the camera-wearer to her left while holding hands across her head.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_cooking015_2_event_ordering_386": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer pours the egg from the bowl into the frying pan with his left hand.\nII. The camera-wearer beats the egg in the bowl with the fork in his right hand.\nIII. The camera-wearer cracks the egg on the counter top with his right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_02_11_event_ordering_15": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer inserts the tire pressure gauge into the valve of the innertube with his right hand.\\nII. The camera-wearer picks the wheel from the mat with both hands.\\nIII. The camera-wearer bends the wheel with his left hand.\\nIV. The camera-wearer lifts the wheel from the mat with his left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_04_12_event_ordering_126": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer rests his right hand on the table with the test device package in his right hand.\\nII. The camera-wearer holds the solution tube with both his hands.\\nIII. The camera-wearer holds the solution tube with both his hands.",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_09_02_4_event_ordering_102": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer stirs the tomato in the skillet with the spatula in her right hand.\\nII. The camera-wearer places the recipe on a cooker with her right hand.\\nIII. The camera-wearer pours the sliced tomatoes in her left hand into the skillet on the gas burner.\\nIV. The camera-wearer takes a container from the cooker with her right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0720_Dance_4_4_event_ordering_560": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer swings right hand to slam her left hand.\\nII. The camera-wearer jumps on the spot while sweeping her right hand downwards.\\nIII. The camera-wearer bends forward while extending her right arm.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_4_event_ordering_10": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer connects the brake noodle of the bicycle with both hands.\\nII. The camera-wearer holds the bicycle wheel with his right hand.\\nIII. The camera-wearer passes the wrench from his left hand to his right hand.\\nIV. The camera-wearer holds the bike basket with his left hand.",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0720_Dance_3_10_event_ordering_550": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer turns her torso towards her right while swinging her hands to her right.\\nII. The camera-wearer stops dancing.\\nIII. The camera-wearer steps backwards while swinging her hands.\\nIV. The camera-wearer kicks her right leg forward while extending her left hand forward.",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_07_12_event_ordering_78": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer releases the brake lever with her right hand.\\nII. The camera-wearer tightens the wheel to the fork with her right hand.\\nIII. The camera-wearer adjusts the caliper with her left hand.\\nIV. The camera-wearer pulls the brake cable with her right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_03_14_event_ordering_122": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer tears the test indicator packet in her left hand with her right hand.\\nII. The camera-wearer moves the test indicator packet on the table with her left hand.\\nIII. The camera-wearer applies some drops of the test solution from the test vial in her right hand to the test indicator on the table.\\nIV. The camera-wearer picks the test vial from the table with her right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_cooking_05_4_event_ordering_64": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person hangs the funnel on the kitchen sink with his right hand.\\nII. The person picks the towel from the cooker top with his left hand.\\nIII. The person places the empty pot on the cooker top with the towel in his left hand.\\nIV. The person picks the noodles from the bowl with his right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_20_2_event_ordering_242": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places the jar of sugar on the countertop with her left hand.\\nII. The man holds the large bowl with both hands.\\nIII. The camera-wearer places the saucepan on the stove with her right hand.\\nIV. The camera-wearer opens the jar of black tea leaves in her right hand with her left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_3_2_3_event_ordering_580": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer steps backward and forward in the same direction while holding the other person's hand.\nII. The camera-wearer places his right hand around the waist of the man.\nIII. The camera-wearer and the man step backwards while holding hands.\nIV. The camera-wearer spins clockwise while holding the man's hand.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_4_event_ordering_58": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer passes the tire from his left hand to his right hand.\nII. The camera-wearer observes the wheel in his hands.\nIII. The camera-wearer rotates the tire with his hands.\nIV. The camera-wearer holds the wheel with his hands.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0710_Cooking_1_2_event_ordering_490": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer touches a knob of the cooker with his right hand.\\nII. The camera-wearer picks the knife from the chopping board with her right hand.\\nIII. The camera-wearer places the electric kettle under the tap with her left hand.\\nIV. The camera-wearer pushes an onion skin aside on the chopping board with her left hand.",
+        "predicted_answer": "a",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_02_12_event_ordering_111": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person tears open the nasal swab pack with her hands.\\nII. The person places her left hand on the COVID antigen box.\\nIII. The person passes the extraction buffer tube from her right hand to her left hand.\\nIV. The person places her left hand on the stopwatch.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_14_4_event_ordering_238": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person presses the stopwatch with her left hand.\\nII. The man picks up a hotpot from the electric cooker on the countertop with his left hand.\\nIII. The camera-wearer picks up the small bowl of cumin from the countertop with her left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_cpr_51_1_event_ordering_358": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person taps the mannequin's shoulders with both hands.\\nII. The person kneels beside the mannequin.\\nIII. The person places both hands on the chest of the mannequin.\\nIV. The person calls for help.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_05_12_event_ordering_131": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer drops the lid of the dropper in his right hand on the table.\\nII. The camera-wearer removes the items in a covid19 test kit box with his right hand.\\nIII. The camera-wearer touches the covid19 test manual on the table with the dropper in his right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_6_2_event_ordering_536": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places the bottle of olive oil in his right hand on the countertop.\\nII. The camera-wearer places his right-hand palm over the pan on the electric stove.\\nIII. The camera-wearer places the noodle in the chopsticks on the paper napkin in his left hand.\\nIV. The camera-wearer places the chopsticks in his right hand into the saucepan on the electric stove.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_27_3_event_ordering_188": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person cuts the cucumber on the chopping board with the cutter in her right hand.\\nII. The person places the tomato slice on the chopping board with her left hand.\\nIII. The person places the chopping board on the countertop with both hands.",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_09_8_event_ordering_85": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer turns the nuts with both hands.\nII. The camera-wearer holds the spokes on the wheel with her right hand.\nIII. The camera-wearer removes the head of the wrench on the nut with her left hand.\nIV. The camera-wearer passes the wrench in her right hand to her left hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_033_20_event_ordering_310": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer grabs a grey hand hold with his left hand.\\nII. The camera-wearer grabs a big black hand hold with his right hand.\\nIII. The camera-wearer grabs a big grey hand hold with his right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_6_5_event_ordering_511": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person closes the electric jug with his right hand.\\nII. The person passes the plastic vegetable bag in his left hand to his right hand.\\nIII. The person adjusts the cup on the table with his left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_basketball_11_42_event_ordering_382": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person bounces the ball with both hands.\\nII. The person catches the ball with both hands.\\nIII. The person throws a mikan layup at the hoop with his left hand.",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_basketball_03_78_event_ordering_367": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person shoots a layup shot into the net with his right hand.\\nII. The person catches the ball with his right hand.\\nIII. The person passes the ball from his left hand to his right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "uniandes_cooking_009_2_event_ordering_438": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person stirs the tea in the tea bowl on the stove top with the spoon in his right hand.\\nII. The person turns on the tap with his right hand.\\nIII. The person passes the bowl of water from his left hand to right hand.\\nIV. The person picks the kitchen towel from the countertop with his right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0713_Dance_3_3_event_ordering_524": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer swings her left foot forward.\nII. The camera-wearer steps forward and backward.\nIII. The camera-wearer hops sideways while stepping her right foot backward.\nIV. The camera-wearer hops sideways while stepping her right foot backward again.",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_covid_001_12_event_ordering_419": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer holds the test tube ziploc bag with his right hand.\\nII. The camera-wearer rotates the collection swab around in the nostril with his right hand.\\nIII. The camera-wearer places the instruction manual paper on the table with his right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_09_11_event_ordering_83": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person places the bicycle on the floor with both hands.\\nII. The person holds the cassette with her right hand.\\nIII. The person holds an axle nut with her right hand.\\nIV. The person fixes the wrench on the axle end cap with her left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_18_8_event_ordering_159": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person passes the test solution tube from his right hand to his left hand.\\nII. The person opens the covid antigen box with his right hand.\\nIII. The person reads instructions from the manual on the table.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_10_event_ordering_55": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person moves his left hand on the wheel.\\nII. The person tosses the tire with his right hand.\\nIII. The camera-wearer moves his right hand on the wheel.\\nIV. The camera-wearer moves up his left hand on the wheel.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_022_20_event_ordering_296": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person places his left foot on the bouldering wall.\nII. The person taps the dark blue hand hold with his right hand.\nIII. The person grabs a teal hand hold with his left hand.\nIV. The person places his right foot on a blue foothold.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0713_Dance_1_4_event_ordering_521": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer kicks her feet forward while swinging her arms.\\nII. The camera-wearer steps back with her right foot while extending her right hand.\\nIII. The camera-wearer steps forward with her left foot.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_covid_001_6_event_ordering_421": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person places the covid-19 testing plate pack on the table with his left hand.\\nII. The person holds the collapsed mini tube holder with both hands.\\nIII. The person removes the swab from the pack with his right hand.\\nIV. The person holds the covid-19 testing tube bag with both hands.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_022_18_event_ordering_294": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer walks away from the bouldering wall.\\nII. The camera-wearer places his left foot on a big grey foothold.\\nIII. The camera-wearer bends forward to climb the bouldering wall.\\nIV. The camera-wearer grabs a big grey handhold with his left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_cpr_43_4_event_ordering_346": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person places her right hand on the shoulder of the CPR mannequin.\nII. The person stands from the CPR mat.\nIII. The person taps the CPR mannequin with both hands.",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_43_1_event_ordering_192": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person drops the milk pot on the stovetop.\\nII. The person moves the sieve above the cup on the countertop.\\nIII. The camera-wearer picks the bowl on the gas burner with the picker.\\nIV. The camera-wearer adds the milk to the stainless pot.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_4_2_4_event_ordering_591": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer spins the woman to the left with his left hand while stepping to the left.\\nII. The camera-wearer steps backward and forward while the woman turns to the right.\\nIII. The camera-wearer turns the woman around with his left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_basketball_03_77_event_ordering_366": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person shoots the ball into the hoop with his right hand.\nII. The person catches the ball with his right hand.\nIII. The person shoots the ball into the hoop with his left hand.\nIV. The person catches the ball with his right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_09_02_4_event_ordering_101": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person stirs the mixture in the skillet with the spatula in her right hand.\\nII. The person holds the peeled garlic on the chopping board with her left hand.\\nIII. The person places the egg shell in her right hand on the kitchen table.\\nIV. The person places the spatula in the skillet with her right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_4_event_ordering_38": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer holds the rear derailleur with their left hand.\\nII. The camera-wearer loosens a screw on the rear derailleur with a screwdriver in their right hand.\\nIII. The camera-wearer turns the pedal with their right hand.\\nIV. The camera-wearer places the screwdriver in the bike stand with their right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0710_Cooking_1_2_event_ordering_491": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places an onion on a chopping board with her left hand.\\nII. The camera-wearer adjusts the camera on her head with her left hand.\\nIII. The camera-wearer adjusts the camera with her right hand.\\nIV. The camera-wearer opens a cabinet with her right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_cpr_48_1_event_ordering_353": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer lowers his head to the CPR mannequin\u2019s mouth to check for breathing.\\nII. The camera-wearer kneels beside the CPR mannequin.\\nIII. The camera-wearer interlaces the fingers of his hands.\\nIV. The camera-wearer interlaces the fingers of his hands.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_49_1_event_ordering_321": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer drops the white nozzle in his right hand into the Panbio COVID-19 antigen self-test pack.\\nII. The camera-wearer removes the empty sterile swab sachet with both hands.\\nIII. The camera-wearer drags his left hand on the sterile swab kit on a wooden table.\\nIV. The camera-wearer passes a test tube from his right hand to his left hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "utokyo_salad_4_1018_4_event_ordering_623": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person places the white radish in the refrigerator with his left hand.\\nII. The person closes the black pepper container cover with his right hand.\\nIII. The person peels the eggshell with his left hand.\\nIV. The person adds the sliced white radish to the mixing bowl with both hands.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_8_event_ordering_52": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer places the bike's wheel on his left thigh.\nII. The camera-wearer picks the wheel from the floor with his left hand.\nIII. The camera-wearer holds the bike's tube with both hands.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_cpr_50_1_event_ordering_356": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person kneels beside the mannequin.\\nII. The person places her left hand on the mannequin.\\nIII. The person presses the mannequin's chest with both hands.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "sfu_cooking023_2_event_ordering_395": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person holds the portion of tomato on the chopping board with his left hand.\nII. The person moves the bowl on the countertop with his left hand.\nIII. The person takes a tomato from the chopping board with his left hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_7_2_event_ordering_538": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person slices the cucumber on the chopping board with the knife in his right hand.\nII. The person covers the oil bottle with the lid in his right hand.\nIII. The person slices the cucumber on the chopping board with the knife in his right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_cpr_46_1_event_ordering_350": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places his right hand on the shoulder of the CPR mannequin.\\nII. The camera-wearer presses the chest of the CPR mannequin with both hands.\\nIII. The camera-wearer bends his head towards the face of the CPR mannequin.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_033_18_event_ordering_307": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places his left foot on the big teal foothold.\\nII. The camera-wearer places his right foot on the bouldering wall.\\nIII. The camera-wearer places his right foot on a small teal foothold.\\nIV. The camera-wearer grabs a big teal handhold with his right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_6_event_ordering_61": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer applies the dust cap to the valve with his right hand.\\nII. The camera-wearer bends the tire to the left side with his left hand.\\nIII. The camera-wearer adjusts the valve with his right hand.\\nIV. The camera-wearer moves his right hand around the tire.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_rockclimbing_022_14_event_ordering_289": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places his left foot on a small red foot hold.\\nII. The camera-wearer grabs a big red hand hold with his left hand.\\nIII. The camera-wearer places his left foot on a red foot hold.",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_02_3_event_ordering_21": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person disconnects the air pump from the valve of the bike tube.\\nII. The person adjusts the bike tire properly on the bike wheel.\\nIII. The person places the bike tire on the basket.\\nIV. The person picks up the air pump with his right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_22_1_event_ordering_177": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer adds salt into the egg mixture with his right hand.\\nII. The camera-wearer moves the spoon in the jar of salt with his right hand.\\nIII. The camera-wearer picks a jar of turmeric powder from the shelf with his right hand.\\nIV. The camera-wearer puts the spoon in the jar of oil with his right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_023_2_event_ordering_272": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer holds the egg pack in the refrigerator with his right hand.\\nII. The camera-wearer turns the knob of the electric cooker with his right hand.\\nIII. The camera-wearer places the crate of eggs on the countertop with his left hand.\\nIV. The camera-wearer opens the trash bin with his right hand.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0706_Dance_4_4_event_ordering_485": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer moves sideways while extending his right hand upward.\\nII. The camera-wearer steps his feet in places to his right while moving his hands in a circular motion.\\nIII. The camera-wearer turns to his left while extending his left hand upward.",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_2_1_3_event_ordering_571": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer kicks his left leg forward while the woman steps forward.\nII. The camera-wearer kicks his right leg forward while the woman steps forward to her left side.\nIII. The camera-wearer moves his left leg side by side while the woman kicks up her left leg to her right side.\nIV. The camera-wearer kicks his right leg forward while the woman extends her left leg forward to her left side.",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_42_1_event_ordering_189": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer adjusts the heat of the stove by turning the knob with her left hand.\\nII. The camera-wearer waits until the omelet form in the skillet.\\nIII. The camera-wearer places the stainless bowl on the countertop with her left hand.\\nIV. The camera-wearer adjusts the heat of the stove by turning the knob with her left hand.",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0331_Guitar_4_5_event_ordering_454": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The camera-wearer slides his left hand on the fretboard of the guitar.\nII. The camera-wearer adjusts the camera on his head with his right hand.\nIII. The camera-wearer plays a melodic tune.\nIV. The camera-wearer reads the manuscript.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_music_12_5_event_ordering_259": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person plays chords with both hands.\\nII. The person shifts up his left hand.\\nIII. The person plays a chord with his left hand.\\nIV. The person plays chords with both hands again.",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_54_1_event_ordering_331": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer picks the test strip from the test strip pack with his right hand.\\nII. The camera-wearer places the test strip on the table with his right hand.\\nIII. The camera-wearer transfers the extraction buffer tube pack from his left hand to his right hand.\\nIV. The camera-wearer touches the test strip on the table with his right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_17_1_event_ordering_174": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer transfers something to her left hand.\\nII. The camera-wearer pours oil into the cucumber and tomato mixture.\\nIII. The camera-wearer pours the salt into the cucumber and tomato mixture.",
+        "predicted_answer": "a",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0713_Dance_1_4_event_ordering_520": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer kicks her left foot back while extending her left hand forward.\\nII. The camera-wearer steps in place while extending her hands forward.\\nIII. The camera-wearer kicks left foot back while extending her left hand forward.\\nIV. The camera-wearer steps forward while extending her right hand forward.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_4_1_3_event_ordering_584": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The woman taps her right leg with her left hand while holding the camera-wearer.\\nII. The camera-wearer holds the woman\u2019s waist with his right hand.\\nIII. The camera-wearer turns to his left.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0727_Partner_Dance_4_1_4_event_ordering_587": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person spins the woman to the right with his left hand while stepping backward.\\nII. The person and the woman turn right while the person was holding the woman's right hand with his right hand.\\nIII. The person holds the right hand of the woman with his left hand while moving to the right.",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_10_event_ordering_54": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person picks the wheel from the floor with both hands.\\nII. The person swipes his left hand on the tire.\\nIII. The person places the tire on the floor against a tool table with his left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_bike_10_3_event_ordering_221": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\nI. The person presses the tire with his right hand.\nII. The person picks a tube from the work table with his right hand.\nIII. The person places the dust cap on the work table with his right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_27_1_event_ordering_185": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places the lid on the countertop with her left hand.\\nII. The camera-wearer stirs the tea in the pot with a spoon.\\nIII. The camera-wearer picks the lid of the sugar jar from the countertop with her right hand.",
+        "predicted_answer": "d",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_51_1_event_ordering_325": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person places the COVID-19 test kit box on the table with his right hand.\\nII. The person places the COVID-19 collection swab pack on the table with his right hand.\\nIII. The person holds the pair of scissors with his right hand.\\nIV. The person removes the COVID-19 testing plate from the pack with his right hand.",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_12_2_event_ordering_235": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer places the tea container lid on the countertop with their left hand.\\nII. The camera-wearer adds the tea to the spoon from the tea container in their right hand.\\nIII. The camera-wearer puts the pot in the kitchen sink with their right hand.\\nIV. The camera-wearer presses the stove button with their right hand.",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "nus_cpr_54_1_event_ordering_362": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The person places her right hand on the torso of the CPR mannequin.\\nII. The person kneels on the CPR mat.\\nIII. The person interlocks her right hand with her left hand.",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    },
+    "upenn_0706_Dance_2_4_event_ordering_483": {
+        "question": "Identify the correct chronological order of the following related events observed in the scene:\\nI. The camera-wearer glides her feet on a spot while turning to her right.\\nII. The camera-wearer steps her feet sideways while spreading both arms.\\nIII. The camera-wearer steps her feet forward in places while swinging her hands.",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "event_ordering",
+        "strategy": "stitched"
+    }
+}

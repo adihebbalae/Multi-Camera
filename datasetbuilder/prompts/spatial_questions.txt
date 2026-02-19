@@ -1,0 +1,89 @@
+You are an expert at creating MCQ spatial reasoning questions from videos with multiple camera scenes. Given a scene description and scene graph relationships, generate ONE multiple-choice question with four options about a directional spatial relationship between two objects.
+
+TASK: Create a single MCQ about a directional relationship using ONLY these relations: "in front of", "behind", "to the left of", "to the right of".
+
+GUIDELINES:
+1. Use the scene description to ground the question (brief, 1 sentence max).
+2. Ask about the relative position between two specific object types or instances.
+3. Enforce a unique correct answer:
+   - Prefer pairs where the source object class has a single instance in the scene/frame.
+   - If not possible, use a descriptive reference (e.g., "the red bus", "the parked white car") when available in the description or graph.
+   - Ensure none of the distractor options is also true in the scene.
+4. Avoid vague relations like "near" or "next to". Only use the four directional relations above.
+5. If no unique answer can be guaranteed for the sampled pair, choose another pair.
+6. Output format MUST be a JSON object with fields: question, options (A-D), correct_option, rationale.
+
+INPUTS:
+- Scene token: {scene_token}
+- Frame index: {frame_idx}
+- Scene description (short): {scene_description}
+- Candidate directional relationships (filtered):
+{directional_relationships}
+- Object instance counts (by class):
+{object_counts}
+
+EXAMPLES:
+
+Example A:
+Scene description: A cyclist passes a stopped car at an intersection.
+Relationships:
+- Frame 12: vehicle.bicycle is to the right of vehicle.car
+- Frame 12: vehicle.car is behind vehicle.truck
+
+Generated:
+{
+  "question": "In this scene [scene description], where is the bicycle relative to the car?",
+  "options": {
+    "A": "In front of the car",
+    "B": "Behind the car",
+    "C": "To the left of the car",
+    "D": "To the right of the car"
+  },
+  "correct_option": "D",
+  "rationale": "At frame 12, the scene graph shows the bicycle is to the right of the car."
+}
+
+Example B:
+Scene description: A bus approaches with a single pedestrian waiting at the curb.
+Relationships:
+- Frame 8: human.pedestrian.adult is in front of vehicle.bus
+
+Generated:
+{
+  "question": "In the scene description, what is directly in front of the bus?",
+  "options": {
+    "A": "Car",
+    "B": "Pedestrian",
+    "C": "Bicycle",
+    "D": "Wheelchair"
+  },
+  "correct_option": "B",
+  "rationale": "At frame 8, the pedestrian is in front of the bus according to the scene graph."
+}
+
+Example C:
+Scene description: A bus approaches with a single pedestrian waiting at the curb.
+Relationships:
+- Frame 8: human.pedestrian.adult is in front of vehicle.bus
+
+Generated:
+{
+  "question": "Which of the statements is true for the scene?",
+  "options": {
+    "A": "A bus is in front of the pedestrian",
+    "B": "A pedestrian is in front of the bus",
+    "C": "A bicycle is to the right of the bus",
+    "D": "A wheelchair is in front of the pedestrian"
+  },
+  "correct_option": "B",
+  "rationale": "At frame 8, the pedestrian is in front of the bus according to the scene graph."
+}
+
+
+
+NOW GENERATE ONE MCQ:
+- Use exactly one relationship from the input that yields a unique answer.
+- If multiple are valid, choose the one with the fewest instances of the source object class.
+- Return ONLY the JSON object described in the schema.
+
+

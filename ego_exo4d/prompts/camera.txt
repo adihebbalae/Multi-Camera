@@ -6,16 +6,23 @@ GUIDELINES:
 1. The question should focus on identifying the best camera angle for a given scene description or a specific event within the scene.
 2. The options should include the correct camera angle and three plausible but incorrect camera angles from the provided list of all available camera angles.
 3. IMPORTANT: If any description contains "C" (which stands for the camera-wearer or person), replace it with "the camera-wearer" or "the person" as appropriate for natural language. For instance, "C presses" should become "The camera-wearer presses" or "The person presses".
+4. For "Best camera angle for the scene": the Description field contains a chronological list of video annotations. Derive a single-sentence summary of what the video is about and incorporate it into the question (e.g. "This video shows <summary>. Which camera best captures this scene?").
 
 FORMAT: Return a JSON object with "question", "options", "answer", and "reasoning".
 
 EXAMPLE 1: Best camera angle for the scene
+Annotations:
+- C picks up the bicycle wheel
+- C inspects the tire for damage
+- C removes the tire from the rim
+- C installs a new inner tube
+- C reassembles the wheel onto the bicycle
 Best Camera for Scene: camera 4
 All Available Cameras: camera 1, camera 2, camera 3, camera 4
 
 Output:
 {{
-  "question": "What is the best camera angle to view this entire scene?",
+  "question": "This video shows the camera-wearer repairing a bicycle by removing, inspecting, and reassembling the wheel. Which camera angle best captures this entire scene?",
   "options": {{
     "A": "camera 1",
     "B": "camera 2",
@@ -23,7 +30,7 @@ Output:
     "D": "camera 4"
   }},
   "answer": "D",
-  "reasoning": "Camera 4 provides the most comprehensive and informative view of the overall scene's activity."
+  "reasoning": "Camera 4 provides the most comprehensive and informative view of the overall bicycle repair scene."
 }}
 
 EXAMPLE 2: Best camera angle for a specific event
@@ -38,11 +45,30 @@ Output:
     "A": "camera 1",
     "B": "camera 2",
     "C": "camera 3",
-    "D": "camera 4"
-    "E": "camera 5",
+    "D": "camera 4",
+    "E": "camera 5"
   }},
   "answer": "A",
   "reasoning": "Camera 1 offers the clearest and most detailed perspective of the person's action of holding the bicycle wheel with both hands at 30.81681 seconds."
+}}
+
+EXAMPLE 3: Best camera angle for multiple events
+Event 1: The person holds the bicycle wheel with both hands (timestamp=30.82); Event 2: The person inflates the bicycle tire (timestamp=95.43)
+Best Camera for Events: camera 1
+All Available Cameras: camera 1, camera 2, camera 3, camera 4, camera 5
+
+Output:
+{{
+  "question": "Which camera best shows the person holding the bicycle wheel with both hands and then inflating the bicycle tire?",
+  "options": {{
+    "A": "camera 1",
+    "B": "camera 2",
+    "C": "camera 3",
+    "D": "camera 4",
+    "E": "camera 5"
+  }},
+  "answer": "A",
+  "reasoning": "Camera 1 provides the best view of both events: the person holding the bicycle wheel at 30.82 seconds and then inflating the tire at 95.43 seconds."
 }}
 
 NOW GENERATE A QUESTION FOR THIS SCENE:

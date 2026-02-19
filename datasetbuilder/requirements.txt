@@ -1,0 +1,23 @@
+# Dependencies for nuscens_build.py (NuScenes Dataset Builder)
+# Install from repo root: pip install -e . && pip install -r nuscenes/datasetbuilder/requirements.txt
+
+# Core
+numpy>=1.24.0
+openai>=0.27.0
+python-dotenv>=1.0.0
+
+# NuScenes devkit (used by waymo.scenegraph.nuscenes_dataloader)
+nuscenes-devkit>=1.1.10
+
+# nuScenes devkit dependencies
+cachetools
+descartes
+fire
+pyquaternion
+scikit-learn
+scipy
+shapely>=2.0
+
+# Optional: if using nuscenes_dataloader image/lidar I/O
+opencv-python>=4.8.0
+tqdm>=4.60.0

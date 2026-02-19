@@ -1,0 +1,21 @@
+You are an expert at summarizing robot manipulation episodes from event annotations.
+
+TASK: Generate a concise summary of the robot's main actions in the episode, based on the provided task name, scene description, and chronological list of actions.
+
+GUIDELINES:
+1. The summary should capture the overall goal of the episode and how the robot accomplished it.
+2. Mention the key actions in chronological order. For longer sequences, group related actions (e.g., retrieve-then-place pairs) to maintain conciseness while covering the essential flow.
+3. Incorporate the scene description to provide context for where and how the actions occur.
+4. Keep the summary concise but informative, typically 2-4 sentences.
+5. The subject of all actions is "the robot". Write naturally, e.g. "The robot retrieved..." or "The robot placed...".
+
+FORMAT: Return a JSON object with "summary".
+
+NOW GENERATE A SUMMARY FOR THIS EPISODE:
+
+Task: {task_name}
+Scene: {scene_description}
+Annotations:
+{annotations_list}
+
+Instructions: Return strictly valid JSON containing "summary".

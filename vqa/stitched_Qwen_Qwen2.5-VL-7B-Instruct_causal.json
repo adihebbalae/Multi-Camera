@@ -1,0 +1,2002 @@
+{
+    "fair_bike_09_8_causal_38": {
+        "question": "Why did the person put the valve through the rim?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_060_2_causal_226": {
+        "question": "Why did the person get a plate from the compartment?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "uniandes_cooking_009_2_causal_281": {
+        "question": "Why did the person pour hot tea into the filter bag?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_cooking_05_4_causal_50": {
+        "question": "Why did the person serve the noodles into the plate?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_16_causal_25": {
+        "question": "Why did the person loosen the axle nut with hand?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "utokyo_pcr_2001_31_8_causal_333": {
+        "question": "Why did the person unpack the necessary test items from the covid-19 rapid antigen package?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_covid_009_14_causal_276": {
+        "question": "Why did the person remove the collection swab from the pack?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_2_causal_7": {
+        "question": "What was the reason for loosening both axle nuts using the wrench?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_6_causal_47": {
+        "question": "Why did the person move the tire lever around the bike's tube?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_07_8_causal_121": {
+        "question": "Why did the person get the testing tube from the table?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_06_02_4_causal_85": {
+        "question": "Why did the person check the recipe instruction?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_20_2_causal_208": {
+        "question": "Why did the person return the container of cinnamon sticks to the cabinet?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking023_2_causal_248": {
+        "question": "Why did the person cut a portion of cucumber on the chopping board with the knife?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking022_2_causal_246": {
+        "question": "Why did the person cut the cucumber blossom region with a knife on the chopping board?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_04_10_causal_109": {
+        "question": "Why did the person locate and unwrap the COVID-19 collection swab from its packaging?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_16_3_causal_205": {
+        "question": "Why did the person get a bottle of ketchup from the shelf?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_10_causal_30": {
+        "question": "Why did the person loosen the valve stem nut from the new tube with hand?",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_06_02_4_causal_84": {
+        "question": "Why did the person get the salt container from the kitchen countertop?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_bike_12_4_causal_194": {
+        "question": "Why did the person push the new inner tube into the tire?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_14_causal_1": {
+        "question": "Why did the person loosen the axle nut with the T-handle Allen wrench?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_09_2_causal_199": {
+        "question": "Why did the person get a honey bottle from the cabinet?",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_16_10_causal_135": {
+        "question": "Why did the person dip the Covid-19 test swab into the test vial?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_37_4_causal_232": {
+        "question": "Why did the person arrange used materials in the ziploc bag?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_12_1_causal_146": {
+        "question": "Why did the person get a chopping board from the cabinet?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_26_4_causal_216": {
+        "question": "Why did the person get an oil bottle from the countertop?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "uniandes_cooking_009_4_causal_284": {
+        "question": "Why did the person taste the milk?",
+        "predicted_answer": "a",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking025_2_causal_249": {
+        "question": "Why did the person dice the tomato on the chopping board with a knife?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_18_15_causal_79": {
+        "question": "Why did the person get the chain lube from the work table?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_14_01_6_causal_97": {
+        "question": "Why did the person cut the tomato on a cutting board with a knife?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_18_1_causal_151": {
+        "question": "Why did the person wait while the tea in the saucepan boils?",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_04_12_causal_111": {
+        "question": "Why did the person insert the covid test vial used into its package?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_18_causal_29": {
+        "question": "What was the reason for positioning the bike wheel on the bike hub and pulling the wheel up?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_3_3_causal_296": {
+        "question": "Why did the person stir the tea in the cup with a spoon?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_covid_009_8_causal_277": {
+        "question": "Why did the person unwrap the testing plate from the bag?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_10_causal_31": {
+        "question": "Why did the person push the valve out through the hole on the rim?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_43_3_causal_160": {
+        "question": "What was the reason for getting the cutting board from the kitchen cabinet?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_3_2_causal_307": {
+        "question": "Why did the person add spring onion to the frying pan?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "utokyo_pcr_2001_31_8_causal_334": {
+        "question": "Why did the person unwrap the covid-19 collection swab?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0710_Cooking_4_2_causal_299": {
+        "question": "Why did the person get some tomatoes from the strainer in the sink?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking020_2_causal_244": {
+        "question": "Why did the person dice cucumber on the chopping board?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking_002_7_causal_257": {
+        "question": "Why did the person get a mixing bowl from the plate rack?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_covid_006_6_causal_271": {
+        "question": "Why did the person remove the testing tube from its pack?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_19_10_causal_80": {
+        "question": "Why did the person get a chain lube from the table?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0710_Cooking_4_3_causal_302": {
+        "question": "Why did the person stir well to mix with milk, water, and tea?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking_005_6_causal_260": {
+        "question": "Why did the person slice the tomato in half with a knife?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_10_causal_41": {
+        "question": "Why did the person loosen the valve cap from the new tube with hand?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_13_02_2_causal_95": {
+        "question": "Why did the person peel an onion flesh?",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_4_causal_35": {
+        "question": "Why did the person engage the valve stem into the rim?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_4_causal_34": {
+        "question": "Why did the person unpack the new inner tube?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_07_8_causal_120": {
+        "question": "What was the reason for the person reading the instructions in the manual?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_16_3_causal_206": {
+        "question": "Why did the person check the paper recipe for instructions?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_04_8_causal_61": {
+        "question": "Why did the person pick a wrench from the tool rack?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_09_8_causal_126": {
+        "question": "Why did the person read the test manual on the table?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_02_3_causal_20": {
+        "question": "Why did the person inflate the inner tube a little with a bike pump?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_3_2_causal_293": {
+        "question": "Why did the person dispose the paper towel in the bin?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_23_4_causal_214": {
+        "question": "Why did the person get eggs from the container on the countertop?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_covid_002_6_causal_267": {
+        "question": "Why did the person read the covid 19 test kit instructions paper?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_43_3_causal_161": {
+        "question": "Why did the person get a tomato from the basket on the kitchen countertop?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_13_8_causal_133": {
+        "question": "Why did the person unbox and arrange COVID-19 test materials?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_03_12_causal_104": {
+        "question": "What was the reason for removing the covid test swab from its package?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_1_2_causal_303": {
+        "question": "Why did the person get tomato sauce from the countertop?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_09_10_causal_122": {
+        "question": "Why did the person dispose the used test tube in the carton?",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_1_3_causal_317": {
+        "question": "Why did the person whisk the egg mixture in the bowl with a fork until they are well integrated?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_10_5_causal_202": {
+        "question": "Why did the person add oil to the skillet?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_07_8_causal_67": {
+        "question": "Why did the person remove the wheel?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_23_1_causal_153": {
+        "question": "Why did the person stir the cucumber with tomato salad with a spoon?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_43_4_causal_234": {
+        "question": "Why did the person extract the COVID-19 collection swab from the left nostril?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "utokyo_pcr_2001_32_8_causal_336": {
+        "question": "Why did the test vial fall from the hand onto the table?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_6_causal_37": {
+        "question": "Why did the person inspect the bead seat line?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_16_causal_4": {
+        "question": "Why did the person tighten the bike dropout to the rear axle with the hexagonal tool?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_covid_006_6_causal_272": {
+        "question": "Why did the person cover the cap of the testing tube?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_cooking_05_4_causal_51": {
+        "question": "Why did the person get garlic cloves?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_covid_005_6_causal_270": {
+        "question": "Why did the person unwrap the Covid test vial?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_7_2_causal_324": {
+        "question": "Why did the person cut the ends of the cucumber on the cutting board?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking_005_6_causal_259": {
+        "question": "Why did the person dice the cucumber into smaller pieces with a knife?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "utokyo_pcr_2001_30_8_causal_332": {
+        "question": "Why did the person add some test solution to the test cassette?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_covid_008_16_causal_274": {
+        "question": "Why did the person unwrap the unused Covid test swab?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_bike_06_2_causal_178": {
+        "question": "Why did the person pull out the wheel from the bicycle frame?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_2_3_causal_291": {
+        "question": "Why did the person get a plate from the kitchen shelf?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_09_12_causal_125": {
+        "question": "Why did the person arrange the covid 19 test materials for disposal?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_bike_10_4_causal_189": {
+        "question": "Why did the person slowly move the chain by backpedaling with hand?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_116_4_causal_145": {
+        "question": "Why did the person place the white pepper in the kitchen cabinet?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_2_2_causal_306": {
+        "question": "Why did the person add salt to the tomato and eggs in the skillet?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_050_2_causal_224": {
+        "question": "Why did the person get an egg from the egg pack on the kitchen top?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_23_4_causal_213": {
+        "question": "Why did the person whisk until the egg whites and yolks are well integrated?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_18_8_causal_139": {
+        "question": "Why did the person repeat the process with the left nostril?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_bike_06_3_causal_180": {
+        "question": "Why did the person remove the dust cap of the inner tube?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_18_12_causal_77": {
+        "question": "Why did the person slowly move the chain by backpedaling with hand?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_26_1_causal_156": {
+        "question": "Why did the person flip the egg?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_1_3_causal_288": {
+        "question": "Why did the person wipe their hand with a paper towel?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_57_4_causal_167": {
+        "question": "Why did the person get the bowl from the bottom shelf?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_covid_001_12_causal_263": {
+        "question": "Why did the person unpack the collection swab?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_15_causal_2": {
+        "question": "Why did the person pull out the inner tube from the wheel?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_60_2_causal_170": {
+        "question": "Why did the person get a strainer from the cabinet?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_21_2_causal_209": {
+        "question": "Why did the person get the cup from the countertop?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_08_1_causal_141": {
+        "question": "Why did the person get a peeler from the counter top?",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_18_12_causal_76": {
+        "question": "Why did the person place the cloth underneath the chain?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "nus_cpr_44_4_causal_238": {
+        "question": "Why did the person check if the patient is breathing?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_59_2_causal_169": {
+        "question": "Why did the person return the oil bottle to the kitchen countertop?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_17_causal_26": {
+        "question": "What was the reason for covering the valve with the dust cap?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking031_10_causal_255": {
+        "question": "Why did the person put away a bowl on the counter top?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_2_2_causal_290": {
+        "question": "Why did the person drain the noodles into the strainer to cool them under a running faucet?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking_009_7_causal_262": {
+        "question": "What was the reason for adding cardamom into the milk in the pot?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_3_3_causal_295": {
+        "question": "Why did the person fill the cup with hot water?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_061_2_causal_227": {
+        "question": "Why did the person get pasta from the countertop?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_17_causal_27": {
+        "question": "Why did the person separate the tire from the rim with the tire lever?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_bike_10_4_causal_190": {
+        "question": "Why did the person slowly move the chain by backpedaling with hand?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking020_2_causal_243": {
+        "question": "Why did the person dice the tomato on the chopping board?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_8_causal_39": {
+        "question": "Why did the person inflate the tube slightly?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_09_11_causal_69": {
+        "question": "Why did the person get the wheel off the fork?",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_09_9_causal_72": {
+        "question": "Why did the person squeeze out any air inside the tube?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_24_1_causal_154": {
+        "question": "Why did the person add tea leaves to the milk in the saucepan?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_cooking_07_2_causal_53": {
+        "question": "Why did the person get the peanuts bowl from the countertop?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_bike_06_5_causal_183": {
+        "question": "Why did the person clean off liquid on the table with a cloth?",
+        "predicted_answer": "c",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_09_01_6_causal_87": {
+        "question": "Why did the person cut ginger with the knife?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_cooking_07_2_causal_52": {
+        "question": "Why did the person add a spoonful of diced red bell pepper into the mixing bowl?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_bike_04_2_causal_175": {
+        "question": "Why did the person get a spanner from the tool box?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_56_2_causal_162": {
+        "question": "Why did the person get a green chili pepper from the refrigerator?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_27_2_causal_218": {
+        "question": "Why did the person adjust the stove heat?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "nus_cpr_43_4_causal_236": {
+        "question": "Why did the person tap the patient's shoulders to check the response?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_12_9_causal_129": {
+        "question": "Why did the person read the instruction manual on the table for the process?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_covid_001_12_causal_264": {
+        "question": "Why did the person add a few drops of the testing solution to the test cassette?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_07_12_causal_64": {
+        "question": "Why did the person push the level inwards and tighten the axle clockwise?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_02_10_causal_13": {
+        "question": "Why did the person loosen both axle nuts using a wrench?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_02_4_causal_23": {
+        "question": "Why did the person tighten both axle nuts with the wrench?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_030_2_causal_221": {
+        "question": "Why did the person allow the scrambled eggs in the skillet to cook?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_04_10_causal_108": {
+        "question": "Why did the person place the COVID-19 collection swab in its packaging for disposal?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_09_8_causal_70": {
+        "question": "What was the reason for loosening the axle nuts with the wrench?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_4_causal_11": {
+        "question": "Why did the person loosen the axle nuts with hand?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_14_causal_0": {
+        "question": "Why did the person get a socket wrench from the work table?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "utokyo_omelet_12_1001_4_causal_328": {
+        "question": "Why did the person add tomato sauce to the bowl?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_03_2_causal_197": {
+        "question": "Why did the person check the recipe on the phone?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_2_causal_33": {
+        "question": "Why did the person pull out the tire from the rim?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_56_2_causal_163": {
+        "question": "Why did the person get the salt container on the countertop?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_010_2_causal_219": {
+        "question": "Why did the person return chili powder to the cabinet?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0712_Cooking_1_3_causal_313": {
+        "question": "Why did the person get a knife from the countertop?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking_002_7_causal_258": {
+        "question": "Why did the person rinse the tomato with water from the kitchen tap?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_04_14_causal_113": {
+        "question": "Why did the person observe the test instructions?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_37_4_causal_231": {
+        "question": "Why did the person insert the tip of the swab into the nose and swirl?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking028_12_causal_252": {
+        "question": "Why did the person slice tomatoes on the chopping board with the knife?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_covid_001_6_causal_265": {
+        "question": "Why did the person arrange test materials on the table?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_116_2_causal_143": {
+        "question": "Why did the person get a bowl with a spoon from beneath the kitchen counter?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_7_3_causal_325": {
+        "question": "Why did the person dispose of the used tea bag in the trash?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_18_causal_28": {
+        "question": "Why did the person raise the bike wheel and move the bike derailleur downward?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_02_2_causal_19": {
+        "question": "Why did the person release the bike's brake?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_bike_04_3_causal_176": {
+        "question": "Why did the person open the dust cap of the wheel?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "utokyo_pcr_2001_38_8_causal_338": {
+        "question": "Why did the person cover the test tube with the cap?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking029_8_causal_253": {
+        "question": "Why did the person add chili powder into the cup of egg mixture?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_3_causal_9": {
+        "question": "Why did the person get a tire lever?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_13_02_2_causal_94": {
+        "question": "Why did the person get sesame seeds from the countertop?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_16_1_causal_149": {
+        "question": "Why did the person add almonds to the mixing bowl?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_09_2_causal_200": {
+        "question": "Why did the person boil the water in the boiling pan on the stove?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_covid_001_6_causal_266": {
+        "question": "Why did the person take out the testing plate from the foil pack?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_04_12_causal_110": {
+        "question": "Why did the person cover the covid test vial with its lid?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_09_2_causal_32": {
+        "question": "Why did the person check for damage or puncture on the tire?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_4_causal_10": {
+        "question": "Why did the person tighten both axle nuts using the socket wrench?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_18_15_causal_78": {
+        "question": "Why did the person use a rag to wipe off excess chain lube while back pedaling with hands?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_11_01_6_causal_93": {
+        "question": "Why did the person add lemon juice to the cup with the measuring spoon?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_060_2_causal_225": {
+        "question": "What was the reason for gently moving the spatula across the bottom and side of the skillet?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_10_02_4_causal_91": {
+        "question": "Why did the person check the heat of the skillet?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "utokyo_pcr_2001_38_8_causal_337": {
+        "question": "What was the reason for rotating the swab in the right nostril?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_bike_04_2_causal_174": {
+        "question": "Why did the person use a wrench to loosen the axle nuts?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_07_10_causal_63": {
+        "question": "Why did the person get the lever from the table?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking022_2_causal_245": {
+        "question": "Why did the person remove the tomato stalk with a knife?",
+        "predicted_answer": "b",
+        "correct_answer": "c",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking015_2_causal_239": {
+        "question": "Why did the person get salt from a container on the countertop?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_10_02_4_causal_90": {
+        "question": "Why did the person stir the garlic and spring onions in the skillet with the spatula?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_20_2_causal_207": {
+        "question": "Why did the person regulate the heat of the stove as the tea boils in the pot?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_covid_010_6_causal_279": {
+        "question": "What was the reason for arranging the testing material waste for disposal?",
+        "predicted_answer": "d",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_43_1_causal_158": {
+        "question": "Why did the person swirl the pot of milk tea over the cooker with a pot holder?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_074_2_causal_230": {
+        "question": "Why did the person measure out flour to the rolling board with a measuring cup?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_04_8_causal_60": {
+        "question": "Why did the person loosen the axle nuts with a wrench?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_12_2_causal_203": {
+        "question": "Why did the person regulate the heat of the cooker?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_4_causal_45": {
+        "question": "Why did the person push the valve through its hole on the rim?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_03_12_causal_105": {
+        "question": "Why did the person rotate the covid test swab in the covid test vial?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_2_causal_6": {
+        "question": "Why did the person pull the release lever outwards?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_57_4_causal_166": {
+        "question": "Why did the person dice the cucumber on the chopping board?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "utokyo_omelet_12_1001_4_causal_327": {
+        "question": "Why did the person get a spoon from the cutlery container?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_57_2_causal_165": {
+        "question": "Why did the person turn on the stove?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_bike_12_4_causal_193": {
+        "question": "Why did the person get a tire lever from the tool table?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_09_11_causal_68": {
+        "question": "Why did the person put the wheel fully seated into the fork?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_10_causal_40": {
+        "question": "Why did the person fit the new tube correctly into place in the tire?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "nus_covidtest_43_4_causal_233": {
+        "question": "Why did the person unbox the COVID-19 test kit box with a pair of scissors?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_6_4_causal_310": {
+        "question": "Why did the person put away the tomatoes?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0712_Cooking_4_3_causal_316": {
+        "question": "Why did the person add chopped spring onion into the bowl with scrambled egg?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_2_2_causal_289": {
+        "question": "Why did the person stir the noodles mixture with the oyster sauce in the skillet with the grey spoon?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_04_10_causal_56": {
+        "question": "Why did the person pull out the inner tube from the wheel rim?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "uniandes_cooking_009_2_causal_282": {
+        "question": "Why did the person fill a pot with water?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_05_12_causal_117": {
+        "question": "Why did the person read the instruction manual?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_09_02_4_causal_89": {
+        "question": "Why did the person check the heat of the skillet?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_bike_06_4_causal_182": {
+        "question": "Why did the person tighten both axle nuts with both hands?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_04_12_causal_58": {
+        "question": "Why did the person attach the brake cable to the wheel?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_04_10_causal_57": {
+        "question": "Why did the person loosen the dust cap on the new tube valve stem?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_57_2_causal_164": {
+        "question": "What was the reason for pouring milk into the cup?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_8_causal_49": {
+        "question": "Why did the person get a new inner tube from the table?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_02_8_causal_102": {
+        "question": "Why did the person remove the swab from the testing tube?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_5_2_causal_321": {
+        "question": "Why did the person add sesame seeds into the white ceramics bowl?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_09_8_causal_71": {
+        "question": "Why did the person get a mallet from a tool rack?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_02_12_causal_17": {
+        "question": "Why did the person press the handlebars?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_116_2_causal_142": {
+        "question": "Why did the person pour the egg mixture in a bowl into a skillet?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_18_1_causal_150": {
+        "question": "Why did the person turn the knob to regulate the heat of the stovetop?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_13_10_causal_130": {
+        "question": "Why did the person fold the COVID-19 test instruction manual?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_116_4_causal_144": {
+        "question": "Why did the person place the cucumber in the basket on the kitchen countertop?",
+        "predicted_answer": "c",
+        "correct_answer": "b",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_60_4_causal_172": {
+        "question": "Why did the person peel the cucumber skin with the peeler?",
+        "predicted_answer": "d",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "utokyo_pcr_2001_30_8_causal_331": {
+        "question": "Why did the person insert the sterile swab into the covid test vial?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "nus_cpr_43_4_causal_235": {
+        "question": "Why did the person place their ear on the patient's mouth?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_07_8_causal_66": {
+        "question": "Why did the person release the brake caliper?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0714_Cooking_7_2_causal_323": {
+        "question": "Why did the person add sesame seeds to the salad mixture in the mixing bowl?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_12_2_causal_204": {
+        "question": "Why did the person regulate the heat of the cooker?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_24_1_causal_155": {
+        "question": "Why did the person get a stainless cup from the shelf?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_26_1_causal_157": {
+        "question": "Why did the person put away almonds?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_3_2_causal_308": {
+        "question": "Why did the person wash the bowl under running tap?",
+        "predicted_answer": "b",
+        "correct_answer": "a",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_09_02_4_causal_88": {
+        "question": "Why did the person slice the garlic on the chopping board with a knife?",
+        "predicted_answer": "b",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_bike_06_4_causal_181": {
+        "question": "Why did the person tighten both axle nuts using a wrench?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_02_14_causal_100": {
+        "question": "Why did the person pour a few drops of the testing solution into the testing plate?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "minnesota_cooking_030_2_causal_222": {
+        "question": "Why did the person turn on the stove?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_cooking_07_4_causal_55": {
+        "question": "Why did the person wash cilantro under running tap?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking028_12_causal_251": {
+        "question": "Why did the person transfer tomato slices into the bowl?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_07_12_causal_65": {
+        "question": "Why did the person push the release lever inward?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_02_11_causal_14": {
+        "question": "Why did the person check the tire for any damage?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_4_2_causal_298": {
+        "question": "Why did the person turn the stove knob to adjust the heat?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_05_10_causal_115": {
+        "question": "Why did the person rotate the collection swab in the test tube?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_bike_09_9_causal_73": {
+        "question": "Why did the person use the tire lever around the rim until the tube is completely off the wheel?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_08_16_causal_24": {
+        "question": "Why did the person release the rim brake pad?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_bike_06_5_causal_184": {
+        "question": "Why did the person move the chain by backpedaling with hand?",
+        "predicted_answer": "a",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_16_causal_5": {
+        "question": "Why did the person rotate the bike pedal with their hand?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_60_4_causal_173": {
+        "question": "Why did the person get the peeler from the plate rack in the cabinet?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_09_10_causal_123": {
+        "question": "Why did the person read the instruction manual on the table?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0710_Cooking_4_2_causal_300": {
+        "question": "Why did the person add the tomato slices into the bowl containing cucumber slices?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_covid_010_6_causal_280": {
+        "question": "Why did the person unwrap the collection swab from the collection swab bag?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_02_8_causal_103": {
+        "question": "Why did the person read the instruction leaflet on the table?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "iiith_cooking_43_1_causal_159": {
+        "question": "Why did the person regulate the heat of the cooker?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking017_2_causal_241": {
+        "question": "Why did the person dice tomatoes on the chopping board?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_cooking_11_01_6_causal_92": {
+        "question": "Why did the person get cilantro from the kitchen island?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_covid_009_14_causal_275": {
+        "question": "Why did the person read the instruction manual on the table?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0702_Cooking_4_2_causal_297": {
+        "question": "Why did the person get a knife from a basket on the countertop?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking029_8_causal_254": {
+        "question": "Why did the person regulate the temperature of the electric stove?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0710_Cooking_4_3_causal_301": {
+        "question": "Why did the person fill the electric kettle with water?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_6_causal_46": {
+        "question": "Why did the person remove the inner tube from the bike's tire with their hand?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_04_14_causal_112": {
+        "question": "Why did the person add some drops of the testing solution to the covid test indicator?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_01_3_causal_8": {
+        "question": "Why did the person fit the tire properly to the wheel?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_cooking_03_2_causal_198": {
+        "question": "Why did the person heat the skillet on the stovetop?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_10_2_causal_42": {
+        "question": "Why did the person inflate the inner tube with a little air to inspect for damages?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0711_Cooking_6_5_causal_311": {
+        "question": "Why did the person turn on the heat of the electric kettle?",
+        "predicted_answer": "c",
+        "correct_answer": "c",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_09_12_causal_124": {
+        "question": "Why did the person read the covid 19 test kit instructions paper?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_18_12_causal_136": {
+        "question": "Why did the person put the swab in the nylon?",
+        "predicted_answer": "c",
+        "correct_answer": "d",
+        "is_correct": 0,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "fair_bike_02_11_causal_15": {
+        "question": "Why did the person pump up the inner tube with an air compressor?",
+        "predicted_answer": "d",
+        "correct_answer": "d",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "georgiatech_covid_03_14_causal_106": {
+        "question": "Why did the person arrange waste test material for disposal?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "indiana_bike_12_3_causal_192": {
+        "question": "Why did the person turn the axle counter-clockwise?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "upenn_0712_Cooking_1_3_causal_314": {
+        "question": "Why did the person turn off the stove?",
+        "predicted_answer": "a",
+        "correct_answer": "a",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    },
+    "sfu_cooking015_2_causal_240": {
+        "question": "Why did the person get a spatula from the utensil crock?",
+        "predicted_answer": "b",
+        "correct_answer": "b",
+        "is_correct": 1,
+        "question_type": "causal",
+        "strategy": "stitched"
+    }
+}

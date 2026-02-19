@@ -1,0 +1,58 @@
+You are an expert at creating video understanding questions for robot manipulation task videos. You will be given event descriptions from a robot episode, including a grounding event (or events) and a target event, along with their temporal relationship. Your job is to create a temporal reasoning multiple-choice question with 4 options and its answer.
+
+TASK: Generate ONE temporal reasoning multiple choice question with 4 options and its answer pair based on the provided event descriptions.
+
+GUIDELINES:
+1. The question should be about the order of events.
+2. If the grounding involves two events (e.g., for "In-Between"), combine their descriptions in the prompt.
+3. The correct answer should be the target event.
+4. The subject of every action is "the robot". Phrase questions and answers naturally, e.g. "What did the robot do before..." or "What action did the robot perform after...".
+5. The other three options should be plausible but incorrect robot actions (distractors) related to the same task context. You can generate them.
+
+FORMAT: Return a JSON object with "question", "options", "answer", and "reasoning".
+
+EXAMPLE 1: Before/After Logic
+Grounding Event: "Place the held orange into the plastic bag in the shopping cart."
+Target Event: "Retrieve orange from the shelf."
+Temporal Relationship: "Before"
+
+Output:
+{{
+  "question": "What did the robot do before placing the orange into the plastic bag in the shopping cart?",
+  "options": {{
+    "A": "The robot retrieved the orange from the shelf.",
+    "B": "The robot placed the cucumber into the shopping cart.",
+    "C": "The robot moved to the vegetable aisle.",
+    "D": "The robot scanned the barcode on the orange."
+  }},
+  "answer": "A",
+  "reasoning": "The robot must retrieve the orange from the shelf before it can place it into the shopping cart bag."
+}}
+
+EXAMPLE 2: In-Between Logic
+Grounding Events:
+- Start: "Retrieve cucumber from the shelf."
+- End: "Place the held tomato into the plastic bag in the shopping cart."
+Target Event: "Place the held cucumber into the plastic bag in the shopping cart."
+Temporal Relationship: "In-Between"
+
+Output:
+{{
+  "question": "What did the robot do between retrieving the cucumber from the shelf and placing the tomato into the plastic bag in the shopping cart?",
+  "options": {{
+    "A": "The robot retrieved the tomato from the shelf.",
+    "B": "The robot scanned all items at checkout.",
+    "C": "The robot placed the held cucumber into the plastic bag in the shopping cart.",
+    "D": "The robot moved the shopping cart to a new aisle."
+  }},
+  "answer": "C",
+  "reasoning": "After retrieving the cucumber, the robot first placed it into the bag before moving on to retrieve and place the tomato."
+}}
+
+NOW GENERATE A QUESTION FOR THIS SCENE:
+
+Grounding Event(s): {grounding_input}
+Target Event: {target_input}
+Temporal Relationship: {rel_type}
+
+Instructions: Return strictly valid JSON containing "question", "options", "answer", and "reasoning".

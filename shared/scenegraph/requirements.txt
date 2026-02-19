@@ -1,0 +1,37 @@
+# Requirements for nuScenes Lidar Segmentation Dataloader
+# Install with: pip install -r requirements.txt
+#
+# NOTE: Python 3.13 compatibility
+# ================================
+# Python 3.13 is very new and some dependencies may have compatibility issues.
+# Recommended: Use Python 3.10, 3.11, or 3.12 for best compatibility.
+#
+# If using Python 3.13, install in this order:
+# 1. pip install --upgrade setuptools pip wheel
+# 2. pip install numpy opencv-python tqdm matplotlib pillow
+# 3. pip install shapely>=2.0
+# 4. pip install nuscenes-devkit --no-deps
+# 5. pip install cachetools descartes fire pyquaternion scikit-learn scipy
+
+# Core dependencies
+numpy>=1.24.0
+opencv-python>=4.8.0
+tqdm>=4.60.0
+
+# nuScenes devkit (use --no-deps if Python 3.13)
+# For Python 3.13: pip install nuscenes-devkit --no-deps
+nuscenes-devkit>=1.1.10
+
+# nuScenes dependencies (install separately if needed)
+cachetools
+descartes
+fire
+pyquaternion
+scikit-learn
+scipy
+shapely>=2.0
+
+# Optional but recommended
+matplotlib>=3.7.0  # For visualization
+pillow>=9.0.0     # For image processing
+

@@ -1,0 +1,86 @@
+TEMPORAL_REASONING_PROMPT = """
+You are an expert at creating video understanding questions for autonomous driving datasets. You will be given a list of objects and their descriptions and activity in the temporal order they appear in the video. Your job is to create temporal reasoning questions from this list.
+
+TASK: Generate ONE temporal reasoning multiple choice question with 4 options and its answer pair based on the provided list of objects and their activities over time.
+
+GUIDELINES:
+1. **Input Data:** You will be provided with:
+   - **Grounding Object/Event:** The reference event with a visual description (e.g., "Car stops (car is red)").
+   - **Target Object/Event:** The event to be identified, also with a visual description (e.g., "Pedestrian crosses (wearing a blue hat)").
+   - **Temporal Relationship:** The logic to apply (Before, After, In-between, During).
+2. **Visual Specificity:** You **MUST** incorporate the specific visual descriptions (color, vehicle type, clothing, location) provided in the input for **BOTH** the Grounding object and the Target object. 
+   - The **Question** should usually describe the Grounding object visually to set the context.
+   - The **Correct Answer** should usually describe the Target object visually to confirm identification.
+3. **Question Types:**
+   - **Before/After:** "What did the [Target + desc] do immediately after [Grounding + desc] happened?"
+   - **In-Between:** "Between [Grounding Start + desc] and [Grounding End + desc], what did the [Target + desc] do?"
+   - **Simultaneous:** "While the [Grounding + desc] was happening, what was the [Target + desc] doing?"
+4. **Distractors:** Generate three plausible but incorrect distractors. They should describe realistic driving behaviors but be factually wrong based on the input.
+5. **Format:** Return a JSON object with "question", "options", "answer", and "reasoning".
+
+EXAMPLES:
+
+Example 1: In-Between Logic
+Grounding Input: 
+- Start: A sedan turns right (the sedan is blue and has a sunroof).
+- End: A city bus stops (the bus is red and displays route 55).
+Target Input: A cyclist rides through traffic (the cyclist is wearing a high-vis yellow vest).
+Temporal Relationship: In-between
+
+Output:
+{{
+  "question": "What activity occurred in the time between the blue sedan with a sunroof initiating its right turn and the red route 55 bus coming to a stop?",
+  "options": {{
+    "A": "A pedestrian in a blue coat began crossing the street.",
+    "B": "A cyclist wearing a high-vis yellow vest rode through the traffic.",
+    "C": "The ego-vehicle performed a U-turn.",
+    "D": "A green delivery truck moved into the bus lane."
+  }},
+  "answer": "B",
+  "reasoning": "The target event (cyclist in yellow vest) happens chronologically between the two grounding events."
+}}
+
+Example 2: Before/After Logic
+Grounding Input: A hatchback clears the intersection (the hatchback is white and covered in mud).
+Target Input: A taxi merges into the left lane (the taxi is a yellow SUV).
+Temporal Relationship: Immediately after
+
+Output:
+{{
+  "question": "What did the yellow SUV taxi do right after the mud-covered white hatchback cleared the intersection?",
+  "options": {{
+    "A": "It merged into the left lane.",
+    "B": "It came to a sudden stop.",
+    "C": "It honked at a pedestrian.",
+    "D": "It turned into a parking lot."
+  }},
+  "answer": "A",
+  "reasoning": "The grounding event is the muddy hatchback clearing the path, immediately followed by the yellow SUV taxi's merge."
+}}
+
+Example 3: During/Simultaneous Logic
+Grounding Input: The ego-vehicle waits for schoolchildren to cross (the children are wearing red backpacks).
+Target Input: A van idles behind the ego-vehicle (the van is white with a floral delivery logo).
+Temporal Relationship: During
+
+Output:
+{{
+  "question": "While the ego-vehicle was waiting for the schoolchildren with red backpacks to finish crossing, what was the white van with the floral logo doing?",
+  "options": {{
+    "A": "It attempted to overtake the ego-vehicle.",
+    "B": "It reversed to find another route.",
+    "C": "It remained idling behind the ego-vehicle.",
+    "D": "It turned on its hazard lights."
+  }},
+  "answer": "C",
+  "reasoning": "The target state (idling white van with floral logo) occurs simultaneously with the grounding state (waiting for children with red backpacks)."
+}}
+
+NOW GENERATE A QUESTION FOR THIS SCENE:
+
+Grounding Object/Event: {grounding_input}
+Target Object/Event: {target_input}
+Temporal Relationship: {rel_type}
+
+Instructions: Return strictly valid JSON containing "question", "options", "answer", and "reasoning". Ensure the question and correct answer explicitly use the visual descriptions provided in the input parentheses.
+"""

@@ -1,0 +1,65 @@
+You are an expert at creating video understanding questions for autonomous driving datasets. Given object counts from a nuScenes scene, generate ONE natural, specific counting question with its answer.
+
+TASK: Generate a counting question about the number of instances of an object type in the video.
+
+GUIDELINES:
+1. Ask about the total count of a specific object class across the entire video
+2. Make the question natural and conversational
+3. Focus on interesting or varied object classes (not always cars)
+4. Include the exact count as the answer
+5. Format: Return a JSON object with "question" and "answer" fields
+
+EXAMPLES:
+
+Example 1:
+Object counts:
+- vehicle.car: 15
+- human.pedestrian.adult: 3
+- vehicle.bicycle: 2
+
+Generated:
+{{
+  "question": "How many pedestrians appear in this driving scene?",
+  "answer": "3",
+  "reasoning": "There are 3 unique human.pedestrian.adult instances across all frames in the video."
+}}
+
+Example 2:
+Object counts:
+- vehicle.car: 28
+- vehicle.truck: 5
+- human.pedestrian.child: 1
+- vehicle.bicycle: 4
+
+Generated:
+{{
+  "question": "What is the total number of bicycles visible throughout the video?",
+  "answer": "4",
+  "reasoning": "There are 4 unique vehicle.bicycle instances tracked across the scene."
+}}
+
+Example 3:
+Object counts:
+- vehicle.car: 12
+- vehicle.bus: 1
+- vehicle.motorcycle: 2
+- human.pedestrian.adult: 7
+
+Generated:
+{{
+  "question": "How many motorcycles can be seen in the entire video sequence?",
+  "answer": "2",
+  "reasoning": "The scene contains 2 unique vehicle.motorcycle instances."
+}}
+
+NOW GENERATE A QUESTION FOR THIS SCENE:
+
+Scene: {scene_token}
+Number of frames: {num_frames}
+Object counts:
+{object_counts}
+
+Generate ONE counting question following the format above. Choose an interesting object class that has a meaningful count (avoid extremely common objects like parked cars unless the count is notable). Return only the JSON object.
+
+
+
