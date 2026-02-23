@@ -294,14 +294,16 @@ def generate_temporal_qa(sg: SceneGraph, resolved: ResolvedGraph,
     if not candidates:
         return []
     
-    # Diversify selection, preferring MEVID-validated + described events
+    # Diversify selection: strong > medium > weak, MEVID-validated preferred
     used_pairs = set()
     used_activities = set()
     selected = []
     
-    # First pass: prefer MEVID-validated
+    # Pass 1: strong connection + MEVID-validated (best quality)
     for c in candidates:
-        if c["mevid_validated"] and len(selected) < count:
+        if len(selected) >= count:
+            break
+        if c["connection_strength"] == "strong" and c["mevid_validated"]:
             cam_pair = (c["event_a"].camera_id, c["event_b"].camera_id)
             act_pair = (c["event_a"].activity, c["event_b"].activity)
             if cam_pair not in used_pairs or act_pair not in used_activities:
@@ -309,7 +311,30 @@ def generate_temporal_qa(sg: SceneGraph, resolved: ResolvedGraph,
                 used_activities.add(act_pair)
                 selected.append(c)
     
-    # Fill remaining from any candidates
+    # Pass 2: strong connection (entity cluster linked)
+    for c in candidates:
+        if len(selected) >= count:
+            break
+        if c in selected:
+            continue
+        if c["connection_strength"] == "strong":
+            cam_pair = (c["event_a"].camera_id, c["event_b"].camera_id)
+            act_pair = (c["event_a"].activity, c["event_b"].activity)
+            if cam_pair not in used_pairs or act_pair not in used_activities:
+                used_pairs.add(cam_pair)
+                used_activities.add(act_pair)
+                selected.append(c)
+    
+    # Pass 3: medium connection (related activities)
+    for c in candidates:
+        if len(selected) >= count:
+            break
+        if c in selected:
+            continue
+        if c["connection_strength"] == "medium":
+            selected.append(c)
+    
+    # Pass 4: fill remaining from any candidates (score-sorted order)
     for c in candidates:
         if len(selected) >= count:
             break

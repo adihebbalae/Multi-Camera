@@ -231,6 +231,21 @@ def generate_spatial_qa(sg: SceneGraph, resolved: ResolvedGraph,
         else:
             correct_idx = 2
         
+        # Find clip_files for each entity from their events
+        def _entity_clip_file(entity_id):
+            ent = sg.entities.get(entity_id)
+            if not ent:
+                return ""
+            event_map = {e.event_id: e for e in sg.events}
+            for evid in ent.events:
+                evt = event_map.get(evid)
+                if evt and evt.video_file:
+                    return evt.video_file.replace(".avi", ".mp4")
+            return ""
+
+        clip_a = _entity_clip_file(cand["entity_a"])
+        clip_b = _entity_clip_file(cand["entity_b"])
+
         debug_info = {
             "entity_a": {
                 "entity_id": cand["entity_a"],
@@ -240,6 +255,7 @@ def generate_spatial_qa(sg: SceneGraph, resolved: ResolvedGraph,
                 "frame": cand["frame_a"],
                 "timestamp": f"{ent_a.first_sec:.2f}-{ent_a.last_sec:.2f}s",
                 "world_pos_enu": cand["position_a"],
+                "clip_file": clip_a,
             },
             "entity_b": {
                 "entity_id": cand["entity_b"],
@@ -249,6 +265,7 @@ def generate_spatial_qa(sg: SceneGraph, resolved: ResolvedGraph,
                 "frame": cand["frame_b"],
                 "timestamp": f"{ent_b.first_sec:.2f}-{ent_b.last_sec:.2f}s",
                 "world_pos_enu": cand["position_b"],
+                "clip_file": clip_b,
             },
             "distance_meters": distance,
             "proximity": proximity,

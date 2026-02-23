@@ -27,11 +27,18 @@ Thumbs.db
 # Data (local only, not committed)
 output/
 data/qa_pairs/
+data/entity_descriptions/
+data/gpt_logs/
 *.log
 
-# Allow these specific preprocessing files
+# Allow these specific data files needed by v10 pipeline
 !data/annotated_activity_slots.txt
 !data/slot_index.json
+!data/canonical_slots.json
+!data/geom_slot_index.json
+!data/person_database.json
+!data/person_database_yolo.json
+!data/mevid_supported_slots.json
 
 # Jupyter
 .ipynb_checkpoints/

@@ -1,0 +1,1423 @@
+==========================================================================================
+MEVA ANNOTATED ACTIVITY SLOTS (Site-Aware)
+Generated: 2026-02-22 19:35:49
+==========================================================================================
+
+SLOT FORMAT: {date}.{time}.{site}
+  - Each slot now groups cameras by both TIME and LOCATION (site)
+  - Sites: admin, bus, hospital, school
+
+ANNOTATION SOURCES LEGEND:
+----------------------------------------
+  [K]   = kitware          (EVALUATION level - fully audited)
+  [KT]  = kitware-training (TRAINING level - reduced audit)
+  [N]   = nist-json        (NIST ActEV JSON format)
+  [CMU] = contrib/CMU-v2   (CMU contributor)
+  [IBM] = contrib/IBM-*    (IBM person-person & person-vehicle)
+  [UMD] = contrib/UMD-*    (UMD/IBM joint annotations)
+
+STATISTICS:
+----------------------------------------
+  Total annotated slots: 381
+  Multi-camera annotated slots: 368
+
+CLIPS BY SOURCE:
+----------------------------------------
+  kitware: 239 slots, 769 clips
+  kitware-training: 341 slots, 1443 clips
+  nist-json: 49 slots, 65 clips
+
+==========================================================================================
+SLOT DETAILS (sorted by date/time/site)
+==========================================================================================
+
+2018-03-05.13-10.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-05.13-10.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-05.13-10.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-05.13-10.school             M [KT]                      (11 clips)
+    kitware-training: G299, G300, G328, G330, G336, G339, G419, G420, G421, G423, G424
+
+2018-03-05.13-15.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-05.13-15.bus                M [K,KT]                    (6 clips)
+    kitware: G340, G505, G506
+    kitware-training: G331, G508, G509
+
+2018-03-05.13-15.hospital           M [K,KT]                    (3 clips)
+    kitware: G341
+    kitware-training: G301, G436
+
+2018-03-05.13-15.school             M [K,KT]                    (11 clips)
+    kitware: G328, G423, G424
+    kitware-training: G299, G300, G330, G336, G339, G419, G420, G421
+
+2018-03-05.13-20.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-05.13-20.bus                M [K,KT]                    (6 clips)
+    kitware: G331, G340
+    kitware-training: G505, G506, G508, G509
+
+2018-03-05.13-20.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-05.13-20.school             M [K,KT]                    (11 clips)
+    kitware: G328, G336, G419, G420, G423, G424
+    kitware-training: G299, G300, G330, G339, G421
+
+2018-03-05.14-00.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-05.14-00.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-05.14-00.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-05.14-00.school             M [K,KT]                    (11 clips)
+    kitware: G420
+    kitware-training: G299, G300, G328, G330, G336, G339, G419, G421, G423, G424
+
+2018-03-05.14-05.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-05.14-05.bus                M [K,KT]                    (6 clips)
+    kitware: G506
+    kitware-training: G331, G340, G505, G508, G509
+
+2018-03-05.14-05.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-05.14-05.school             M [K,KT]                    (11 clips)
+    kitware: G328
+    kitware-training: G299, G300, G330, G336, G339, G419, G420, G421, G423, G424
+
+2018-03-05.14-10.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-05.14-10.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-05.14-10.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-05.14-10.school             M [K,KT]                    (11 clips)
+    kitware: G330, G420, G421, G424
+    kitware-training: G299, G300, G328, G336, G339, G419, G423
+
+2018-03-07.10-55.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-07.10-55.bus                M [K,KT]                    (6 clips)
+    kitware: G505, G508
+    kitware-training: G331, G340, G506, G509
+
+2018-03-07.10-55.hospital           M [K,KT]                    (3 clips)
+    kitware: G341
+    kitware-training: G301, G436
+
+2018-03-07.10-55.school             M [K,KT]                    (11 clips)
+    kitware: G328, G339, G419, G423, G424
+    kitware-training: G299, G300, G330, G336, G420, G421
+
+2018-03-07.11-00.admin              M [K,KT]                    (2 clips)
+    kitware: G329
+    kitware-training: G326
+
+2018-03-07.11-00.bus                M [K,KT]                    (6 clips)
+    kitware: G505, G506, G508, G509
+    kitware-training: G331, G340
+
+2018-03-07.11-00.hospital           M [K,KT]                    (3 clips)
+    kitware: G341
+    kitware-training: G301, G436
+
+2018-03-07.11-00.school             M [K,KT]                    (11 clips)
+    kitware: G300, G328, G336, G339, G419, G420, G421
+    kitware-training: G299, G330, G423, G424
+
+2018-03-07.11-05.admin              M [K,KT]                    (2 clips)
+    kitware: G326
+    kitware-training: G329
+
+2018-03-07.11-05.bus                M [K,KT]                    (6 clips)
+    kitware: G331, G340, G508
+    kitware-training: G505, G506, G509
+
+2018-03-07.11-05.hospital           M [K,KT]                    (3 clips)
+    kitware: G341
+    kitware-training: G301, G436
+
+2018-03-07.11-05.school             M [K,KT]                    (11 clips)
+    kitware: G300, G328, G339, G419
+    kitware-training: G299, G330, G336, G420, G421, G423, G424
+
+2018-03-07.11-10.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-07.11-10.bus                M [K,KT]                    (6 clips)
+    kitware: G505, G506, G508
+    kitware-training: G331, G340, G509
+
+2018-03-07.11-10.hospital           M [K,KT]                    (3 clips)
+    kitware: G341, G436
+    kitware-training: G301
+
+2018-03-07.11-10.school             M [K,KT]                    (11 clips)
+    kitware: G299, G300, G339, G419, G420, G421
+    kitware-training: G328, G330, G336, G423, G424
+
+2018-03-07.16-50.admin              M [K,N]                     (4 clips)
+    kitware: G326, G329
+    nist-json: G326, G329
+
+2018-03-07.16-50.bus                M [K,KT,N]                  (7 clips)
+    kitware: G331, G340, G505, G506, G509
+    kitware-training: G508
+    nist-json: G331
+
+2018-03-07.16-50.hospital           M [K,KT,N]                  (4 clips)
+    kitware: G301
+    kitware-training: G341, G436
+    nist-json: G301
+
+2018-03-07.16-50.school             M [K,KT,N]                  (14 clips)
+    kitware: G300, G330, G419, G421, G423, G638
+    kitware-training: G299, G328, G336, G339, G420, G424
+    nist-json: G328, G336
+
+2018-03-07.16-55.admin              M [K,N]                     (3 clips)
+    kitware: G326, G329
+    nist-json: G329
+
+2018-03-07.16-55.bus                M [K,KT,N]                  (7 clips)
+    kitware: G340, G505, G506, G509
+    kitware-training: G331, G508
+    nist-json: G340
+
+2018-03-07.16-55.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-07.16-55.school             M [K,KT]                    (12 clips)
+    kitware: G300, G328, G336, G419, G420, G421, G423, G424, G638
+    kitware-training: G299, G330, G339
+
+2018-03-07.17-00.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-07.17-00.bus                M [K,KT]                    (6 clips)
+    kitware: G331, G505, G506, G508, G509
+    kitware-training: G340
+
+2018-03-07.17-00.hospital           M [K,KT]                    (3 clips)
+    kitware: G341
+    kitware-training: G301, G436
+
+2018-03-07.17-00.school             M [K,KT]                    (12 clips)
+    kitware: G638
+    kitware-training: G299, G300, G328, G330, G336, G339, G419, G420, G421, G423, G424
+
+2018-03-07.17-05.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-07.17-05.bus                M [K,KT,N]                  (8 clips)
+    kitware: G505, G508, G509
+    kitware-training: G331, G340, G506
+    nist-json: G331, G340
+
+2018-03-07.17-05.hospital           M [K,KT]                    (3 clips)
+    kitware: G341, G436
+    kitware-training: G301
+
+2018-03-07.17-05.school             M [K,KT,N]                  (14 clips)
+    kitware: G336, G419, G420, G423, G424
+    kitware-training: G299, G300, G328, G330, G339, G421, G638
+    nist-json: G299, G336
+
+2018-03-07.17-20.admin              M [K,KT]                    (2 clips)
+    kitware: G329
+    kitware-training: G326
+
+2018-03-07.17-20.bus                M [K,KT]                    (6 clips)
+    kitware: G331, G505, G506, G508
+    kitware-training: G340, G509
+
+2018-03-07.17-20.hospital           M [K]                       (3 clips)
+    kitware: G301, G341, G436
+
+2018-03-07.17-20.school             M [K,KT]                    (12 clips)
+    kitware: G300, G336, G419, G420, G423, G424, G638
+    kitware-training: G299, G328, G330, G339, G421
+
+2018-03-07.17-25.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-07.17-25.bus                M [K,KT]                    (6 clips)
+    kitware: G340, G505, G506, G508, G509
+    kitware-training: G331
+
+2018-03-07.17-25.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-07.17-25.school             M [K,KT]                    (13 clips)
+    kitware: G300, G424, G638
+    kitware-training: G299, G328, G330, G336, G339, G419, G420, G421, G423, G639
+
+2018-03-07.17-30.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-07.17-30.bus                M [K,KT,N]                  (7 clips)
+    kitware: G340, G505, G506, G508, G509
+    kitware-training: G331
+    nist-json: G505
+
+2018-03-07.17-30.hospital           M [K,KT]                    (3 clips)
+    kitware: G301, G341
+    kitware-training: G436
+
+2018-03-07.17-30.school             M [K,KT]                    (13 clips)
+    kitware: G300, G419, G420, G421, G423, G638, G639
+    kitware-training: G299, G328, G330, G336, G339, G424
+
+2018-03-07.17-35.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-07.17-35.bus                M [K]                       (6 clips)
+    kitware: G331, G340, G505, G506, G508, G509
+
+2018-03-07.17-35.hospital           M [K]                       (3 clips)
+    kitware: G301, G341, G436
+
+2018-03-07.17-35.school             M [K,KT,N]                  (14 clips)
+    kitware: G299, G300, G339, G419, G420, G421, G423, G638
+    kitware-training: G328, G330, G336, G424, G639
+    nist-json: G421
+
+2018-03-09.10-10.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-09.10-10.bus                M [K,KT,N]                  (7 clips)
+    kitware: G340, G505, G506, G508, G509
+    kitware-training: G331
+    nist-json: G340
+
+2018-03-09.10-10.hospital           M [K,KT]                    (3 clips)
+    kitware: G341
+    kitware-training: G301, G436
+
+2018-03-09.10-10.school             M [K,KT,N]                  (14 clips)
+    kitware: G299, G300, G328, G336, G339, G419, G421, G423, G638, G639
+    kitware-training: G330, G420, G424
+    nist-json: G328
+
+2018-03-09.10-15.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-09.10-15.bus                M [K,KT]                    (6 clips)
+    kitware: G340, G505, G506
+    kitware-training: G331, G508, G509
+
+2018-03-09.10-15.hospital           M [K,KT]                    (3 clips)
+    kitware: G301, G436
+    kitware-training: G341
+
+2018-03-09.10-15.school             M [K,KT]                    (13 clips)
+    kitware: G299, G300, G328, G336, G421, G638
+    kitware-training: G330, G339, G419, G420, G423, G424, G639
+
+2018-03-09.10-20.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-09.10-20.bus                M [K,KT]                    (6 clips)
+    kitware: G506
+    kitware-training: G331, G340, G505, G508, G509
+
+2018-03-09.10-20.hospital           M [K,KT]                    (2 clips)
+    kitware: G436
+    kitware-training: G301
+
+2018-03-09.10-20.school             M [K,KT]                    (13 clips)
+    kitware: G328, G336, G419, G420, G423, G424, G639
+    kitware-training: G299, G300, G330, G339, G421, G638
+
+2018-03-09.10-25.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-09.10-25.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-09.10-25.hospital           M [K,KT]                    (2 clips)
+    kitware: G436
+    kitware-training: G301
+
+2018-03-09.10-25.school             M [K,KT]                    (13 clips)
+    kitware: G299, G330, G336, G419, G420, G421, G423, G639
+    kitware-training: G300, G328, G339, G424, G638
+
+2018-03-09.10-30.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-09.10-30.bus                M [K,KT]                    (6 clips)
+    kitware: G340, G505
+    kitware-training: G331, G506, G508, G509
+
+2018-03-09.10-30.hospital           M [K,KT]                    (3 clips)
+    kitware: G301
+    kitware-training: G341, G436
+
+2018-03-09.10-30.school             M [K,KT]                    (13 clips)
+    kitware: G328, G330, G419, G420, G423, G424
+    kitware-training: G299, G300, G336, G339, G421, G638, G639
+
+2018-03-09.10-35.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-09.10-35.bus                M [K,KT]                    (6 clips)
+    kitware: G340, G505
+    kitware-training: G331, G506, G508, G509
+
+2018-03-09.10-35.hospital           M [K]                       (3 clips)
+    kitware: G301, G341, G436
+
+2018-03-09.10-35.school             M [K,KT]                    (13 clips)
+    kitware: G328, G336, G339, G423, G424, G639
+    kitware-training: G299, G300, G330, G419, G420, G421, G638
+
+2018-03-09.10-40.admin              M [K,KT]                    (2 clips)
+    kitware: G326
+    kitware-training: G329
+
+2018-03-09.10-40.bus                M [K,KT]                    (6 clips)
+    kitware: G506
+    kitware-training: G331, G340, G505, G508, G509
+
+2018-03-09.10-40.hospital           M [K,KT]                    (3 clips)
+    kitware: G341
+    kitware-training: G301, G436
+
+2018-03-09.10-40.school             M [K,KT]                    (13 clips)
+    kitware: G330, G336, G339, G419
+    kitware-training: G299, G300, G328, G420, G421, G423, G424, G638, G639
+
+2018-03-11.11-15.hospital             [K]                       (1 clips)
+    kitware: G436
+
+2018-03-11.11-15.school             M [K]                       (10 clips)
+    kitware: G299, G300, G328, G330, G336, G419, G420, G421, G424, G638
+
+2018-03-11.11-20.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-11.11-20.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-11.11-20.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-11.11-20.school             M [K,KT]                    (13 clips)
+    kitware: G299, G300, G328, G330, G336, G419, G420, G421, G423, G424, G638, G639
+    kitware-training: G339
+
+2018-03-11.11-25.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-11.11-25.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-11.11-25.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-11.11-25.school             M [K,KT]                    (13 clips)
+    kitware: G299, G300, G328, G330, G336, G420, G421, G423, G424, G638
+    kitware-training: G339, G419, G639
+
+2018-03-11.11-30.admin              M [K,KT]                    (2 clips)
+    kitware: G329
+    kitware-training: G326
+
+2018-03-11.11-30.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-11.11-30.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-11.11-30.school             M [K,KT,N]                  (14 clips)
+    kitware: G300, G328, G330, G336, G419, G420, G421, G423, G424, G638
+    kitware-training: G299, G339, G639
+    nist-json: G421
+
+2018-03-11.11-35.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-11.11-35.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-11.11-35.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-11.11-35.school             M [K,KT,N]                  (14 clips)
+    kitware: G299, G300, G328, G330, G336, G419, G420, G421, G423, G424, G638
+    kitware-training: G339, G639
+    nist-json: G421
+
+2018-03-11.11-40.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-11.11-40.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-11.11-40.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-11.11-40.school             M [K,KT]                    (14 clips)
+    kitware: G299, G300, G328, G336, G419, G420, G423, G424, G474, G638
+    kitware-training: G330, G339, G421, G639
+
+2018-03-11.11-45.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-11.11-45.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-11.11-45.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-11.11-45.school             M [K,KT]                    (14 clips)
+    kitware: G299, G300, G328, G330, G336, G419, G420, G421, G423, G424, G474, G638
+    kitware-training: G339, G639
+
+2018-03-11.11-50.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-11.11-50.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-11.11-50.hospital           M [K,KT]                    (3 clips)
+    kitware: G341, G436
+    kitware-training: G301
+
+2018-03-11.11-50.school             M [K,KT,N]                  (15 clips)
+    kitware: G299, G300, G328, G336, G419, G420, G421, G423, G424, G638, G639
+    kitware-training: G330, G339
+    nist-json: G300, G424
+
+2018-03-11.11-55.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-11.11-55.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-11.11-55.hospital           M [K,KT]                    (3 clips)
+    kitware: G341, G436
+    kitware-training: G301
+
+2018-03-11.11-55.school             M [K,KT]                    (13 clips)
+    kitware: G299, G300, G328, G330, G336, G419, G420, G421, G423, G424, G638, G639
+    kitware-training: G339
+
+2018-03-11.12-00.school             M [K]                       (3 clips)
+    kitware: G299, G336, G420
+
+2018-03-11.13-50.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-11.13-50.bus                M [K,KT]                    (6 clips)
+    kitware: G340
+    kitware-training: G331, G505, G506, G508, G509
+
+2018-03-11.13-50.hospital           M [K,KT]                    (3 clips)
+    kitware: G341
+    kitware-training: G301, G436
+
+2018-03-11.13-50.school             M [K,KT,N]                  (19 clips)
+    kitware: G339, G421, G423
+    kitware-training: G299, G300, G328, G330, G336, G419, G420, G424, G638, G639
+    nist-json: G299, G328, G330, G336, G339, G421
+
+2018-03-11.13-55.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-11.13-55.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-11.13-55.hospital           M [KT,N]                    (4 clips)
+    kitware-training: G301, G341, G436
+    nist-json: G436
+
+2018-03-11.13-55.school             M [K,KT]                    (13 clips)
+    kitware: G339, G420, G638, G639
+    kitware-training: G299, G300, G328, G330, G336, G419, G421, G423, G424
+
+2018-03-11.14-00.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-11.14-00.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-11.14-00.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-11.14-00.school             M [K,KT]                    (13 clips)
+    kitware: G423, G424
+    kitware-training: G299, G300, G328, G330, G336, G339, G419, G420, G421, G638, G639
+
+2018-03-11.14-05.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-11.14-05.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-11.14-05.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-11.14-05.school             M [K,KT]                    (13 clips)
+    kitware: G420, G423
+    kitware-training: G299, G300, G328, G330, G336, G339, G419, G421, G424, G638, G639
+
+2018-03-11.14-10.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-11.14-10.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-11.14-10.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-11.14-10.school             M [KT]                      (13 clips)
+    kitware-training: G299, G300, G328, G330, G336, G339, G419, G420, G421, G423, G424, G638, G639
+
+2018-03-11.14-15.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-11.14-15.bus                M [K,KT]                    (6 clips)
+    kitware: G340
+    kitware-training: G331, G505, G506, G508, G509
+
+2018-03-11.14-15.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-11.14-15.school             M [K,KT]                    (13 clips)
+    kitware: G299, G339, G423, G638, G639
+    kitware-training: G300, G328, G330, G336, G419, G420, G421, G424
+
+2018-03-11.14-20.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-11.14-20.bus                M [K,KT]                    (6 clips)
+    kitware: G340, G506, G508
+    kitware-training: G331, G505, G509
+
+2018-03-11.14-20.hospital           M [K,KT]                    (3 clips)
+    kitware: G341
+    kitware-training: G301, G436
+
+2018-03-11.14-20.school             M [K,KT]                    (13 clips)
+    kitware: G299, G330, G419, G420, G424
+    kitware-training: G300, G328, G336, G339, G421, G423, G638, G639
+
+2018-03-11.16-10.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-11.16-10.bus                M [K]                       (5 clips)
+    kitware: G331, G340, G505, G506, G509
+
+2018-03-11.16-10.hospital           M [K]                       (2 clips)
+    kitware: G301, G341
+
+2018-03-11.16-10.school               [K]                       (1 clips)
+    kitware: G339
+
+2018-03-11.16-15.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-11.16-15.bus                M [K,KT]                    (6 clips)
+    kitware: G331, G340, G505, G506, G509
+    kitware-training: G508
+
+2018-03-11.16-15.hospital           M [K]                       (4 clips)
+    kitware: G301, G341, G436, G479
+
+2018-03-11.16-15.school             M [K,KT,N]                  (14 clips)
+    kitware: G299, G300, G328, G336, G339, G419, G420, G421, G423, G424, G638
+    kitware-training: G330, G639
+    nist-json: G421
+
+2018-03-11.16-20.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-11.16-20.bus                M [K,KT]                    (6 clips)
+    kitware: G331, G340, G505, G506, G509
+    kitware-training: G508
+
+2018-03-11.16-20.hospital           M [K]                       (4 clips)
+    kitware: G301, G341, G436, G479
+
+2018-03-11.16-20.school             M [K,KT,N]                  (13 clips)
+    kitware: G299, G300, G328, G330, G336, G419, G420, G421, G423, G424, G638
+    kitware-training: G639
+    nist-json: G300
+
+2018-03-11.16-25.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-11.16-25.bus                M [K,KT]                    (6 clips)
+    kitware: G331, G340, G505, G506, G509
+    kitware-training: G508
+
+2018-03-11.16-25.hospital           M [K]                       (3 clips)
+    kitware: G301, G341, G436
+
+2018-03-11.16-25.school             M [K,N]                     (14 clips)
+    kitware: G299, G300, G328, G330, G336, G339, G419, G420, G421, G423, G424, G638, G639
+    nist-json: G424
+
+2018-03-11.16-30.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-11.16-30.bus                M [K,KT]                    (7 clips)
+    kitware: G331, G340, G475, G505, G506, G509
+    kitware-training: G508
+
+2018-03-11.16-30.hospital           M [K]                       (5 clips)
+    kitware: G301, G341, G436, G476, G479
+
+2018-03-11.16-30.school             M [K,KT]                    (14 clips)
+    kitware: G299, G300, G328, G330, G336, G339, G419, G420, G421, G423, G424, G474, G638
+    kitware-training: G639
+
+2018-03-11.16-35.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-11.16-35.bus                M [K,KT]                    (6 clips)
+    kitware: G331, G340, G505, G506, G509
+    kitware-training: G508
+
+2018-03-11.16-35.hospital           M [K]                       (4 clips)
+    kitware: G301, G341, G436, G479
+
+2018-03-11.16-35.school             M [K,KT]                    (13 clips)
+    kitware: G300, G328, G330, G336, G339, G419, G420, G421, G423, G424, G638
+    kitware-training: G299, G639
+
+2018-03-11.16-40.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-11.16-40.bus                M [K,KT]                    (6 clips)
+    kitware: G331, G340, G505, G506, G509
+    kitware-training: G508
+
+2018-03-11.16-40.hospital           M [K]                       (3 clips)
+    kitware: G301, G341, G436
+
+2018-03-11.16-40.school             M [K,KT]                    (13 clips)
+    kitware: G299, G300, G328, G330, G336, G339, G419, G420, G421, G423, G424, G638
+    kitware-training: G639
+
+2018-03-11.16-45.bus                M [K]                       (3 clips)
+    kitware: G331, G505, G509
+
+2018-03-11.16-45.school             M [K]                       (4 clips)
+    kitware: G299, G330, G421, G423
+
+2018-03-11.17-10.admin                [KT]                      (1 clips)
+    kitware-training: G326
+
+2018-03-11.17-10.bus                M [K,KT]                    (6 clips)
+    kitware: G505
+    kitware-training: G331, G340, G506, G508, G509
+
+2018-03-11.17-10.hospital           M [K,KT]                    (3 clips)
+    kitware: G341
+    kitware-training: G301, G436
+
+2018-03-11.17-10.school             M [K,KT]                    (13 clips)
+    kitware: G330, G339, G419, G421, G423, G424, G639
+    kitware-training: G299, G300, G328, G336, G420, G638
+
+2018-03-11.17-15.admin                [KT]                      (1 clips)
+    kitware-training: G326
+
+2018-03-11.17-15.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-11.17-15.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-11.17-15.school             M [K,KT]                    (12 clips)
+    kitware: G299, G336, G423
+    kitware-training: G300, G330, G339, G419, G420, G421, G424, G638, G639
+
+2018-03-11.17-20.admin                [KT]                      (1 clips)
+    kitware-training: G326
+
+2018-03-11.17-20.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-11.17-20.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-11.17-20.school             M [K,KT]                    (13 clips)
+    kitware: G328, G420, G423
+    kitware-training: G299, G300, G330, G336, G339, G419, G421, G424, G638, G639
+
+2018-03-11.17-25.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-11.17-25.bus                M [K,KT]                    (6 clips)
+    kitware: G340, G506
+    kitware-training: G331, G505, G508, G509
+
+2018-03-11.17-25.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-11.17-25.school             M [K,KT]                    (13 clips)
+    kitware: G299, G300, G328, G330, G336, G419, G423, G424, G638
+    kitware-training: G339, G420, G421, G639
+
+2018-03-12.10-00.admin              M [KT,N]                    (2 clips)
+    kitware-training: G326
+    nist-json: G326
+
+2018-03-12.10-00.bus                M [K,KT]                    (6 clips)
+    kitware: G340
+    kitware-training: G331, G505, G506, G508, G509
+
+2018-03-12.10-00.hospital           M [K,KT,N]                  (4 clips)
+    kitware: G436
+    kitware-training: G301, G341
+    nist-json: G436
+
+2018-03-12.10-00.school             M [K,KT,N]                  (15 clips)
+    kitware: G299, G330, G420
+    kitware-training: G300, G328, G336, G339, G419, G421, G423, G424, G638, G639
+    nist-json: G339, G423
+
+2018-03-12.10-05.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-12.10-05.bus                M [K,KT]                    (6 clips)
+    kitware: G340
+    kitware-training: G331, G505, G506, G508, G509
+
+2018-03-12.10-05.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-12.10-05.school             M [K,KT]                    (13 clips)
+    kitware: G299, G328, G330, G639
+    kitware-training: G300, G336, G339, G419, G420, G421, G423, G424, G638
+
+2018-03-12.10-10.admin                [KT]                      (1 clips)
+    kitware-training: G326
+
+2018-03-12.10-10.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-12.10-10.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-12.10-10.school             M [K,KT,N]                  (14 clips)
+    kitware: G421, G423
+    kitware-training: G299, G300, G328, G330, G336, G339, G419, G420, G424, G638, G639
+    nist-json: G299
+
+2018-03-12.10-15.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-12.10-15.bus                M [K,KT]                    (6 clips)
+    kitware: G506
+    kitware-training: G331, G340, G505, G508, G509
+
+2018-03-12.10-15.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-12.10-15.school             M [K,KT]                    (13 clips)
+    kitware: G299, G336, G424
+    kitware-training: G300, G328, G330, G339, G419, G420, G421, G423, G638, G639
+
+2018-03-12.10-20.admin                [KT]                      (1 clips)
+    kitware-training: G326
+
+2018-03-12.10-20.bus                M [K,KT]                    (6 clips)
+    kitware: G505
+    kitware-training: G331, G340, G506, G508, G509
+
+2018-03-12.10-20.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-12.10-20.school             M [KT]                      (13 clips)
+    kitware-training: G299, G300, G328, G330, G336, G339, G419, G420, G421, G423, G424, G638, G639
+
+2018-03-12.10-25.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-12.10-25.bus                M [K,KT]                    (6 clips)
+    kitware: G340
+    kitware-training: G331, G505, G506, G508, G509
+
+2018-03-12.10-25.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-12.10-25.school             M [K,KT]                    (13 clips)
+    kitware: G299, G300, G328, G336, G421, G638
+    kitware-training: G330, G339, G419, G420, G423, G424, G639
+
+2018-03-12.10-30.admin              M [K]                       (2 clips)
+    kitware: G326, G329
+
+2018-03-12.10-30.bus                M [K,KT]                    (6 clips)
+    kitware: G505
+    kitware-training: G331, G340, G506, G508, G509
+
+2018-03-12.10-30.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-12.10-30.school             M [K,KT]                    (13 clips)
+    kitware: G330, G336, G421, G424
+    kitware-training: G299, G300, G328, G339, G419, G420, G423, G638, G639
+
+2018-03-12.10-40.admin              M [K,KT]                    (2 clips)
+    kitware: G329
+    kitware-training: G326
+
+2018-03-12.10-40.bus                M [K,KT]                    (6 clips)
+    kitware: G340
+    kitware-training: G331, G505, G506, G508, G509
+
+2018-03-12.10-40.hospital           M [KT,N]                    (4 clips)
+    kitware-training: G301, G341, G436
+    nist-json: G436
+
+2018-03-12.10-40.school             M [K,KT,N]                  (14 clips)
+    kitware: G299, G330, G339, G421, G638
+    kitware-training: G300, G328, G336, G419, G420, G423, G424, G639
+    nist-json: G328
+
+2018-03-12.10-45.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-12.10-45.bus                M [K,KT]                    (6 clips)
+    kitware: G505
+    kitware-training: G331, G340, G506, G508, G509
+
+2018-03-12.10-45.hospital           M [K,KT]                    (3 clips)
+    kitware: G301, G436
+    kitware-training: G341
+
+2018-03-12.10-45.school             M [K,KT,N]                  (16 clips)
+    kitware: G328, G330, G421, G639
+    kitware-training: G299, G300, G336, G339, G419, G420, G423, G424, G638
+    nist-json: G328, G424, G638
+
+2018-03-12.10-50.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-12.10-50.bus                M [K,KT]                    (6 clips)
+    kitware: G340
+    kitware-training: G331, G505, G506, G508, G509
+
+2018-03-12.10-50.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-12.10-50.school             M [K,KT,N]                  (14 clips)
+    kitware: G299, G330, G423, G639
+    kitware-training: G300, G328, G336, G339, G419, G420, G421, G424, G638
+    nist-json: G423
+
+2018-03-12.10-55.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-12.10-55.bus                M [KT]                      (5 clips)
+    kitware-training: G331, G340, G505, G506, G508
+
+2018-03-12.10-55.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-12.10-55.school             M [K,KT]                    (13 clips)
+    kitware: G330, G421
+    kitware-training: G299, G300, G328, G336, G339, G419, G420, G423, G424, G638, G639
+
+2018-03-12.11-00.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-12.11-00.bus                M [K,KT,N]                  (7 clips)
+    kitware: G340
+    kitware-training: G331, G505, G506, G508, G509
+    nist-json: G340
+
+2018-03-12.11-00.hospital           M [K,KT]                    (3 clips)
+    kitware: G341, G436
+    kitware-training: G301
+
+2018-03-12.11-00.school             M [K,KT]                    (13 clips)
+    kitware: G423, G424, G639
+    kitware-training: G299, G300, G328, G330, G336, G339, G419, G420, G421, G638
+
+2018-03-12.11-05.admin                [KT]                      (1 clips)
+    kitware-training: G326
+
+2018-03-12.11-05.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-12.11-05.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-12.11-05.school             M [K,KT]                    (13 clips)
+    kitware: G328, G330, G420, G423
+    kitware-training: G299, G300, G336, G339, G419, G421, G424, G638, G639
+
+2018-03-12.11-10.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-12.11-10.bus                M [K,KT]                    (6 clips)
+    kitware: G340
+    kitware-training: G331, G505, G506, G508, G509
+
+2018-03-12.11-10.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-12.11-10.school             M [K,KT,N]                  (14 clips)
+    kitware: G328, G336, G424, G638
+    kitware-training: G299, G300, G330, G339, G419, G420, G421, G423, G639
+    nist-json: G423
+
+2018-03-13.15-50.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-13.15-50.bus                M [K,KT]                    (6 clips)
+    kitware: G505, G506
+    kitware-training: G331, G340, G508, G509
+
+2018-03-13.15-50.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-13.15-50.school             M [K,KT]                    (13 clips)
+    kitware: G336, G419, G421, G638
+    kitware-training: G299, G300, G328, G330, G339, G420, G423, G424, G639
+
+2018-03-13.15-55.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-13.15-55.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-13.15-55.hospital           M [K,KT]                    (3 clips)
+    kitware: G301, G436
+    kitware-training: G341
+
+2018-03-13.15-55.school             M [K,KT]                    (13 clips)
+    kitware: G299, G330, G424, G638
+    kitware-training: G300, G328, G336, G339, G419, G420, G421, G423, G639
+
+2018-03-13.16-00.admin                [KT]                      (1 clips)
+    kitware-training: G326
+
+2018-03-13.16-00.bus                M [K,KT]                    (6 clips)
+    kitware: G505
+    kitware-training: G331, G340, G506, G508, G509
+
+2018-03-13.16-00.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-13.16-00.school             M [K,KT]                    (12 clips)
+    kitware: G336, G424, G638, G639
+    kitware-training: G299, G300, G328, G330, G339, G419, G420, G423
+
+2018-03-13.16-05.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-13.16-05.bus                M [K,KT]                    (6 clips)
+    kitware: G505, G506
+    kitware-training: G331, G340, G508, G509
+
+2018-03-13.16-05.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-13.16-05.school             M [K,KT]                    (13 clips)
+    kitware: G328, G336, G421, G424
+    kitware-training: G299, G300, G330, G339, G419, G420, G423, G638, G639
+
+2018-03-13.16-10.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-13.16-10.bus                M [K,KT]                    (6 clips)
+    kitware: G506
+    kitware-training: G331, G340, G505, G508, G509
+
+2018-03-13.16-10.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-13.16-10.school             M [K,KT]                    (13 clips)
+    kitware: G423, G424
+    kitware-training: G299, G300, G328, G330, G336, G339, G419, G420, G421, G638, G639
+
+2018-03-13.16-15.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-13.16-15.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-13.16-15.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-13.16-15.school             M [KT]                      (12 clips)
+    kitware-training: G299, G300, G328, G330, G336, G339, G419, G420, G423, G424, G638, G639
+
+2018-03-13.16-20.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-13.16-20.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-13.16-20.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-13.16-20.school             M [K,KT]                    (13 clips)
+    kitware: G336, G339, G424
+    kitware-training: G299, G300, G328, G330, G419, G420, G421, G423, G638, G639
+
+2018-03-13.16-25.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-13.16-25.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-13.16-25.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-13.16-25.school             M [KT]                      (12 clips)
+    kitware-training: G299, G300, G328, G330, G336, G339, G419, G420, G423, G424, G638, G639
+
+2018-03-13.16-30.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-13.16-30.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-13.16-30.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-13.16-30.school             M [K,KT]                    (12 clips)
+    kitware: G423
+    kitware-training: G299, G300, G328, G330, G336, G339, G419, G420, G424, G638, G639
+
+2018-03-13.17-05.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-13.17-05.bus                M [K,KT]                    (6 clips)
+    kitware: G505
+    kitware-training: G331, G340, G506, G508, G509
+
+2018-03-13.17-05.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-13.17-05.school             M [K,KT,N]                  (16 clips)
+    kitware: G299, G423, G424, G639
+    kitware-training: G300, G328, G330, G336, G339, G419, G420, G421, G638
+    nist-json: G328, G336, G421
+
+2018-03-13.17-10.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-13.17-10.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-13.17-10.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-13.17-10.school             M [K,KT]                    (13 clips)
+    kitware: G336, G421
+    kitware-training: G299, G300, G328, G330, G339, G419, G420, G423, G424, G638, G639
+
+2018-03-13.17-15.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-13.17-15.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-13.17-15.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-13.17-15.school             M [K,KT]                    (12 clips)
+    kitware: G336, G424
+    kitware-training: G299, G300, G328, G330, G339, G419, G420, G423, G638, G639
+
+2018-03-13.17-20.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-13.17-20.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-13.17-20.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-13.17-20.school             M [K,KT]                    (12 clips)
+    kitware: G336
+    kitware-training: G299, G300, G328, G330, G339, G419, G420, G423, G424, G638, G639
+
+2018-03-13.17-25.admin                [KT]                      (1 clips)
+    kitware-training: G326
+
+2018-03-13.17-25.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-13.17-25.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-13.17-25.school             M [K,KT,N]                  (14 clips)
+    kitware: G336, G421
+    kitware-training: G299, G300, G328, G330, G339, G419, G420, G423, G424, G638, G639
+    nist-json: G336
+
+2018-03-13.17-30.admin                [KT]                      (1 clips)
+    kitware-training: G326
+
+2018-03-13.17-30.bus                M [KT,N]                    (7 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+    nist-json: G340
+
+2018-03-13.17-30.hospital           M [KT,N]                    (4 clips)
+    kitware-training: G301, G341, G436
+    nist-json: G341
+
+2018-03-13.17-30.school             M [KT]                      (13 clips)
+    kitware-training: G299, G300, G328, G330, G336, G339, G419, G420, G421, G423, G424, G638, G639
+
+2018-03-13.17-35.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-13.17-35.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-13.17-35.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-13.17-35.school             M [K,KT,N]                  (14 clips)
+    kitware: G330, G419
+    kitware-training: G299, G300, G328, G336, G339, G420, G421, G423, G424, G638, G639
+    nist-json: G299
+
+2018-03-13.17-40.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-13.17-40.bus                M [KT]                      (6 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+
+2018-03-13.17-40.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-13.17-40.school             M [K,KT,N]                  (13 clips)
+    kitware: G300
+    kitware-training: G299, G328, G330, G336, G339, G419, G420, G423, G424, G638, G639
+    nist-json: G300
+
+2018-03-15.14-50.admin              M [K,KT]                    (2 clips)
+    kitware: G329
+    kitware-training: G326
+
+2018-03-15.14-50.bus                M [K,KT]                    (6 clips)
+    kitware: G340, G508
+    kitware-training: G331, G505, G506, G509
+
+2018-03-15.14-50.hospital           M [KT,N]                    (4 clips)
+    kitware-training: G301, G341, G436
+    nist-json: G341
+
+2018-03-15.14-50.school             M [K,KT,N]                  (14 clips)
+    kitware: G300, G420, G421
+    kitware-training: G299, G328, G330, G336, G339, G419, G424, G638, G639
+    nist-json: G424, G638
+
+2018-03-15.14-55.admin                [KT]                      (1 clips)
+    kitware-training: G326
+
+2018-03-15.14-55.bus                M [K,KT]                    (6 clips)
+    kitware: G505
+    kitware-training: G331, G340, G506, G508, G509
+
+2018-03-15.14-55.hospital           M [KT,N]                    (4 clips)
+    kitware-training: G301, G341, G436
+    nist-json: G436
+
+2018-03-15.14-55.school             M [K,KT,N]                  (14 clips)
+    kitware: G300, G328, G336, G339, G421, G638, G639
+    kitware-training: G299, G330, G419, G420, G423, G424
+    nist-json: G421
+
+2018-03-15.15-00.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-15.15-00.bus                M [K,KT]                    (6 clips)
+    kitware: G340
+    kitware-training: G331, G505, G506, G508, G509
+
+2018-03-15.15-00.hospital           M [K]                       (3 clips)
+    kitware: G301, G341, G436
+
+2018-03-15.15-00.school             M [K,KT]                    (13 clips)
+    kitware: G299, G330, G339
+    kitware-training: G300, G328, G336, G419, G420, G421, G423, G424, G638, G639
+
+2018-03-15.15-05.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-15.15-05.bus                M [K,KT]                    (6 clips)
+    kitware: G508
+    kitware-training: G331, G340, G505, G506, G509
+
+2018-03-15.15-05.hospital           M [KT]                      (2 clips)
+    kitware-training: G301, G341
+
+2018-03-15.15-05.school             M [K,KT]                    (12 clips)
+    kitware: G336, G339
+    kitware-training: G299, G300, G328, G330, G419, G420, G421, G424, G638, G639
+
+2018-03-15.15-10.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-15.15-10.bus                M [KT,N]                    (5 clips)
+    kitware-training: G331, G506, G508, G509
+    nist-json: G331
+
+2018-03-15.15-10.hospital           M [KT]                      (2 clips)
+    kitware-training: G301, G341
+
+2018-03-15.15-10.school             M [K,KT]                    (13 clips)
+    kitware: G336, G339, G421, G424
+    kitware-training: G299, G300, G328, G330, G419, G420, G423, G638, G639
+
+2018-03-15.15-15.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-15.15-15.bus                M [KT,N]                    (7 clips)
+    kitware-training: G331, G340, G505, G506, G508, G509
+    nist-json: G331
+
+2018-03-15.15-15.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-15.15-15.school             M [K,KT]                    (13 clips)
+    kitware: G300, G339, G421, G424, G638
+    kitware-training: G299, G328, G330, G336, G419, G420, G423, G639
+
+2018-03-15.15-30.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-15.15-30.bus                M [K,KT,N]                  (7 clips)
+    kitware: G506
+    kitware-training: G331, G340, G505, G508, G509
+    nist-json: G340
+
+2018-03-15.15-30.hospital           M [K,KT]                    (3 clips)
+    kitware: G341
+    kitware-training: G301, G436
+
+2018-03-15.15-30.school             M [K,KT]                    (11 clips)
+    kitware: G339, G421, G424
+    kitware-training: G299, G300, G328, G330, G336, G419, G638, G639
+
+2018-03-15.15-35.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-15.15-35.bus                M [K,KT,N]                  (7 clips)
+    kitware: G340
+    kitware-training: G331, G505, G506, G508, G509
+    nist-json: G506
+
+2018-03-15.15-35.hospital           M [KT,N]                    (4 clips)
+    kitware-training: G301, G341, G436
+    nist-json: G341
+
+2018-03-15.15-35.school             M [K,KT,N]                  (12 clips)
+    kitware: G328, G339, G421, G638
+    kitware-training: G299, G300, G330, G336, G419, G424, G639
+    nist-json: G300
+
+2018-03-15.15-40.admin              M [K,KT]                    (2 clips)
+    kitware: G326
+    kitware-training: G329
+
+2018-03-15.15-40.bus                M [K,KT]                    (6 clips)
+    kitware: G508
+    kitware-training: G331, G340, G505, G506, G509
+
+2018-03-15.15-40.hospital           M [KT]                      (3 clips)
+    kitware-training: G301, G341, G436
+
+2018-03-15.15-40.school             M [K,KT,N]                  (14 clips)
+    kitware: G339
+    kitware-training: G299, G300, G328, G330, G336, G419, G420, G421, G423, G424, G638, G639
+    nist-json: G638
+
+2018-03-15.15-45.admin                [KT]                      (1 clips)
+    kitware-training: G326
+
+2018-03-15.15-45.bus                M [K,KT,N]                  (7 clips)
+    kitware: G505, G506
+    kitware-training: G331, G340, G508, G509
+    nist-json: G506
+
+2018-03-15.15-45.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-15.15-45.school             M [K,KT,N]                  (14 clips)
+    kitware: G300, G336, G339, G638
+    kitware-training: G299, G328, G330, G419, G420, G421, G423, G424, G639
+    nist-json: G638
+
+2018-03-15.15-50.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-15.15-50.bus                M [K,KT]                    (6 clips)
+    kitware: G331, G508
+    kitware-training: G340, G505, G506, G509
+
+2018-03-15.15-50.hospital           M [K,KT]                    (3 clips)
+    kitware: G301, G341
+    kitware-training: G436
+
+2018-03-15.15-50.school             M [K,KT]                    (13 clips)
+    kitware: G336, G339
+    kitware-training: G299, G300, G328, G330, G419, G420, G421, G423, G424, G638, G639
+
+2018-03-15.15-55.admin              M [KT]                      (2 clips)
+    kitware-training: G326, G329
+
+2018-03-15.15-55.bus                M [K,KT]                    (6 clips)
+    kitware: G331
+    kitware-training: G340, G505, G506, G508, G509
+
+2018-03-15.15-55.hospital           M [K,KT]                    (3 clips)
+    kitware: G436
+    kitware-training: G301, G341
+
+2018-03-15.15-55.school             M [K,KT]                    (12 clips)
+    kitware: G328, G336, G421, G424, G638, G639
+    kitware-training: G299, G300, G330, G339, G419, G423

@@ -367,6 +367,17 @@ def generate_numerical_qa(
             debug_info["activity"] = cand["activity"]
             debug_info["activity_human"] = humanize_activity(cand["activity"])
 
+        # Collect clip_files from the events referenced by this candidate
+        event_map = {e.event_id: e for e in sg.events}
+        clip_files = set()
+        for eid in cand.get("event_ids", []):
+            evt = event_map.get(eid)
+            if evt and evt.video_file:
+                cf = evt.video_file.replace(".avi", ".mp4")
+                clip_files.add(cf)
+        if clip_files:
+            debug_info["clip_files"] = sorted(clip_files)
+
         qa = {
             "question_id": f"v8_numerical_{idx + 1:03d}",
             "category": "numerical",

@@ -239,8 +239,8 @@ def generate_best_camera_qa(sg: SceneGraph, resolved: ResolvedGraph,
             rng.shuffle(options)
             correct_idx = options.index(f"Camera {first_cam}")
             
-            # Build clip_file from the event
-            clip_file = getattr(first_event, 'clip_file', '') or ''
+            # Build clip_file from the event's video_file
+            clip_file = (first_event.video_file or '').replace('.avi', '.mp4')
             
             question_template = (
                 f"Which camera first captures the entrance of {desc} into the scene?"
@@ -305,7 +305,7 @@ def generate_best_camera_qa(sg: SceneGraph, resolved: ResolvedGraph,
             rng.shuffle(options)
             correct_idx = options.index(f"Camera {last_cam}")
             
-            clip_file = getattr(last_event, 'clip_file', '') or ''
+            clip_file = (last_event.video_file or '').replace('.avi', '.mp4')
             
             question_template = (
                 f"Of all cameras capturing {desc} entering the scene, "

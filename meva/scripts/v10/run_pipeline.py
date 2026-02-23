@@ -62,7 +62,7 @@ except ImportError:
 # ============================================================================
 
 OUTPUT_DIR = Path("/home/ah66742/data/qa_pairs")
-MEVA_AVI_BASE = Path("/nas/mars/dataset/MEVA/avis")
+MEVA_MP4_BASE = Path("/nas/mars/dataset/MEVA/mp4s")
 CANONICAL_SLOTS_PATH = Path("/home/ah66742/data/canonical_slots.json")
 RANDOM_SEED = 42
 
@@ -93,78 +93,86 @@ def fix_articles(text: str) -> str:
 # ============================================================================
 
 def _build_video_paths(q: dict, slot: str) -> List[str]:
-    """Build absolute AVI paths for each camera in a QA pair.
+    """Build absolute MP4 paths for each camera in a QA pair.
     
-    Derives from slot name + debug_info clip files:
-      slot = "2018-03-11.11-25-00.school"
-      clip = "2018-03-11.11-25-00.11-30-00.school.G330.mp4"
-      → /nas/mars/dataset/MEVA/avis/2018-03-11/11/2018-03-11.11-25-00.11-30-00.school.G330.r13.avi
+    Uses slot-grouped MP4 directory structure:
+      slot = "2018-03-11.11-25.school"
+      clip_file = "2018-03-11.11-25-00.11-30-00.school.G330.r13.mp4"
+      → /nas/mars/dataset/MEVA/mp4s/2018-03-11/11/2018-03-11.11-25.school/
+            2018-03-11.11-25-00.11-30-00.school.G330.r13.mp4
     """
     date = slot.split(".")[0]  # "2018-03-11"
     hour = slot.split(".")[1].split("-")[0]  # "11"
+    slot_dir = MEVA_MP4_BASE / date / hour / slot
     
     paths = []
-    seen_clips = set()
+    seen = set()
     
     def _add_clip(clip: str):
-        """Helper to add a clip file to paths (deduped)."""
-        if not clip or clip in seen_clips:
+        """Normalize a clip filename and add its MP4 path (deduped)."""
+        if not clip or clip in seen:
             return
-        seen_clips.add(clip)
-        stem = clip.replace(".mp4", "").replace(".avi", "")
-        avi_path = str(MEVA_AVI_BASE / date / hour / f"{stem}.r13.avi")
-        paths.append(avi_path)
+        seen.add(clip)
+        # Normalize: strip any extension, ensure single .r13.mp4
+        stem = clip
+        for ext in (".mp4", ".avi"):
+            if stem.endswith(ext):
+                stem = stem[:-len(ext)]
+        # Strip trailing .r13 if present (avoid double .r13)
+        if stem.endswith(".r13"):
+            stem = stem[:-4]
+        mp4_name = f"{stem}.r13.mp4"
+        mp4_path = str(slot_dir / mp4_name)
+        if mp4_path not in paths:
+            paths.append(mp4_path)
     
     # Collect clip files from debug_info
     debug = q.get("debug_info", {})
     
-    # 1. temporal: event_a, event_b (dict with clip_file)
+    # 1. Direct clip_files list (counting, best_camera, summarization, spatial)
+    for cf in debug.get("clip_files", []):
+        _add_clip(cf)
+    
+    # 2. temporal: event_a, event_b (dict with clip_file)
     for key in ["event_a", "event_b"]:
         info = debug.get(key, {})
-        if isinstance(info, dict):
-            _add_clip(info.get("clip_file", ""))
+        if isinstance(info, dict) and info.get("clip_file"):
+            _add_clip(info["clip_file"])
     
-    # 2. perception / best_camera: representative_event (dict with clip_file)
+    # 3. perception / best_camera: representative_event (dict with clip_file)
     rep = debug.get("representative_event", {})
-    if isinstance(rep, dict):
-        _add_clip(rep.get("clip_file", ""))
+    if isinstance(rep, dict) and rep.get("clip_file"):
+        _add_clip(rep["clip_file"])
     
-    # 3. perception multi-cam: camera_1_event, camera_2_event, etc.
+    # 4. perception multi-cam: camera_1_event, camera_2_event, etc.
     for key in debug:
         if key.startswith("camera_") and key.endswith("_event"):
             info = debug[key]
-            if isinstance(info, dict):
-                _add_clip(info.get("clip_file", ""))
+            if isinstance(info, dict) and info.get("clip_file"):
+                _add_clip(info["clip_file"])
     
-    # 4. event_ordering: events (list of dicts with clip_file)
+    # 5. event_ordering: events (list of dicts with clip_file)
     events_list = debug.get("events", [])
     if isinstance(events_list, list):
         for ev in events_list:
-            if isinstance(ev, dict):
-                _add_clip(ev.get("clip_file", ""))
+            if isinstance(ev, dict) and ev.get("clip_file"):
+                _add_clip(ev["clip_file"])
     
-    # 5. Legacy: ordered_events
-    for key in ["ordered_events"]:
+    # 6. Spatial: entity_a, entity_b (dict with clip_file)
+    for key in ["entity_a", "entity_b"]:
         info = debug.get(key, {})
-        if isinstance(info, list):
-            for ev in info:
-                if isinstance(ev, dict):
-                    _add_clip(ev.get("clip_file", ""))
-        elif isinstance(info, dict):
-            _add_clip(info.get("clip_file", ""))
+        if isinstance(info, dict) and info.get("clip_file"):
+            _add_clip(info["clip_file"])
     
-    # Fallback: construct from requires_cameras
+    # Fallback: match only this slot's cameras in the slot directory
     if not paths:
         cameras = q.get("requires_cameras", [])
-        for cam in cameras:
-            avi_dir = MEVA_AVI_BASE / date / hour
-            if avi_dir.exists():
-                import glob
-                pattern = str(avi_dir / f"*{cam}.r13.avi")
-                matches = sorted(glob.glob(pattern))
-                for m in matches:
-                    if m not in paths:
-                        paths.append(m)
+        if slot_dir.exists() and cameras:
+            for cam in cameras:
+                for f in sorted(slot_dir.glob(f"*{cam}*.r13.mp4")):
+                    p = str(f)
+                    if p not in paths:
+                        paths.append(p)
     
     return sorted(set(paths))
 

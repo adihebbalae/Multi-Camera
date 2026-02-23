@@ -193,11 +193,18 @@ def generate_scene_summary_qa(sg: SceneGraph, resolved: ResolvedGraph,
         f"which description best characterizes the overall scene?"
     )
     
+    # Collect all clip_files across all cameras
+    all_clip_files = sorted(set(
+        e.video_file.replace(".avi", ".mp4")
+        for e in sg.events if e.video_file
+    ))
+
     debug_info = {
         "question_type": "scene_characterization",
         "scene_analysis": analysis,
         "scene_description": description,
         "scene_type": scene_type,
+        "clip_files": all_clip_files,
     }
     
     qa = {
@@ -260,6 +267,7 @@ def generate_scene_summary_qa(sg: SceneGraph, resolved: ResolvedGraph,
             "debug_info": {
                 "question_type": "busiest_camera",
                 "camera_event_counts": analysis["camera_event_counts"],
+                "clip_files": all_clip_files,
             },
         }
         qa_pairs.append(qa2)
