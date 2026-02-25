@@ -31,7 +31,8 @@ from .utils.mevid import find_mevid_persons_for_slot
 # Constants
 # ============================================================================
 
-MIN_GAP_SEC = 3.0            # Minimum gap between consecutive events (unambiguous)
+MIN_GAP_SEC = 2.0            # Minimum gap between consecutive events (unambiguous)
+MAX_GAP_SEC = 10.0           # Maximum gap — events must be close enough to be related
 DEFAULT_FPS = 30.0
 MIN_EVENTS = 3               # Minimum events per ordering question
 MAX_EVENTS = 4               # Maximum events per ordering question
@@ -205,9 +206,11 @@ def _find_ordering_groups(events: List[Event], sg: SceneGraph,
                 candidate = unique_events[next_idx]
                 last = chain[-1]
 
-                # Must have clear temporal gap
+                # Must have clear temporal gap (2-10 seconds)
                 gap = candidate.start_sec - last.end_sec
                 if gap < MIN_GAP_SEC:
+                    continue
+                if gap > MAX_GAP_SEC:
                     continue
 
                 # Prefer cross-camera: skip same-camera if we already have

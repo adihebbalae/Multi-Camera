@@ -1,13 +1,12 @@
 """
 FINAL generate_numerical.py — Numerical/counting questions across cameras.
 
-Tests a model's ability to count activities or entities from a
-multi-camera scene.  Two counting subtypes:
+Tests a model's ability to count activities from a multi-camera scene.
 
-1. **activity_counting**: "How many times does [activity] occur across all cameras?"
-   → Count event instances of that activity type from sg.events.
-2. **entity_counting**: "How many distinct people are visible across all cameras?"
-   → Count unique entity clusters from the resolved graph.
+**activity_counting**: "How many times does [activity] occur across all cameras?"
+   → Count event instances of that activity type from sg.events, with
+     cross-camera temporal deduplication (events of the same activity on
+     different cameras within ±2 seconds are counted as one instance).
 
 Distractors are generated arithmetically (±1, ±2, ×2) so that wrong answers
 are plausible.  All options are stringified integers > 0, sorted numerically.
@@ -91,20 +90,49 @@ def _build_options(correct: int, rng: random.Random) -> Tuple[List[str], int]:
 # Candidate Builders
 # ============================================================================
 
+def _dedup_activity_count(events_for_activity: list) -> Tuple[int, List[str]]:
+    """Count distinct instances of an activity with cross-camera temporal dedup.
+
+    Events on DIFFERENT cameras whose start_sec is within ±2 seconds are
+    merged into a single cluster (counted as one occurrence).  Events on
+    the SAME camera are always counted separately.
+
+    Returns (deduped_count, list_of_event_ids).
+    """
+    sorted_evts = sorted(events_for_activity, key=lambda e: e.start_sec)
+    clusters: List[list] = []
+    for evt in sorted_evts:
+        merged = False
+        for cluster in clusters:
+            for c_evt in cluster:
+                if evt.camera_id != c_evt.camera_id and abs(evt.start_sec - c_evt.start_sec) <= 2.0:
+                    cluster.append(evt)
+                    merged = True
+                    break
+            if merged:
+                break
+        if not merged:
+            clusters.append([evt])
+    all_ids = [e.event_id for e in sorted_evts]
+    return len(clusters), all_ids
+
+
 def _activity_counting_candidates(sg: SceneGraph) -> List[Dict]:
     """
-    For each activity type, count total event instances across all cameras.
+    For each activity type, count event instances across all cameras
+    with cross-camera temporal deduplication (±2 s).
     """
-    activity_counts: Dict[str, int] = Counter(e.activity for e in sg.events)
+    # Group events by activity
+    activity_groups: Dict[str, list] = defaultdict(list)
     activity_cameras: Dict[str, Set[str]] = defaultdict(set)
-    activity_events: Dict[str, List[str]] = defaultdict(list)
 
     for e in sg.events:
+        activity_groups[e.activity].append(e)
         activity_cameras[e.activity].add(e.camera_id)
-        activity_events[e.activity].append(e.event_id)
 
     candidates = []
-    for act, cnt in activity_counts.items():
+    for act, evts in activity_groups.items():
+        cnt, event_ids = _dedup_activity_count(evts)
         if cnt < MIN_COUNT or cnt > MAX_COUNT:
             continue
         candidates.append({
@@ -112,48 +140,11 @@ def _activity_counting_candidates(sg: SceneGraph) -> List[Dict]:
             "activity": act,
             "correct_count": cnt,
             "cameras_involved": sorted(activity_cameras[act]),
-            "event_ids": activity_events[act],
+            "event_ids": event_ids,
             "cross_camera": len(activity_cameras[act]) >= 2,
         })
     return candidates
 
-
-def _entity_counting_candidates(
-    sg: SceneGraph, resolved: ResolvedGraph
-) -> List[Dict]:
-    """
-    Count distinct entity clusters (unique people/entities) across all cameras.
-    """
-    # Person clusters only (most natural counting question)
-    person_clusters = []
-    for cluster in resolved.entity_clusters:
-        # Check if cluster contains at least one person entity
-        for eid in cluster.entities:
-            ent = sg.entities.get(eid)
-            if ent and ent.entity_type == "person":
-                person_clusters.append(cluster)
-                break
-
-    cnt = len(person_clusters)
-    if cnt < MIN_COUNT or cnt > MAX_COUNT:
-        return []
-
-    all_cameras: Set[str] = set()
-    cluster_ids = []
-    for cl in person_clusters:
-        cluster_ids.append(cl.cluster_id)
-        for cam in cl.cameras:
-            all_cameras.add(cam)
-
-    return [{
-        "subtype": "entity_counting",
-        "activity": None,
-        "correct_count": cnt,
-        "cameras_involved": sorted(all_cameras),
-        "event_ids": [],
-        "cluster_ids": cluster_ids,
-        "cross_camera": len(all_cameras) >= 2,
-    }]
 
 
 # ============================================================================
@@ -184,11 +175,8 @@ def _score_candidate(cand: Dict) -> float:
     if cand["cross_camera"]:
         score += 2.0
 
-    # Subtype preference: entity counting is most "scene-level"
-    if cand["subtype"] == "entity_counting":
-        score += 1.0
-    elif cand["subtype"] == "activity_counting":
-        score += 0.5
+    # Subtype: activity_counting is the only subtype
+    score += 0.5
 
     return score
 
@@ -207,11 +195,6 @@ def _make_question_text(cand: Dict) -> str:
         return (
             f"How many times does someone perform the action of "
             f"{act_lower} across all cameras in this slot?"
-        )
-
-    if subtype == "entity_counting":
-        return (
-            "How many distinct people are visible across all cameras in this slot?"
         )
 
     return "How many?"
@@ -269,7 +252,6 @@ def generate_numerical_qa(
     # ------------------------------------------------------------------
     all_candidates: List[Dict] = []
     all_candidates.extend(_activity_counting_candidates(sg))
-    all_candidates.extend(_entity_counting_candidates(sg, resolved))
 
     if not all_candidates:
         if verbose:
@@ -284,9 +266,7 @@ def generate_numerical_qa(
     all_candidates.sort(key=lambda c: c["_score"], reverse=True)
 
     if verbose:
-        print(f"  Numerical: {len(all_candidates)} candidates "
-              f"(act={sum(1 for c in all_candidates if c['subtype'] == 'activity_counting')}, "
-              f"ent={sum(1 for c in all_candidates if c['subtype'] == 'entity_counting')})")
+        print(f"  Numerical: {len(all_candidates)} activity_counting candidates")
 
     # ------------------------------------------------------------------
     # 3. Diversified selection: no two Qs with same subtype or same activity

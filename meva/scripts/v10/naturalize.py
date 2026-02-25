@@ -1,35 +1,34 @@
 #!/usr/bin/env python3
 """
-V8 Naturalization V2 — Pre-processes and naturalizes V8 template QA pairs.
+Naturalize — Pre-processes and naturalizes template QA pairs via GPT.
 
-Key improvements over V1:
-1. Pre-processing layer (FREE, no API call):
-   - Description simplification: "blue upper body garment" → "blue top"
-   - Camera reference removal from temporal/spatial question text
-   - Temporal anchors for disambiguation ("about 6 seconds in")
-   - Activity de-duplication ("enters scene enters scene" → "enters scene")
-   - Grammar fixes: capitalization, mid-sentence periods
-   - Event descriptions reconstructed from structured verification data
+Clean 3-stage architecture:
+  Stage 1 — Structural pre-processing (Python, FREE):
+    - Reconstruct questions from structured verification data
+    - Description simplification: "blue upper body garment" -> "blue top"
+    - Camera reference removal from temporal/spatial question text
+    - MEVA ontology vocabulary normalization
+    - NO grammar fixes — all language rewriting delegated to GPT
 
-2. Updated GPT prompts (optional GPT naturalization):
-   - Better few-shot examples reflecting cleaned templates
-   - Category-specific format guidance
-   - Post-processing validation
+  Stage 2 — Language rewrite (GPT, 1 API call per question):
+    - Receives plain text question + context (never raw JSON)
+    - Handles ALL grammar, phrasing, style variation, article agreement
+    - Returns rewritten question + reasoning sentence
+    - Options are frozen (never sent to GPT for rewriting)
 
-3. Three modes:
-   --preprocess-only: Just pre-process templates (free, instant)
-   --dry-run: Show what would be sent to GPT
-   (default): Pre-process + GPT naturalization
+  Stage 3 — JSON assembly (Python):
+    - Inserts GPT's returned text back into QA structure
+    - Saves output file + GPT log
+
+Modes:
+  --preprocess-only: Just run Stage 1 (free, instant)
+  --dry-run: Show what would be sent to GPT
+  (default): Full pipeline (Stage 1 + 2 + 3)
 
 Usage:
-    # Pre-process only (free):
-    python3 scripts/v8/naturalize_v8_qa_v2.py --input data/qa_pairs/SLOT.v8.json --preprocess-only
-
-    # Full pipeline (pre-process + GPT):
-    python3 scripts/v8/naturalize_v8_qa_v2.py --input data/qa_pairs/SLOT.v8.json
-
-    # Dry-run:
-    python3 scripts/v8/naturalize_v8_qa_v2.py --input data/qa_pairs/SLOT.v8.json --dry-run
+    python3 -m meva.scripts.v10.naturalize --input data/qa_pairs/SLOT.final.raw.json
+    python3 -m meva.scripts.v10.naturalize --input data/qa_pairs/SLOT.final.raw.json --preprocess-only
+    python3 -m meva.scripts.v10.naturalize --input data/qa_pairs/SLOT.final.raw.json --dry-run
 """
 
 import json
@@ -49,14 +48,14 @@ QA_DIR = Path("/home/ah66742/data/qa_pairs")
 LOG_DIR = Path("/home/ah66742/data/gpt_logs")
 
 DEFAULT_MODEL = "gpt-4o-mini"
-DEFAULT_TEMPERATURE = 0.7
+DEFAULT_TEMPERATURE = 0.3  # Low: naturalize only, no creative drift
 MAX_RETRIES = 3
 RETRY_DELAY = 2.0
 CLIP_DURATION = 300.0  # 5-minute clips
 
 
 # ============================================================================
-# Description Simplification (standalone, mirrors person_descriptions.py)
+# Description Simplification
 # ============================================================================
 
 # Garment type simplifications
@@ -98,7 +97,7 @@ def simplify_description(desc: str) -> str:
 
     "wearing a blue upper body garment and blue lower body clothing,
      with a black hoodie featuring a graphic design on the back."
-    →
+    ->
     "wearing a blue top and blue pants, with a black hoodie featuring
      a graphic design on the back"
     """
@@ -126,7 +125,7 @@ def simplify_description(desc: str) -> str:
 
 
 # ============================================================================
-# Activity Humanization (standalone, mirrors activity_hierarchy.py)
+# Activity Humanization
 # ============================================================================
 
 _GERUND_MAP = {
@@ -150,7 +149,7 @@ _NO_ARTICLE = frozenset({
 
 
 def _humanize_activity(activity: str) -> str:
-    """person_opens_facility_door → opens facility door"""
+    """person_opens_facility_door -> opens facility door"""
     for prefix in ("person_", "vehicle_", "hand_"):
         if activity.startswith(prefix):
             activity = activity[len(prefix):]
@@ -159,7 +158,7 @@ def _humanize_activity(activity: str) -> str:
 
 
 def _humanize_gerund(activity: str) -> str:
-    """person_opens_facility_door → Opening a facility door"""
+    """person_opens_facility_door -> Opening a facility door"""
     base = _humanize_activity(activity)
     words = base.split()
     if not words:
@@ -189,8 +188,30 @@ def _humanize_gerund(activity: str) -> str:
 
 
 def _short_activity_label(activity: str) -> str:
-    """Short gerund label for options: person_opens_facility_door → opening a facility door"""
-    return _humanize_gerund(activity).lower()
+    """Short gerund label: person_opens_facility_door -> opening a facility door"""
+    result = _humanize_gerund(activity)
+    return result[0].lower() + result[1:] if result else result
+
+
+# ============================================================================
+# Ontology Rewrites (module-level, used by preprocess_all)
+# ============================================================================
+
+_ONTOLOGY_REWRITES = [
+    (re.compile(r'(enter(?:s|ing))(?: a)? scene through structure', re.IGNORECASE),
+     lambda m: m.group(1) + " the camera's view through a doorway/gate"),
+    (re.compile(r'(exit(?:s|ing)|leav(?:es|ing))(?: a)? scene through structure', re.IGNORECASE),
+     lambda m: ('leaving' if m.group(1).lower().startswith(('exit', 'leav')) and m.group(1)[0].islower()
+                else 'Leaving' if m.group(1)[0].isupper()
+                else m.group(1)) + " the camera's view through a doorway/gate"),
+]
+
+
+def _apply_ontology_rewrites(text: str) -> str:
+    """Apply MEVA ontology clarifications via case-insensitive regex."""
+    for pattern, repl in _ONTOLOGY_REWRITES:
+        text = pattern.sub(repl, text)
+    return text
 
 
 # ============================================================================
@@ -207,8 +228,6 @@ def _temporal_anchor(sec: float, clip_duration: float = CLIP_DURATION) -> str:
         return f"roughly {int(round(sec))} seconds in"
     elif sec < 120:
         return f"around the {int(round(sec))}-second mark"
-    elif sec < 180:
-        return f"around {int(round(sec / 10)) * 10} seconds in"
     elif sec < 250:
         return f"around {int(round(sec / 10)) * 10} seconds in"
     else:
@@ -262,8 +281,6 @@ def _extract_person_desc(entity_description: str, activity: str = "") -> str:
         return "a person"
 
     # Remove embedded activity text after the description
-    # Pattern: description ends with period, then activity follows
-    # e.g. "...backpack. enters scene through structure on camera G421"
     activity_verbs = {
         "enters", "exits", "opens", "closes", "picks", "puts", "carries",
         "talks", "sits", "stands", "reads", "texts", "interacts", "embraces",
@@ -292,7 +309,7 @@ def _extract_person_desc(entity_description: str, activity: str = "") -> str:
     # Simplify garment terminology and strip clutter
     desc = simplify_description(desc)
 
-    # Normalize prefix: "the person" → "a person"
+    # Normalize prefix: "the person" -> "a person"
     for prefix in ["The person ", "the person "]:
         if desc.startswith(prefix):
             desc = "a person " + desc[len(prefix):]
@@ -309,16 +326,16 @@ def _extract_person_desc(entity_description: str, activity: str = "") -> str:
 # Per-Category Pre-processing
 # ============================================================================
 
-def _preprocess_temporal(qa: Dict, strip_camera_refs: bool = False) -> Dict:
+def _preprocess_temporal(qa: Dict, strip_camera_refs: bool = True) -> Dict:
     """
     Reconstruct temporal question from structured verification data.
 
     Fixes: camera refs in question, description verbosity, activity doubling,
     temporal ambiguity (adds timestamp anchors), capitalization.
 
-    If strip_camera_refs=True (V3 mode), camera IDs are removed from the question
-    text — person descriptions (clothing colors, carried objects) serve as the
-    primary disambiguator instead. Camera refs are still kept in answer options.
+    Camera IDs are removed from the question text by default — person
+    descriptions (clothing colors, carried objects) serve as the primary
+    disambiguator instead. Camera refs are still kept in answer options.
     """
     result = {k: v for k, v in qa.items()}
     v = qa.get("verification", {})
@@ -348,8 +365,6 @@ def _preprocess_temporal(qa: Dict, strip_camera_refs: bool = False) -> Dict:
     cam_b = ev_b.get("camera", db_.get("camera", ""))
 
     # Build clean event descriptions
-    # V3 mode: strip camera refs from question text (person descriptions disambiguate)
-    # V2 mode: keep camera refs in question text
     include_cam = not strip_camera_refs
 
     def _fmt_event(desc, act, cam, with_camera=True):
@@ -369,11 +384,9 @@ def _preprocess_temporal(qa: Dict, strip_camera_refs: bool = False) -> Dict:
     # Determine mention order (preserve original answer randomization)
     ci = qa["correct_answer_index"]
     if ci == 0:
-        # Event A mentioned first AND occurred first → option 0 correct
         desc_1, desc_2 = clean_a, clean_b
         ev_1, ev_2 = ev_a, ev_b
     else:
-        # Event B mentioned first but Event A occurred first → option 1 correct
         desc_1, desc_2 = clean_b, clean_a
         ev_1, ev_2 = ev_b, ev_a
 
@@ -384,27 +397,17 @@ def _preprocess_temporal(qa: Dict, strip_camera_refs: bool = False) -> Dict:
         f"Which event occurred first?"
     )
 
-    # Build options using camera + activity labels
-    act_1 = _humanize_gerund(ev_1.get("activity", "event"))
-    act_2 = _humanize_gerund(ev_2.get("activity", "event"))
-    cam_1 = ev_1.get("camera", "")
-    cam_2 = ev_2.get("camera", "")
-
-    # Use person descriptions to disambiguate events (no camera IDs in options)
-    # desc_1 / desc_2 are person appearance descriptions + activity
+    # Build options using person descriptions (no camera IDs in options)
     def _option_label(desc, act):
-        """Build a concise option label from event description."""
         d = desc.strip().rstrip('.')
         if d.startswith("A "):
             d = "The " + d[2:]
         elif d.startswith("a "):
             d = "The " + d[2:]
-        elif d.startswith("Someone "):
-            d = d  # keep as-is
         return d
 
-    opt_1 = _option_label(desc_1, act_1)
-    opt_2 = _option_label(desc_2, act_2)
+    opt_1 = _option_label(desc_1, None)
+    opt_2 = _option_label(desc_2, None)
 
     options = [
         f"{opt_1} occurred first",
@@ -413,10 +416,7 @@ def _preprocess_temporal(qa: Dict, strip_camera_refs: bool = False) -> Dict:
         "Cannot be determined",
     ]
 
-    # Fix article agreement (a → an before vowels)
-    question = re.sub(r'\ba ([aeiouAEIOU])', r'an \1', question)
-    options = [re.sub(r'\ba ([aeiouAEIOU])', r'an \1', o) for o in options]
-
+    # Article agreement is applied globally in preprocess_all; skip here
     result["question_template"] = question
     result["options"] = options
     result["correct_answer"] = options[ci]
@@ -449,8 +449,6 @@ def _preprocess_spatial(qa: Dict) -> Dict:
     # Build question without camera reference
     question = f"How close are {desc_a} and {desc_b} in the scene?"
     question = question[0].upper() + question[1:]
-    # Fix article agreement (a → an before vowels)
-    question = re.sub(r'\ba ([aeiouAEIOU])', r'an \1', question)
 
     result["question_template"] = question
     return result
@@ -468,15 +466,15 @@ def _preprocess_perception(qa: Dict) -> Dict:
     template = qa.get("question_template", "")
 
     if q_type == "attribute_verification":
-        # "A person is visible on camera G423. What color are they wearing..."
-        # Simplify any embedded person description
         person_desc = v.get("person_description", "")
         if person_desc:
-            simplified = simplify_description(person_desc).rstrip(".")
-            # Template is already clean for this type — just ensure capitalization
+            template = re.sub(
+                re.escape(person_desc),
+                simplify_description(person_desc).rstrip("."),
+                template,
+                count=1,
+            )
     elif q_type == "which_camera":
-        # "Which camera captures a carries heavy object event?"
-        # Make activity name more natural
         alias = v.get("activity_alias", "")
         if alias:
             gerund = _humanize_gerund(v.get("activity", alias))
@@ -487,7 +485,6 @@ def _preprocess_perception(qa: Dict) -> Dict:
     template = simplify_description(template)
     if template:
         template = template[0].upper() + template[1:]
-        # Re-add question mark if simplification stripped it
         if not template.endswith("?"):
             template += "?"
 
@@ -532,7 +529,6 @@ def _preprocess_reid(qa: Dict) -> Dict:
             f"Is this the same person visible on camera {cam_b}?"
         )
     else:
-        # Fallback: simplify in place
         question = simplify_description(qa.get("question_template", ""))
         if question:
             question = question[0].upper() + question[1:]
@@ -558,16 +554,17 @@ def _preprocess_scene_summary(qa: Dict) -> Dict:
 # ============================================================================
 
 def preprocess_all(input_data: Dict, verbose: bool = False,
-                   version: str = "v2") -> Dict:
+                   strip_camera_refs: bool = True) -> Dict:
     """
     Pre-process all QA pairs: simplify descriptions, remove camera refs,
     add temporal anchors, fix grammar. FREE (no API call).
 
-    version='v3' strips camera refs from temporal question text.
+    strip_camera_refs: If True (default), strips camera IDs from temporal
+    question text. Person descriptions disambiguate instead.
     """
     output = {k: v for k, v in input_data.items() if k != "qa_pairs"}
-    output["version"] = "v8_preprocessed"
-    output["preprocessor"] = "naturalize_v8_qa_v2.py"
+    output["version"] = "preprocessed"
+    output["preprocessor"] = "naturalize.py"
 
     preprocessed = []
     changes = {"temporal": 0, "spatial": 0, "perception": 0,
@@ -577,14 +574,14 @@ def preprocess_all(input_data: Dict, verbose: bool = False,
         cat = qa.get("category", "")
 
         if cat == "temporal":
-            cleaned = _preprocess_temporal(qa, strip_camera_refs=(version == "v3"))
+            cleaned = _preprocess_temporal(qa, strip_camera_refs=strip_camera_refs)
         elif cat == "spatial":
             cleaned = _preprocess_spatial(qa)
         elif cat == "perception":
             cleaned = _preprocess_perception(qa)
         elif cat == "re_identification":
             cleaned = _preprocess_reid(qa)
-        elif cat == "scene_summary":
+        elif cat in ("scene_summary", "summarization"):
             cleaned = _preprocess_scene_summary(qa)
         else:
             cleaned = qa.copy()
@@ -598,21 +595,20 @@ def preprocess_all(input_data: Dict, verbose: bool = False,
 
         preprocessed.append(cleaned)
 
-    # Global fix: article agreement (a → an before vowels) in all text fields
+    # ---------------------------------------------------------------
+    # Global text fixes (applied to ALL categories, all text fields)
+    # Ontology vocabulary normalization only — all grammar/article
+    # fixes are delegated to GPT to avoid double-transformation
+    # ---------------------------------------------------------------
     for qa in preprocessed:
-        if "question_template" in qa:
-            qa["question_template"] = re.sub(
-                r'\ba ([aeiouAEIOU])', r'an \1', qa["question_template"]
-            )
+        for field in ("question_template", "correct_answer"):
+            if field in qa:
+                qa[field] = _apply_ontology_rewrites(str(qa[field]))
         if "options" in qa:
             qa["options"] = [
-                re.sub(r'\ba ([aeiouAEIOU])', r'an \1', str(o))
+                _apply_ontology_rewrites(str(o))
                 for o in qa["options"]
             ]
-        if "correct_answer" in qa:
-            qa["correct_answer"] = re.sub(
-                r'\ba ([aeiouAEIOU])', r'an \1', str(qa["correct_answer"])
-            )
 
     output["qa_pairs"] = preprocessed
 
@@ -627,99 +623,81 @@ def preprocess_all(input_data: Dict, verbose: bool = False,
 
 
 # ============================================================================
-# Updated GPT System Prompt (V2)
+# GPT System Prompt
 # ============================================================================
 
-SYSTEM_PROMPT_V2 = """\
-You are a question naturalizer for a multi-camera surveillance video QA benchmark.
+SYSTEM_PROMPT = """\
+You are a skilled question writer AND meticulous copy editor for a multi-camera \
+surveillance video QA benchmark.
 
-Your task is to polish pre-processed template questions into fluent, natural English
-suitable for a Video Question Answering (VQA) evaluation. The templates have already
-been cleaned up — your job is to make them sound conversational while preserving all
-factual content.
+Your task: rewrite each template question into varied, natural English with \
+perfect grammar, punctuation, and phrasing — all in a single step. Each \
+question should sound like a DIFFERENT person wrote it.
 
-Rules:
-1. Rephrase the question to sound natural and conversational
-2. Rephrase each option to sound natural, keeping the SAME meaning and order
-3. Preserve person descriptions precisely (clothing colors, carried objects, distinctive features)
-4. Preserve camera identifiers (e.g., "camera G299") when present — they tell the VLM where to look
-5. Preserve event numbering (Event 1, Event 2) when present
-6. Keep spatial terms unchanged (near, moderate, far, meters)
-7. Keep "simultaneously" and "cannot be determined" as-is
-8. Do NOT add information not present in the template
-9. Do NOT reorder the options
-10. Add a brief 1-sentence "reasoning" explaining why the correct answer is right
+IMPORTANT: You rewrite ONLY the question text and provide a reasoning sentence. \
+You do NOT rewrite the answer options — those are deterministically generated \
+and must not be changed.
 
-Output format — respond with ONLY a JSON object:
-{
-  "question": "The naturalized question text",
-  "options": ["Option A", "Option B", "Option C", "Option D"],
-  "reasoning": "Brief explanation of why the answer is correct"
-}
-"""
+Priority order (resolve conflicts by rank):
+1. Preserve factual meaning exactly — never alter facts, person descriptions \
+(clothing colors, carried objects), activities, spatial terms, or answer options
+2. Ensure flawless grammar, punctuation, and natural phrasing
+3. Apply creative stylistic variation — use different sentence openings, \
+structures, and vocabulary each time. Avoid formulaic patterns like always \
+starting with "In this scene..." or "Looking at the cameras..."
+4. Add one concise reasoning sentence for why the correct answer is right
 
-SYSTEM_PROMPT_V3 = """\
-You are a creative question writer for a multi-camera surveillance video QA benchmark.
+## Constraints
+- Do NOT change the meaning of the question.
+- Do NOT add new facts or details not present in the original.
+- Do NOT remove constraints or simplify the logical requirement.
+- Do NOT alter person descriptions (clothing colors, carried objects).
+- Do not change answer options.
+- Camera identifiers (e.g., G421) in question text are acceptable ONLY for \
+perception and re-identification questions where cameras are inherent.
+- For PERCEPTION questions ("What activity..." / "Which camera..."), maintain \
+the direct question form but you may vary surrounding wording naturally.
+- Only improve grammar, clarity, and naturalness.
 
-Your task: rewrite template questions into varied, natural English. Each question should
-sound like a DIFFERENT person wrote it. Vary sentence structure, word choice, and phrasing
-aggressively — avoid formulaic patterns like always starting with "In this scene..." or
-"Looking at the cameras..." or "Two events are observed...".
+## Ontology Translation
+Translate robotic activity labels into natural human prose. Examples:
+- "enters scene through structure" → "walks into the building"
+- "person_opens_facility_door" → "opens a door"
+Smooth out awkward clothing lists into natural descriptions. Only rephrase \
+what is given — do not invent new details.
 
-Rules:
-1. VARY your phrasing — use different sentence openings, structures, and vocabulary each time
-2. Preserve ALL factual content: person descriptions (clothing colors, carried objects), activities
-3. Rephrase options naturally but keep the SAME meaning and order
-4. Camera identifiers in answer options should be preserved
-5. Keep spatial terms (near, moderate, far, meters) and "simultaneously"/"cannot be determined"
-6. Do NOT add information not in the template
-7. Do NOT reorder options
-8. Add a 1-sentence "reasoning" for why the correct answer is right
+## Grammar & Polish
+Fix grammatical errors, run-on sentences, punctuation, capitalization, \
+awkward phrasing, redundancy, and unclear references.
 
-Phrasing variety examples (do NOT copy these verbatim — invent your own):
-- "Two things happen in view of the cameras..."
-- "Watch for these two events..."
-- "Based on what the cameras recorded..."
-- "Among the people visible..."
-- Direct question without preamble: "Which happened first: ..."
-- "The footage shows..." / "Can you tell..." / "What do you notice about..."
+Bad → Good transformation example:
+- BAD: "Throughout all the cameras in this time frame, how many instances of \
+stopping can be observed?"
+- GOOD: "Across all cameras during this time period, how many stopping events \
+occur?"
+
+Phrasing variety examples (do NOT copy verbatim — invent your own):
+- "A man in a gray hoodie appears near the entrance..."
+- "Which of these events took place first?"
+- "Based on the footage, what happened after..."
+- Direct question without preamble: "Who was spotted on more than one camera?"
 - Vary active/passive voice, question-first vs. description-first
 - Sometimes be brief and direct, sometimes more descriptive
 
 Output format — respond with ONLY a JSON object:
 {
-  "question": "The creatively rephrased question",
-  "options": ["Option A", "Option B", "Option C", "Option D"],
-  "reasoning": "Brief explanation of why the answer is correct"
+  "question": "The creatively rephrased and grammar-polished question",
+  "reasoning": "Brief explanation of why the correct answer is right"
 }
 """
 
-GRAMMAR_CHECKER_PROMPT = """\
-You are a meticulous copy editor. You receive a JSON object containing a VQA question,
-options, and reasoning. Your ONLY job is to fix grammar, punctuation, and awkward phrasing.
 
-Rules:
-1. Fix grammatical errors, run-on sentences, and punctuation mistakes
-2. Do NOT change meaning, add information, or remove details
-3. Do NOT reorder options
-4. Do NOT change camera IDs, person descriptions, or spatial/temporal terms
-5. Keep the same JSON structure
-6. If the text is already grammatically correct, return it unchanged
-7. Be conservative — only fix clear errors
-
-Output format — respond with ONLY a JSON object:
-{
-  "question": "The grammar-checked question",
-  "options": ["Option A", "Option B", "Option C", "Option D"],
-  "reasoning": "The grammar-checked reasoning"
-}
-"""
 
 # ============================================================================
-# Category-specific prompt examples (few-shot, V2)
+# Category-specific prompt examples (few-shot)
 # ============================================================================
 
-CATEGORY_EXAMPLES_V3 = {
+CATEGORY_EXAMPLES = {
     "temporal": {
         "hint": "This is a temporal ordering question about two events. Person descriptions (clothing, objects) identify who is who — there are NO camera references in the question. VARY your phrasing creatively. Return ONLY {question, reasoning}.",
         "example_input": 'Consider two events in this multi-camera scene: (1) A person wearing a gray top and green pants, carrying a black backpack, entering a scene through a structure. (2) A person in a blue top and green pants, interacting with a person. Which event occurred first?',
@@ -760,40 +738,22 @@ CATEGORY_EXAMPLES_V3 = {
         "example_input": "How many cameras capture at least one instance of talking to person?",
         "example_output": '{"question": "Across the available camera feeds, on how many of them can you spot at least one conversation taking place?", "reasoning": "Conversations were observed on 5 of the available camera feeds."}',
     },
-}
 
-CATEGORY_EXAMPLES_V2 = {
-    "temporal": {
-        "hint": "This is a temporal ordering question with two numbered events on specific cameras. Preserve the event numbers, person descriptions, and camera references exactly.",
-        "example_input": 'Consider two events in this multi-camera scene: (1) A person wearing a gray top and green pants, carrying a black backpack, entering a scene through a structure on camera G421. (2) A person interacting with a person on camera G330. Which event occurred first?',
-        "example_output": '{"question": "Two events are observed across the camera feeds: (1) A person in a gray top and green pants, carrying a black backpack, enters through a structure on camera G421. (2) A person interacts with another person on camera G330. Which of these events happened first?", "options": ["Entering a scene through a structure (camera G421) occurred first", "Interacting with a person (camera G330) occurred first", "They occurred simultaneously", "Cannot be determined"], "reasoning": "Based on the video evidence, the scene entry on camera G421 occurred before the interaction on camera G330."}',
-    },
-    "spatial": {
-        "hint": "This is a spatial distance question about how far apart two people are. Person descriptions should be preserved naturally. No camera references in the question.",
-        "example_input": 'How close are the person wearing a blue top and blue pants, with a black hoodie featuring a graphic design on the back, and the person wearing a white hoodie with a Puma logo, camouflage pants, and a camouflage cap in the scene?',
-        "example_output": '{"question": "In the scene, how far apart are the person in blue clothes with a black graphic hoodie and the person in a white Puma hoodie with camouflage pants and cap?", "options": ["They are near each other (within a few meters)", "They are at a moderate distance (5-15 meters)", "They are far apart (more than 15 meters)", "They are at the same location"], "reasoning": "Based on their projected positions in the scene, these two individuals are approximately 6 meters apart, placing them at a moderate distance."}',
-    },
-    "perception": {
-        "hint": "This is a perception question about activities or visual attributes. Camera references are part of the question structure — preserve them.",
-        "example_input": 'A person is visible on camera G423. What color are they wearing on their lower body?',
-        "example_output": '{"question": "Looking at camera G423, what color is the visible person wearing on their lower body?", "options": ["Gray", "Navy", "Blue", "Brown"], "reasoning": "The person on camera G423 is wearing blue pants, making Blue the correct answer."}',
-    },
-    "re_identification": {
-        "hint": "This is a person re-identification question. Camera references are essential — preserve them. Preserve appearance descriptions precisely.",
-        "example_input": 'On camera G419, a person wearing a blue top and blue pants, with a black hoodie featuring a graphic design on the back, is visible. Which other camera also shows this same person?',
-        "example_output": '{"question": "A person in a blue top and blue pants with a black graphic hoodie is visible on camera G419. Which other camera also shows this same person?", "options": ["G423", "G299", "G328", "None of these cameras"], "reasoning": "The person wearing a blue top and pants with the distinctive black graphic hoodie appears on both camera G419 and camera G423."}',
-    },
-    "scene_summary": {
-        "hint": "This is a scene-level summary question. Keep statistical terms, camera counts, and activity references.",
-        "example_input": 'Considering all 8 camera feeds in this slot, which description best characterizes the overall scene?',
-        "example_output": '{"question": "Looking at all 8 camera feeds together, which description best captures the overall activity in this scene?", "options": ["An empty scene with minimal activity, captured on 5 cameras", "A vehicle-focused scene with mostly parking and driving activity", "A single-camera scene showing only indoor activities", "A pedestrian-dominant scene across 8 cameras, primarily featuring putting down objects"], "reasoning": "The vast majority of events are pedestrian activities observed across all 8 cameras, with putting down objects being the most frequent activity."}',
+    "best_camera": {
+        "hint": "Question about which camera first/last captures a person entering the scene. VARY phrasing. Keep camera identifiers in options. Return ONLY {question, reasoning}.",
+        "example_input": "Which camera first captures the entrance of a person in a blue top and gray pants into the scene?",
+        "example_output": '{"question": "On which camera does a person wearing a blue top and gray pants first appear?", "reasoning": "Camera G419 is the first to capture this person entering the scene."}',
     },
 }
 
 
 # ============================================================================
-# GPT Client
+# GPT Client & Category Aliases
 # ============================================================================
+
+# Alias categories that share the same few-shot examples
+_CAT_ALIASES = {"summarization": "scene_summary", "counting": "numerical"}
+
 
 def _create_client():
     """Create OpenAI client."""
@@ -801,46 +761,68 @@ def _create_client():
     return openai.OpenAI()
 
 
-def _naturalize_one(client, question: Dict, model: str,
-                    temperature: float,
-                    system_prompt: str = None,
-                    examples: Dict = None) -> Optional[Dict]:
-    """Send one pre-processed question to GPT for naturalization."""
-    if system_prompt is None:
-        system_prompt = SYSTEM_PROMPT_V2
-    if examples is None:
-        examples = CATEGORY_EXAMPLES_V2
+# ============================================================================
+# GPT Naturalization (1 API call per question)
+# ============================================================================
 
+def _naturalize_question(
+    client,
+    question: Dict,
+    model: str,
+    temperature: float,
+) -> Optional[Dict]:
+    """
+    Single GPT call: send plain text question + context, get back rewritten
+    question + reasoning. Options are never sent to GPT for rewriting.
+
+    Architecture per colleague review:
+    - Input: labeled plaintext fields (never raw JSON structure)
+    - Output: JSON with 2 fields {question, reasoning}
+    - Python handles all JSON assembly
+    """
     category = question["category"]
     template = question["question_template"]
     options = question["options"]
     verification = question.get("verification", {})
 
+    # Select category-specific few-shot examples (with aliases)
     lookup_cat = question.get("subcategory", category)
-    cat_info = examples.get(lookup_cat,
-                            examples.get(category, {}))
-    hint = cat_info.get("hint", "Rephrase this question naturally.")
+    lookup_cat = _CAT_ALIASES.get(lookup_cat, lookup_cat)
+    cat_info = CATEGORY_EXAMPLES.get(
+        lookup_cat, CATEGORY_EXAMPLES.get(
+            _CAT_ALIASES.get(category, category), {})
+    )
+    hint = cat_info.get("hint", "Rephrase this question naturally with perfect grammar.")
     example_in = cat_info.get("example_input", "")
     example_out = cat_info.get("example_output", "")
 
-    user_message = f"Category: {category}\n{hint}\n\n"
+    # Build user message as labeled plaintext (never send raw JSON)
+    parts = [f"CATEGORY: {category}", hint, ""]
 
     if example_in and example_out:
-        user_message += f"Example:\n  Input: {example_in}\n  Output: {example_out}\n\n"
+        parts.append(f"EXAMPLE INPUT:\n{example_in}")
+        parts.append(f"EXAMPLE OUTPUT:\n{example_out}")
+        parts.append("")
 
-    user_message += f"Now naturalize this question:\n\nTemplate: {template}\n\nOptions:\n"
-    for i, opt in enumerate(options):
-        user_message += f"  {chr(65+i)}) {opt}\n"
+    parts.append(f"QUESTION TO REWRITE:\n{template}")
+    parts.append("")
 
-    # Add verification context for reasoning
+    # Options as context only
+    opt_lines = [f"  {chr(65 + i)}) {opt}" for i, opt in enumerate(options)]
+    parts.append("OPTIONS (context only — do NOT modify):\n" + "\n".join(opt_lines))
+
+    # Verification context for reasoning (as plain English)
     if category == "temporal" and "gap_sec" in verification:
-        user_message += f"\nContext: The gap between events is {verification['gap_sec']}s.\n"
+        parts.append(f"\nCONTEXT: The gap between events is {verification['gap_sec']} seconds.")
     elif category == "spatial" and "distance_meters" in verification:
-        user_message += f"\nContext: Distance is {verification['distance_meters']}m.\n"
-    elif category == "re_identification":
-        user_message += "\nContext: Person identified via cross-camera appearance matching.\n"
+        parts.append(f"\nCONTEXT: Distance between entities is {verification['distance_meters']} meters.")
+    elif category == "best_camera":
+        correct_cam = verification.get("correct_camera", "")
+        entrance_time = verification.get("entrance_time_sec", 0)
+        if correct_cam:
+            parts.append(f"\nCONTEXT: First entrance on {correct_cam} at {entrance_time}s.")
 
-    user_message += "\nRespond with ONLY the JSON object."
+    user_message = "\n".join(parts)
 
     for attempt in range(MAX_RETRIES):
         try:
@@ -849,116 +831,64 @@ def _naturalize_one(client, question: Dict, model: str,
                 temperature=temperature,
                 response_format={"type": "json_object"},
                 messages=[
-                    {"role": "system", "content": system_prompt},
+                    {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": user_message},
                 ],
-                max_tokens=600,
+                max_tokens=400,
             )
 
             result = json.loads(response.choices[0].message.content)
 
-            if "question" not in result or "options" not in result:
-                print(f"    WARNING: Missing fields, retry {attempt+1}")
+            if "question" not in result:
+                print(f"    WARNING: Missing 'question' field, retry {attempt + 1}")
                 continue
-
-            if len(result["options"]) != len(options):
-                print(f"    WARNING: Option count mismatch, retry {attempt+1}")
-                continue
-
-            usage = {
-                "prompt_tokens": response.usage.prompt_tokens,
-                "completion_tokens": response.usage.completion_tokens,
-                "total_tokens": response.usage.total_tokens,
-            }
 
             return {
                 "naturalized_question": result["question"],
-                "naturalized_options": result["options"],
+                "naturalized_options": options,  # frozen, no GPT rewriting
                 "reasoning": result.get("reasoning", ""),
-                "usage": usage,
+                "usage": {
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "completion_tokens": response.usage.completion_tokens,
+                    "total_tokens": response.usage.total_tokens,
+                },
             }
 
         except json.JSONDecodeError:
-            print(f"    WARNING: Invalid JSON response, retry {attempt+1}")
+            print(f"    WARNING: Invalid JSON response, retry {attempt + 1}")
             time.sleep(RETRY_DELAY)
         except Exception as e:
-            print(f"    WARNING: API error: {e}, retry {attempt+1}")
+            print(f"    WARNING: API error: {e}, retry {attempt + 1}")
             time.sleep(RETRY_DELAY * (attempt + 1))
 
     return None
-
-
-def _grammar_check_one(client, naturalized: Dict, model: str) -> Optional[Dict]:
-    """Send one naturalized question through grammar checker (pass 2)."""
-    user_message = json.dumps({
-        "question": naturalized.get("naturalized_question", ""),
-        "options": naturalized.get("naturalized_options", []),
-        "reasoning": naturalized.get("reasoning", ""),
-    }, indent=2)
-
-    for attempt in range(MAX_RETRIES):
-        try:
-            response = client.chat.completions.create(
-                model=model,
-                temperature=0.3,  # Low temperature for conservative edits
-                response_format={"type": "json_object"},
-                messages=[
-                    {"role": "system", "content": GRAMMAR_CHECKER_PROMPT},
-                    {"role": "user", "content": user_message},
-                ],
-                max_tokens=600,
-            )
-
-            result = json.loads(response.choices[0].message.content)
-
-            if "question" not in result or "options" not in result:
-                break  # Fall back to naturalized version
-
-            usage = {
-                "prompt_tokens": response.usage.prompt_tokens,
-                "completion_tokens": response.usage.completion_tokens,
-                "total_tokens": response.usage.total_tokens,
-            }
-
-            return {
-                "question": result["question"],
-                "options": result["options"],
-                "reasoning": result.get("reasoning", ""),
-                "usage": usage,
-            }
-
-        except Exception as e:
-            if attempt < MAX_RETRIES - 1:
-                time.sleep(RETRY_DELAY)
-            continue
-
-    return None  # Grammar check failed, caller uses naturalized version as-is
 
 
 # ============================================================================
 # Batch Processing
 # ============================================================================
 
-def naturalize_batch(input_data: Dict, model: str, temperature: float,
-                     verbose: bool = False, version: str = "v2") -> Dict:
-    """Pre-process + GPT naturalize all QA pairs."""
-    # Step 1: Pre-process (free) — V3 strips camera refs from temporal Qs
-    preprocessed = preprocess_all(input_data, verbose=verbose, version=version)
+def naturalize_batch(
+    input_data: Dict,
+    model: str,
+    temperature: float,
+    verbose: bool = False,
+) -> Dict:
+    """Stage 1 (pre-process) + Stage 2 (GPT) + Stage 3 (assemble).
 
-    # Step 2: Select prompts based on version
-    if version == "v3":
-        sys_prompt = SYSTEM_PROMPT_V3
-        cat_examples = CATEGORY_EXAMPLES_V3
-    else:
-        sys_prompt = SYSTEM_PROMPT_V2
-        cat_examples = CATEGORY_EXAMPLES_V2
+    Architecture: 1 API call per question. Options are never sent to GPT
+    for rewriting — only the question text is naturalized.
+    """
+    # Stage 1: Pre-process (free)
+    preprocessed = preprocess_all(input_data, verbose=verbose,
+                                  strip_camera_refs=True)
 
-    # Step 3: GPT naturalize
+    # Stage 2: GPT naturalize (1 call per question)
     client = _create_client()
     qa_pairs = preprocessed["qa_pairs"]
     total = len(qa_pairs)
 
-    print(f"\n  Naturalizing {total} pre-processed questions with {model} ({version})...")
+    print(f"\n  Naturalizing {total} questions with {model} (temp={temperature})...")
 
     naturalized_pairs = []
     total_tokens = 0
@@ -966,53 +896,35 @@ def naturalize_batch(input_data: Dict, model: str, temperature: float,
 
     for i, q in enumerate(qa_pairs):
         if verbose:
-            print(f"  [{i+1}/{total}] {q['category']}: "
+            print(f"  [{i + 1}/{total}] {q['category']}: "
                   f"{q['question_template'][:60]}...")
 
-        # --- Pass 1: Naturalization ---
-        result = _naturalize_one(client, q, model, temperature,
-                                system_prompt=sys_prompt, examples=cat_examples)
+        result = _naturalize_question(client, q, model, temperature)
+
+        # Stage 3: JSON assembly
+        nat_q = q.copy()
 
         if result is None:
             failures += 1
-            nat_q = q.copy()
             nat_q["naturalized_question"] = q["question_template"]
             nat_q["naturalized_options"] = q["options"]
             nat_q["reasoning"] = ""
             nat_q["naturalization_failed"] = True
-            naturalized_pairs.append(nat_q)
-            continue
-
-        nat_q = q.copy()
-        nat_q["naturalized_question"] = result["naturalized_question"]
-        nat_q["naturalized_options"] = result["naturalized_options"]
-        nat_q["reasoning"] = result["reasoning"]
-        total_tokens += result["usage"]["total_tokens"]
-
-        # --- Pass 2: Grammar check ---
-        gc_result = _grammar_check_one(client, nat_q, model)
-
-        if gc_result is not None:
-            nat_q["naturalized_question"] = gc_result["question"]
-            nat_q["naturalized_options"] = gc_result["options"]
-            nat_q["reasoning"] = gc_result["reasoning"]
-            nat_q["grammar_checked"] = True
-            total_tokens += gc_result["usage"]["total_tokens"]
         else:
-            nat_q["grammar_checked"] = False
+            nat_q["naturalized_question"] = result["naturalized_question"]
+            nat_q["naturalized_options"] = result["naturalized_options"]
+            nat_q["reasoning"] = result["reasoning"]
+            total_tokens += result["usage"]["total_tokens"]
 
         naturalized_pairs.append(nat_q)
 
         if (i + 1) % 5 == 0:
-            print(f"    Progress: {i+1}/{total} ({total_tokens} tokens)")
-
-    version_tag = "v8_natural_v3" if version == "v3" else "v8_natural_v2"
+            print(f"    Progress: {i + 1}/{total} ({total_tokens} tokens)")
 
     output = {
         "slot": input_data["slot"],
-        "version": version_tag,
-        "generator": "naturalize_v8_qa_v2.py",
-        "preprocessor": f"{version}_preprocess",
+        "version": "final_naturalized",
+        "generator": "naturalize.py",
         "model": model,
         "temperature": temperature,
         "total_tokens": total_tokens,
@@ -1022,7 +934,7 @@ def naturalize_batch(input_data: Dict, model: str, temperature: float,
         "mevid_supported": input_data.get("mevid_supported", False),
         "mevid_persons_in_slot": input_data.get("mevid_persons_in_slot", 0),
         "category_counts": input_data.get("category_counts", {}),
-        "v8_stats": input_data.get("v8_stats", {}),
+        "stats": input_data.get("stats", input_data.get("v8_stats", {})),
         "qa_pairs": naturalized_pairs,
     }
 
@@ -1061,16 +973,19 @@ def dry_run(input_data: Dict):
 
         for i, opt in enumerate(q["options"]):
             marker = " *" if i == q.get("correct_answer_index") else ""
-            print(f"      {chr(65+i)}) {opt}{marker}")
+            print(f"      {chr(65 + i)}) {opt}{marker}")
         print()
 
     # Cost estimate
-    est_tokens = len(qa_pairs) * 400  # slightly more with examples
+    calls = len(qa_pairs)
+    est_tokens = len(qa_pairs) * 450
+
     est_cost_mini = est_tokens * 0.4e-6
     est_cost_4o = est_tokens * 6e-6
 
-    print(f"  === Cost Estimate (GPT naturalization) ===")
+    print(f"  === Cost Estimate (1 API call per question) ===")
     print(f"  Questions: {len(qa_pairs)}")
+    print(f"  API calls: {calls}")
     print(f"  Est. tokens: ~{est_tokens}")
     print(f"  gpt-4o-mini: ~${est_cost_mini:.4f}")
     print(f"  gpt-4o:      ~${est_cost_4o:.4f}")
@@ -1084,20 +999,18 @@ def dry_run(input_data: Dict):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="V8 Naturalization — Pre-process + GPT naturalize (V2/V3)",
+        description="Naturalize — Pre-process + GPT naturalize QA pairs",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument("--input", "-i", required=True,
-        help="Path to V8 QA JSON file")
+        help="Path to QA JSON file (e.g., SLOT.final.raw.json)")
     parser.add_argument("--output", "-o",
-        help="Output path (default: auto-generated)")
+        help="Output path (default: auto-generated .naturalized.json)")
     parser.add_argument("--model", "-m", default=DEFAULT_MODEL,
         help=f"GPT model (default: {DEFAULT_MODEL})")
-    parser.add_argument("--temperature", "-t", type=float, default=None,
-        help="Temperature (default: 0.7 for V2, 0.95 for V3)")
-    parser.add_argument("--v3", action="store_true",
-        help="V3 mode: more question variety, strip camera refs from temporal Qs")
+    parser.add_argument("--temperature", "-t", type=float, default=DEFAULT_TEMPERATURE,
+        help=f"Temperature (default: {DEFAULT_TEMPERATURE})")
     parser.add_argument("--preprocess-only", action="store_true",
         help="Only pre-process templates (no GPT call, FREE)")
     parser.add_argument("--dry-run", action="store_true",
@@ -1107,19 +1020,14 @@ def main():
         help="Skip confirmation prompt")
 
     args = parser.parse_args()
-
-    # Resolve version and temperature
-    version = "v3" if args.v3 else "v2"
-    temperature = args.temperature if args.temperature is not None else (
-        0.95 if version == "v3" else DEFAULT_TEMPERATURE
-    )
+    temperature = args.temperature
 
     input_path = Path(args.input)
     if not input_path.exists():
         print(f"ERROR: Input not found: {input_path}")
         return
 
-    print(f"Loading: {input_path} (mode: {version}, temp: {temperature})")
+    print(f"Loading: {input_path} (temp: {temperature})")
     with open(input_path) as f:
         input_data = json.load(f)
 
@@ -1130,17 +1038,17 @@ def main():
 
     # Mode 1: Pre-process only (free)
     if args.preprocess_only:
-        result = preprocess_all(input_data, verbose=True, version=version)
+        result = preprocess_all(input_data, verbose=True)
 
         out_path = args.output or str(input_path).replace(
-            ".v8.json", ".v8.preprocessed.json")
+            ".json", ".preprocessed.json")
         with open(out_path, "w") as f:
             json.dump(result, f, indent=2, default=str)
 
-        print(f"\n  Pre-processed output → {out_path}")
+        print(f"\n  Pre-processed output -> {out_path}")
 
         # Show before/after for each question
-        print(f"\n  === Before → After ===")
+        print(f"\n  === Before -> After ===")
         for q in result["qa_pairs"]:
             if "original_template" in q:
                 print(f"\n  [{q['category']}]")
@@ -1164,22 +1072,34 @@ def main():
         return
 
     if not args.yes:
-        print(f"\n  Will pre-process + naturalize {total} questions with {args.model} ({version}, temp={temperature})")
+        print(f"\n  Will pre-process + naturalize {total} questions "
+              f"with {args.model} (temp={temperature})")
+        print(f"  API calls: {total}")
         resp = input("  Continue? [y/N] ").strip().lower()
         if resp != "y":
             print("  Aborted.")
             return
 
-    result = naturalize_batch(input_data, args.model, temperature,
-                              verbose=args.verbose, version=version)
+    result = naturalize_batch(
+        input_data, args.model, temperature,
+        verbose=args.verbose,
+    )
 
     print(f"\n  === Results ===")
     print(f"  Naturalized: {total - result['failures']}/{total}")
     print(f"  Failures: {result['failures']}")
     print(f"  Total tokens: {result['total_tokens']}")
+    print(f"  API calls: {total}")
 
-    suffix = ".v8.natural.v3.json" if version == "v3" else ".v8.natural.v2.json"
-    out_path = args.output or str(input_path).replace(".v8.json", suffix)
+    # Derive output path
+    if args.output:
+        out_path = args.output
+    elif ".final.raw.json" in str(input_path):
+        out_path = str(input_path).replace(".final.raw.json", ".final.naturalized.json")
+    elif ".v9.raw.json" in str(input_path):
+        out_path = str(input_path).replace(".v9.raw.json", ".v9.naturalized.json")
+    else:
+        out_path = str(input_path).replace(".json", ".naturalized.json")
     with open(out_path, "w") as f:
         json.dump(result, f, indent=2, default=str)
     print(f"  Output: {out_path}")
@@ -1188,14 +1108,15 @@ def main():
     slot = input_data.get("slot", "unknown")
     log_dir = LOG_DIR / slot
     log_dir.mkdir(parents=True, exist_ok=True)
-    log_path = log_dir / f"naturalize_v8_{version}_{args.model}.json"
+    log_path = log_dir / f"naturalize_{args.model}.json"
     with open(log_path, "w") as f:
         json.dump({
             "model": args.model,
-            "temperature": args.temperature,
+            "temperature": temperature,
             "total_tokens": result["total_tokens"],
             "questions_processed": total,
             "failures": result["failures"],
+            "api_calls": total,
         }, f, indent=2)
     print(f"  Log: {log_path}")
 

@@ -18,6 +18,9 @@ from .utils.iou import compute_iou
 from .activity_hierarchy import humanize_activity
 
 
+# 2% of 1920×1080 = 2,073,600 × 0.02 ≈ 41,472 px² (~200×208 px minimum)
+MIN_BBOX_AREA = 41472
+
 # ============================================================================
 # Data Structures
 # ============================================================================
@@ -223,7 +226,7 @@ def build_scene_graph(slot: str, events: List[Event],
                 else:
                     first_frame, last_frame = 0, 0
             
-            entities[entity_id] = Entity(
+            entity = Entity(
                 entity_id=entity_id,
                 camera_id=cam_id,
                 actor_id=aid,
@@ -235,6 +238,17 @@ def build_scene_graph(slot: str, events: List[Event],
                 keyframe_bboxes=cam_bboxes.get(aid, {}),
                 events=entity_events.get(cam_id, {}).get(aid, []),
             )
+
+            # Filter out entities whose bounding boxes are too small
+            if entity.keyframe_bboxes:
+                areas = [(bb[2]-bb[0]) * (bb[3]-bb[1]) for bb in entity.keyframe_bboxes.values()]
+                median_area = sorted(areas)[len(areas)//2]
+                if median_area < MIN_BBOX_AREA:
+                    if verbose:
+                        print(f"    Skipping {entity_id}: median bbox area {median_area} < {MIN_BBOX_AREA}")
+                    continue
+
+            entities[entity_id] = entity
 
     # Group events by camera
     events_by_camera: Dict[str, List[Event]] = defaultdict(list)

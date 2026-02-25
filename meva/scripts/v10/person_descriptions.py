@@ -266,43 +266,90 @@ def load_mevid_slots() -> Dict:
     return _mevid_slots_cache
 
 
-def is_mevid_supported(slot: str) -> bool:
-    """Check if a slot has MEVID person support."""
+def _resolve_mevid_slot(slot: str) -> Optional[str]:
+    """Resolve a slot name to its key in mevid_supported_slots.json.
+
+    The MEVID index uses HH-MM-SS format while the pipeline uses HH-MM.
+    This bridges the gap by trying both forms.
+    """
     data = load_mevid_slots()
     slots = data.get("slots", {})
-    return slot in slots
+    if slot in slots:
+        return slot
+    # Try appending -00 to get HH-MM-SS from HH-MM
+    parts = slot.split(".")
+    if len(parts) >= 2:
+        time_part = parts[1]
+        if len(time_part) == 5:  # HH-MM
+            expanded = f"{parts[0]}.{time_part}-00.{'.' .join(parts[2:])}"
+            if expanded in slots:
+                return expanded
+    return None
+
+
+def _resolve_all_mevid_slots(slot: str) -> List[str]:
+    """Return all MEVID slot keys matching a canonical HH-MM slot.
+
+    A canonical HH-MM slot may map to multiple HH-MM-SS raw slots in the
+    MEVID index (e.g., 2018-03-11.11-25.school → 11-25-00, 11-25-01, etc.).
+    """
+    data = load_mevid_slots()
+    slots = data.get("slots", {})
+    if slot in slots:
+        return [slot]
+    parts = slot.split(".")
+    if len(parts) < 3 or len(parts[1]) != 5:
+        return []
+    prefix = f"{parts[0]}.{parts[1]}"
+    site = parts[2]
+    return [k for k in slots if k.startswith(prefix) and k.endswith(f".{site}")]
+
+
+def is_mevid_supported(slot: str) -> bool:
+    """Check if a slot has MEVID person support."""
+    return len(_resolve_all_mevid_slots(slot)) > 0
 
 
 def get_mevid_persons_for_slot(slot: str) -> List[str]:
     """
     Get list of MEVID person IDs available for a slot.
-    
+
     Reads from mevid_supported_slots.json which maps each slot to its
     MEVID persons (built by aggregate_mevid_slots.py).
+    Merges across all matching raw slots for canonical HH-MM lookups.
     """
     data = load_mevid_slots()
     slots = data.get("slots", {})
-    slot_info = slots.get(slot, {})
-    return sorted(slot_info.get("mevid_persons", []))
+    matching = _resolve_all_mevid_slots(slot)
+    all_persons = set()
+    for m in matching:
+        slot_info = slots.get(m, {})
+        all_persons.update(slot_info.get("mevid_persons", []))
+    return sorted(all_persons)
 
 
 def get_mevid_persons_with_cameras(slot: str) -> Dict[str, List[str]]:
     """
     Get MEVID person IDs mapped to their cameras for this specific slot.
-    
+
     Cross-references:
       - mevid_supported_slots.json → which persons and cameras are in this slot
       - person_database.json → which cameras each person globally appears on
-    
+
+    Merges across all matching raw slots for canonical HH-MM lookups.
     Returns: {person_id: [camera_ids_in_this_slot]}
     """
-    # Get slot info
+    # Get slot info (merge across all matching raw slots)
     slot_data = load_mevid_slots()
     slots = slot_data.get("slots", {})
-    slot_info = slots.get(slot, {})
-    
-    mevid_persons = slot_info.get("mevid_persons", [])
-    mevid_cameras = set(slot_info.get("mevid_cameras", []))
+    matching = _resolve_all_mevid_slots(slot)
+
+    mevid_persons = set()
+    mevid_cameras = set()
+    for m in matching:
+        slot_info = slots.get(m, {})
+        mevid_persons.update(slot_info.get("mevid_persons", []))
+        mevid_cameras.update(slot_info.get("mevid_cameras", []))
     
     if not mevid_persons or not mevid_cameras:
         return {}

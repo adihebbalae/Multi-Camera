@@ -100,6 +100,11 @@ def _find_spatial_candidates(sg: SceneGraph, verbose: bool = False) -> List[Dict
             pos_a = entity_positions[eid_a]
             pos_b = entity_positions[eid_b]
             
+            # Same-camera only: both entities must be on the same camera
+            # so the spatial relationship is visually verifiable in one frame
+            if pos_a["camera_id"] != pos_b["camera_id"]:
+                continue
+            
             distance = float(np.linalg.norm(pos_a["position"] - pos_b["position"]))
             
             if distance > 500:
@@ -200,22 +205,16 @@ def generate_spatial_qa(sg: SceneGraph, resolved: ResolvedGraph,
         proximity = cand["proximity"]
         distance = cand["distance_m"]
         
-        is_cross_camera = cand["camera_a"] != cand["camera_b"]
+        # All spatial questions are same-camera (filtered in _find_spatial_candidates)
         
         # V8: Use MEVID descriptions
         desc_a = entity_descs.get(cand["entity_a"], f"a person on camera {cand['camera_a']}")
         desc_b = entity_descs.get(cand["entity_b"], f"a person on camera {cand['camera_b']}")
         
-        if is_cross_camera:
-            question = (
-                f"In the scene, how far apart are {desc_a} on camera {cand['camera_a']} "
-                f"and {desc_b} on camera {cand['camera_b']}?"
-            )
-        else:
-            question = (
-                f"How close are {desc_a} and {desc_b} "
-                f"in the scene visible on camera {cand['camera_a']}?"
-            )
+        question = (
+            f"How close are {desc_a} and {desc_b} "
+            f"in the scene visible on camera {cand['camera_a']}?"
+        )
         
         options = [
             "They are near each other (within a few meters)",
@@ -280,8 +279,8 @@ def generate_spatial_qa(sg: SceneGraph, resolved: ResolvedGraph,
             "options": options,
             "correct_answer_index": correct_idx,
             "correct_answer": options[correct_idx],
-            "requires_cameras": sorted(set([cand["camera_a"], cand["camera_b"]])),
-            "requires_multi_camera": is_cross_camera,
+            "requires_cameras": [cand["camera_a"]],
+            "requires_multi_camera": False,
             "verification": {
                 "entity_a": cand["entity_a"],
                 "entity_b": cand["entity_b"],

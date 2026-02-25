@@ -1,25 +1,30 @@
 #!/usr/bin/env python3
 """
-Render question validation videos: self-contained verification with activity highlighting.
+Render question validation videos: multi-camera grid with geom overlays.
 
-Creates a single video per question showing EVERYTHING needed to verify:
-- Full question text with all options (correct answer marked in green)
-- Multi-camera grid with bounding box overlays
-- BLUE highlighted boxes on actors involved in the question's activities
-- Green boxes on background actors (other people/objects)
-- Activity labels on each camera during event frames
-- 5-second context before first activity, 5 seconds after last
-- Timeline progress bar showing event regions + playback cursor
+Creates a video showing all cameras in a question side-by-side/grid, with:
+- Bounding boxes from geom.yml overlayed (scaled to display resolution)
+- Time span limited to the answer frame range
+- Camera labels and timestamps
+- Question text overlay at the bottom
+
+Handles ALL question categories:
+  temporal      → event_a / event_b dicts
+  event_ordering→ debug_info["events"] list
+  perception    → representative_event dict
+  spatial       → entity_a / entity_b dicts
+  summarization → clip_files list (no events)
+  counting      → clip_files or cameras_involved (no events)
+  best_camera   → representative_event dict
 
 Usage:
     python3 render_question_validation.py --slot 2018-03-07.17-05.school --question-id 0
     python3 render_question_validation.py --slot 2018-03-07.17-05.school --all
-    python3 render_question_validation.py --slot 2018-03-07.17-05.school --natural --all
+    python3 render_question_validation.py --qa-file qa.json --question-id 5 -v
 """
 
 import argparse
 import json
-import math
 import re
 import cv2
 import numpy as np
@@ -27,11 +32,11 @@ from pathlib import Path
 from collections import defaultdict
 import subprocess
 import shutil
-from typing import Dict, List, Optional, Tuple, Set
+from typing import Dict, List, Optional, Tuple
 
 
 def _find_ffmpeg() -> Optional[str]:
-    """Find ffmpeg binary -- system PATH first, then imageio-ffmpeg fallback."""
+    """Find ffmpeg binary — system PATH first, then imageio-ffmpeg fallback."""
     path = shutil.which("ffmpeg")
     if path:
         return path
@@ -50,46 +55,25 @@ MEVA_MP4_ROOT = Path("/nas/mars/dataset/MEVA/mp4s")
 KITWARE_BASE = Path("/nas/mars/dataset/MEVA/meva-data-repo/annotation/DIVA-phase-2/MEVA/kitware")
 KITWARE_TRAINING_BASE = Path("/nas/mars/dataset/MEVA/meva-data-repo/annotation/DIVA-phase-2/MEVA/kitware-meva-training")
 QA_OUTPUT_DIR = Path("/home/ah66742/data/qa_pairs")
+VIDEO_OUTPUT_DIR = Path("/home/ah66742/output/validation_videos")
 
-
-def _get_video_output_dir(slot: str) -> Path:
-    """Return per-slot validation video directory."""
-    d = QA_OUTPUT_DIR / slot / "validation_videos"
-    d.mkdir(parents=True, exist_ok=True)
-    return d
+VIDEO_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ============================================================================
 # Display constants
 # ============================================================================
 CELL_W, CELL_H = 640, 360          # Each camera cell
-PAD = 12                            # Padding between cells
-FONT = cv2.FONT_HERSHEY_SIMPLEX
-FONT_AA = cv2.LINE_AA
-
-# Colors (BGR format)
-COLOR_BG          = (30, 30, 30)       # Dark canvas background
-COLOR_TEXT         = (220, 220, 220)    # Light gray text
-COLOR_TITLE        = (100, 200, 255)   # Orange-yellow title
-COLOR_CORRECT      = (80, 255, 80)     # Green for correct answer
-COLOR_OPTION       = (170, 170, 170)   # Gray for regular options
-COLOR_BOX_ACTIVE   = (255, 180, 0)     # BLUE highlight for relevant actors (BGR)
-COLOR_BOX_BG       = (0, 160, 0)       # Green for background actors
-COLOR_ACTIVITY_TXT = (255, 200, 50)    # Bright blue for activity label text
-COLOR_CONTEXT_TXT  = (100, 100, 100)   # Dim gray for context label
-COLOR_CAM_LABEL    = (0, 200, 255)     # Orange camera label
-COLOR_EVENT_BORDER = (255, 180, 0)     # Blue border during events
-COLOR_TL_BG        = (60, 60, 60)      # Timeline background
-COLOR_TL_EVENT     = (255, 180, 0)     # Timeline event region (blue)
-COLOR_TL_CURSOR    = (0, 0, 255)       # Red playback cursor
-COLOR_SEPARATOR    = (80, 80, 80)      # Separator lines
-
-CONTEXT_PADDING_SEC = 5.0              # 5 seconds before/after activities
-MAX_RENDER_FRAMES = 9000               # Up to 5 minutes at 30fps
-DEFAULT_CONTEXT_FRAMES = 150           # For categories with no frame range (5s)
-
+PAD = 20                            # Padding between cells
+HEADER_H = 60                       # Question text header height
+COLOR_BOX   = (0, 255, 0)           # Green bounding boxes
+COLOR_TEXT  = (255, 255, 255)        # White labels
+COLOR_BGND  = (40, 40, 40)          # Dark gray canvas
+COLOR_CAM   = (0, 200, 255)         # Orange camera label
+MAX_RENDER_FRAMES = 300             # Cap at 10s @ 30fps (avoid huge files)
+DEFAULT_CONTEXT_SEC = 5.0           # For categories with no frame range
 
 # ============================================================================
-# Geom parsing (regex approach -- fast, no YAML dependency)
+# Geom parsing (regex approach — fast, no YAML dependency)
 # ============================================================================
 _RE_ID1 = re.compile(r"['\"]?id1['\"]?\s*:\s*['\"]?(\d+)")
 _RE_TS0 = re.compile(r"['\"]?ts0['\"]?\s*:\s*['\"]?(\d+)")
@@ -127,7 +111,11 @@ def parse_geom_boxes(geom_file: Path) -> Dict[int, list]:
 # ============================================================================
 
 def _slot_dir_name(date: str, start_time: str, site: str) -> str:
-    """Build slot directory name using HH-MM format (no seconds)."""
+    """Build slot directory name using HH-MM format (no seconds).
+    
+    Clip filenames use HH-MM-SS, but slot directories use HH-MM.
+    Example: start_time='17-05-00' → dir '2018-03-07.17-05.school'
+    """
     parts = start_time.split("-")
     hh_mm = f"{parts[0]}-{parts[1]}" if len(parts) >= 2 else start_time
     return f"{date}.{hh_mm}.{site}"
@@ -135,10 +123,15 @@ def _slot_dir_name(date: str, start_time: str, site: str) -> str:
 
 def find_mp4(date: str, hour: str, start_time: str, site: str,
              end_time: str, camera: str) -> Optional[Path]:
-    """Find MP4 file for a camera."""
+    """Find MP4 file for a camera, using slot-grouped directory structure.
+    
+    Directory: /mp4s/{date}/{hour}/{date}.{HH-MM}.{site}/
+    File:      {date}.{start_time}.{end_time}.{site}.{camera}.r13.mp4
+    """
     slot_name = _slot_dir_name(date, start_time, site)
     slot_dir = MEVA_MP4_ROOT / date / hour / slot_name
     if not slot_dir.exists():
+        # Fallback: try globbing for the slot directory
         parent = MEVA_MP4_ROOT / date / hour
         if parent.exists():
             candidates = list(parent.glob(f"{date}.*{site}"))
@@ -149,10 +142,12 @@ def find_mp4(date: str, hour: str, start_time: str, site: str,
         else:
             return None
 
+    # Try exact glob
     pattern = f"*{camera}*.r13.mp4"
     matches = list(slot_dir.glob(pattern))
     if matches:
         return matches[0]
+    # Broader fallback
     matches = list(slot_dir.glob(f"*{camera}*.mp4"))
     return matches[0] if matches else None
 
@@ -172,8 +167,12 @@ def find_geom_file(date: str, hour: str, start_time: str,
 
 
 def extract_clip_timing(clip_file: str) -> Optional[Tuple[str, str, str, str, str, str]]:
-    """Parse clip filename -> (date, hour, start_time, end_time, site, camera)."""
+    """Parse clip filename → (date, hour, start_time, end_time, site, camera).
+
+    Input: '2018-03-07.17-05-00.17-10-00.school.G339.r13.mp4'
+    """
     name = Path(clip_file).name
+    # Strip common suffixes
     for suffix in [".r13.mp4", ".r13.avi", ".mp4", ".avi"]:
         if name.endswith(suffix):
             name = name[: -len(suffix)]
@@ -187,14 +186,14 @@ def extract_clip_timing(clip_file: str) -> Optional[Tuple[str, str, str, str, st
 
 
 # ============================================================================
-# Event extraction -- handles ALL debug_info formats
+# Event extraction — handles ALL debug_info formats
 # ============================================================================
 
 def _extract_events(q: dict, slot: str) -> List[dict]:
     """Extract a unified list of event dicts from any question category.
 
     Each returned event dict has at minimum:
-        camera, clip_file, frame_range, fps, label, actor_ids
+        camera, clip_file, frame_range, fps, label
     """
     debug = q.get("debug_info", {})
     category = q.get("category", "")
@@ -243,10 +242,12 @@ def _extract_events(q: dict, slot: str) -> List[dict]:
     # --- Pattern 4: no events, no clip_files, but cameras list ---
     if not events:
         cameras = q.get("requires_cameras", [])
+        # Try to derive clip_files from slot name
+        # slot format: 2018-03-07.17-05.school
         slot_parts = slot.split(".")
         if len(slot_parts) >= 3:
             date = slot_parts[0]
-            hhmm = slot_parts[1]
+            hhmm = slot_parts[1]  # e.g. 17-05
             site = slot_parts[2]
             hour = hhmm.split("-")[0]
             for cam in cameras:
@@ -265,88 +266,7 @@ def _extract_events(q: dict, slot: str) -> List[dict]:
 
 
 # ============================================================================
-# Text wrapping utilities (for full question display in header)
-# ============================================================================
-
-def _wrap_text(text: str, max_chars: int = 95) -> List[str]:
-    """Word-wrap text to max_chars width."""
-    words = text.split()
-    lines = []
-    line = ""
-    for w in words:
-        if line and len(line) + 1 + len(w) > max_chars:
-            lines.append(line)
-            line = w
-        else:
-            line = (line + " " + w) if line else w
-    if line:
-        lines.append(line)
-    return lines or [""]
-
-
-def _compute_header_layout(q_text: str, options: list,
-                           correct_idx: int, category: str,
-                           q_idx: int, canvas_w: int
-                           ) -> Tuple[list, int]:
-    """Build header text lines and compute total header height.
-
-    Returns (lines, header_height) where each line is (style, text).
-    style in {"title", "question", "option", "correct", "gap"}
-    """
-    LINE_H = 22
-    # Compute max chars based on canvas width (font scale 0.5 ~ 10px/char)
-    max_chars = max(60, int((canvas_w - 2 * PAD) / 9.5))
-
-    lines = []
-    # Title
-    lines.append(("title", f"Q{q_idx}: {category.upper()}"))
-    lines.append(("gap", ""))
-
-    # Full question text (word-wrapped, never truncated)
-    for wl in _wrap_text(q_text, max_chars):
-        lines.append(("question", wl))
-    lines.append(("gap", ""))
-
-    # Options with A/B/C/D labels
-    labels = "ABCDEFGH"
-    for i, opt in enumerate(options[:len(labels)]):
-        suffix = "  << CORRECT" if i == correct_idx else ""
-        opt_full = f"  {labels[i]}) {opt}{suffix}"
-        for ol in _wrap_text(opt_full, max_chars):
-            style = "correct" if i == correct_idx else "option"
-            lines.append((style, ol))
-
-    header_h = (len(lines) + 2) * LINE_H  # +2 for top/bottom margins
-    if header_h % 2:
-        header_h += 1
-    return lines, header_h
-
-
-def _draw_header(canvas: np.ndarray, lines: list):
-    """Render header text lines onto the canvas."""
-    LINE_H = 22
-    y = LINE_H + 6  # top margin
-
-    for style, text in lines:
-        if style == "gap":
-            y += 8
-            continue
-
-        if style == "title":
-            color, scale, thick = COLOR_TITLE, 0.6, 2
-        elif style == "question":
-            color, scale, thick = COLOR_TEXT, 0.5, 1
-        elif style == "correct":
-            color, scale, thick = COLOR_CORRECT, 0.48, 2
-        else:  # "option"
-            color, scale, thick = COLOR_OPTION, 0.45, 1
-
-        cv2.putText(canvas, text, (PAD + 4, y), FONT, scale, color, thick, FONT_AA)
-        y += LINE_H
-
-
-# ============================================================================
-# Frame loading
+# Frame loading with proper scaling
 # ============================================================================
 
 def load_video_segment(mp4_path: Path,
@@ -358,7 +278,7 @@ def load_video_segment(mp4_path: Path,
     """Load a range of frames, resized to target dims.
 
     Returns (frames, fps, scale_x, scale_y) or (None, 0, 0, 0).
-    scale_x/y map original coords -> display coords for box scaling.
+    scale_x/y map original coords → display coords for box scaling.
     """
     if not mp4_path or not mp4_path.exists():
         return None, 0, 0, 0
@@ -372,6 +292,7 @@ def load_video_segment(mp4_path: Path,
     orig_h = cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1072
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
+    # Clamp frame range
     frame_start = max(0, frame_start)
     frame_end = min(frame_end, total_frames - 1)
     n_frames = min(frame_end - frame_start + 1, MAX_RENDER_FRAMES)
@@ -391,103 +312,54 @@ def load_video_segment(mp4_path: Path,
     return (frames, fps, scale_x, scale_y) if frames else (None, 0, 0, 0)
 
 
-# ============================================================================
-# Bounding box overlay with activity highlighting
-# ============================================================================
-
 def overlay_boxes(frame: np.ndarray, boxes: list,
-                  scale_x: float, scale_y: float,
-                  highlight_ids: Optional[Set[int]] = None,
-                  is_event_frame: bool = False) -> np.ndarray:
-    """Draw scaled bounding boxes on a frame.
-
-    During event frames:
-      - Actors in highlight_ids (or ALL if highlight_ids empty): BLUE, thick
-      - Other actors: green, thin
-    During context frames:
-      - All actors: green, thin
-    """
+                  scale_x: float, scale_y: float) -> np.ndarray:
+    """Draw scaled bounding boxes on a (resized) frame."""
     out = frame.copy()
     for (x1, y1, x2, y2, actor_id) in boxes:
-        sx1 = max(0, int(x1 * scale_x))
-        sy1 = max(0, int(y1 * scale_y))
-        sx2 = min(out.shape[1] - 1, int(x2 * scale_x))
-        sy2 = min(out.shape[0] - 1, int(y2 * scale_y))
-
-        if is_event_frame:
-            # Highlight if actor is relevant (or if we have no specific IDs, highlight all)
-            is_relevant = (not highlight_ids) or (actor_id in highlight_ids)
-            if is_relevant:
-                color = COLOR_BOX_ACTIVE
-                thickness = 3
-                label = f"A{actor_id} *"
-            else:
-                color = COLOR_BOX_BG
-                thickness = 1
-                label = f"A{actor_id}"
-        else:
-            color = COLOR_BOX_BG
-            thickness = 1
-            label = f"A{actor_id}"
-
-        cv2.rectangle(out, (sx1, sy1), (sx2, sy2), color, thickness)
+        sx1, sy1 = int(x1 * scale_x), int(y1 * scale_y)
+        sx2, sy2 = int(x2 * scale_x), int(y2 * scale_y)
+        cv2.rectangle(out, (sx1, sy1), (sx2, sy2), COLOR_BOX, 2)
+        label = f"A{actor_id}"
         cv2.putText(out, label, (sx1, max(sy1 - 5, 12)),
-                    FONT, 0.4, color, 1, FONT_AA)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.45, COLOR_TEXT, 1, cv2.LINE_AA)
     return out
 
 
 # ============================================================================
-# Grid composition with header, activity labels, and timeline
+# Grid composition
 # ============================================================================
 
 def compose_grid(frames_dict: Dict[str, List[np.ndarray]],
-                 cam_metadata: Dict[str, dict],
-                 q_text: str,
-                 options: list,
-                 correct_idx: int,
-                 category: str,
-                 q_idx: int,
+                 question_text: str,
+                 answer_text: str = "",
                  fps: float = 30.0) -> List[np.ndarray]:
-    """Compose multi-camera views into a labelled grid with:
-    - Dynamic word-wrapped header (question + options + correct answer)
-    - Camera labels with frame counters
-    - Activity labels during event frames, [CONTEXT] otherwise
-    - Blue border around camera cell during events
-    - Timeline progress bar at bottom with event regions
+    """Compose multi-camera views into a labelled grid with question header.
+
+    Uses cameras present in frames_dict (not requires_cameras) so only
+    cameras that were successfully loaded appear.
     """
     cameras = sorted(frames_dict.keys())
     n_cams = len(cameras)
     if n_cams == 0:
         return []
 
-    # Grid layout
+    # Grid layout — compute rows/cols dynamically
+    import math
     if n_cams == 1:
-        grid_cols, grid_rows = 1, 1
+        grid_rows, grid_cols = 1, 1
     elif n_cams == 2:
-        grid_cols, grid_rows = 2, 1
+        grid_rows, grid_cols = 1, 2
     elif n_cams <= 4:
-        grid_cols, grid_rows = 2, 2
+        grid_rows, grid_cols = 2, 2
     elif n_cams <= 6:
-        grid_cols, grid_rows = 3, 2
+        grid_rows, grid_cols = 2, 3
     else:
-        grid_cols = min(5, math.ceil(math.sqrt(n_cams)))
+        grid_cols = min(4, math.ceil(math.sqrt(n_cams)))
         grid_rows = math.ceil(n_cams / grid_cols)
 
-    # Canvas dimensions
-    grid_w = grid_cols * CELL_W + PAD * (grid_cols + 1)
-    grid_h = grid_rows * CELL_H + PAD * (grid_rows + 1)
-    TIMELINE_H = 32
-
-    # Compute header
-    canvas_w = grid_w
-    header_lines, header_h = _compute_header_layout(
-        q_text, options, correct_idx, category, q_idx, canvas_w)
-
-    canvas_h = header_h + grid_h + TIMELINE_H
-    if canvas_w % 2:
-        canvas_w += 1
-    if canvas_h % 2:
-        canvas_h += 1
+    comp_w = grid_cols * CELL_W + PAD * (grid_cols + 1)
+    comp_h = HEADER_H + grid_rows * CELL_H + PAD * (grid_rows + 1)
 
     # Pad shorter camera feeds with last-frame freeze
     max_frames = max(len(v) for v in frames_dict.values())
@@ -496,111 +368,35 @@ def compose_grid(frames_dict: Dict[str, List[np.ndarray]],
         if deficit > 0:
             frames_dict[cam].extend([frames_dict[cam][-1]] * deficit)
 
-    # Precompute per-camera event local frame ranges (relative to loaded segment)
-    cam_event_locals: Dict[str, List[Tuple[int, int, str]]] = {}
-    for cam in cameras:
-        meta = cam_metadata.get(cam, {})
-        f_offset = meta.get("f_start", 0)
-        event_ranges = meta.get("event_ranges", [])
-        local_ranges = []
-        for er in event_ranges:
-            fr = er.get("frame_range")
-            if fr:
-                local_s = fr[0] - f_offset
-                local_e = fr[1] - f_offset
-                local_ranges.append((local_s, local_e, er.get("activity", "")))
-        cam_event_locals[cam] = local_ranges
-
     composed = []
     for fi in range(max_frames):
-        canvas = np.full((canvas_h, canvas_w, 3), COLOR_BG, dtype=np.uint8)
+        canvas = np.full((comp_h, comp_w, 3), COLOR_BGND, dtype=np.uint8)
 
-        # --- Header ---
-        _draw_header(canvas, header_lines)
+        # Draw question text header
+        q_short = question_text[:120] + ("..." if len(question_text) > 120 else "")
+        cv2.putText(canvas, q_short, (PAD, 35),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1, cv2.LINE_AA)
+        if answer_text:
+            a_short = f"Answer: {answer_text[:80]}"
+            cv2.putText(canvas, a_short, (PAD, 52),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 100), 1, cv2.LINE_AA)
 
-        # Separator line below header
-        cv2.line(canvas, (PAD, header_h - 4), (canvas_w - PAD, header_h - 4),
-                 COLOR_SEPARATOR, 1)
-
-        # --- Camera cells ---
         for ci, cam in enumerate(cameras):
             row, col = ci // grid_cols, ci % grid_cols
             x = PAD + col * (CELL_W + PAD)
-            y = header_h + PAD + row * (CELL_H + PAD)
+            y = HEADER_H + PAD + row * (CELL_H + PAD)
 
-            # Safety: skip if cell outside canvas
-            if y + CELL_H > canvas_h - TIMELINE_H or x + CELL_W > canvas_w:
+            # Safety check — skip if cell falls outside canvas
+            if y + CELL_H > comp_h or x + CELL_W > comp_w:
                 continue
 
             frame = frames_dict[cam][fi]
             canvas[y:y + CELL_H, x:x + CELL_W] = frame
 
-            # Check if this frame is during an event on this camera
-            ev_active = False
-            ev_label = ""
-            for ls, le, act_label in cam_event_locals.get(cam, []):
-                if ls <= fi <= le:
-                    ev_active = True
-                    ev_label = act_label
-                    break
-
-            # Camera label (top-left)
-            ts_sec = fi / fps
-            cam_label = f"{cam}  [{fi + 1}/{max_frames}]  {ts_sec:.1f}s"
-            cv2.putText(canvas, cam_label, (x + 8, y + 22),
-                        FONT, 0.5, COLOR_CAM_LABEL, 2, FONT_AA)
-
-            if ev_active:
-                # Blue border around cell during event
-                cv2.rectangle(canvas, (x, y), (x + CELL_W - 1, y + CELL_H - 1),
-                              COLOR_EVENT_BORDER, 3)
-
-                # Activity label at bottom of cell
-                act_display = f">> {ev_label}"
-                # Dark background for readability
-                cv2.rectangle(canvas, (x, y + CELL_H - 28), (x + CELL_W, y + CELL_H),
-                              (0, 0, 0), -1)
-                cv2.putText(canvas, act_display, (x + 8, y + CELL_H - 8),
-                            FONT, 0.5, COLOR_ACTIVITY_TXT, 1, FONT_AA)
-            elif cam_event_locals.get(cam):
-                # Context label at bottom (only if this camera has events)
-                cv2.putText(canvas, "[CONTEXT]", (x + 8, y + CELL_H - 8),
-                            FONT, 0.4, COLOR_CONTEXT_TXT, 1, FONT_AA)
-
-        # --- Timeline bar ---
-        tl_y = canvas_h - TIMELINE_H
-        tl_left = PAD + 4
-        tl_right = canvas_w - PAD - 4
-        tl_width = tl_right - tl_left
-
-        # Timeline background
-        cv2.rectangle(canvas, (PAD, tl_y + 4), (canvas_w - PAD, tl_y + TIMELINE_H - 4),
-                      COLOR_TL_BG, -1)
-
-        # Draw event regions on timeline
-        if max_frames > 1:
-            for cam, locs in cam_event_locals.items():
-                for ls, le, _ in locs:
-                    x1 = tl_left + int(max(0, ls) / (max_frames - 1) * tl_width)
-                    x2 = tl_left + int(min(max_frames - 1, le) / (max_frames - 1) * tl_width)
-                    x1 = max(tl_left, min(tl_right, x1))
-                    x2 = max(tl_left, min(tl_right, x2))
-                    cv2.rectangle(canvas, (x1, tl_y + 6), (x2, tl_y + TIMELINE_H - 6),
-                                  COLOR_TL_EVENT, -1)
-
-            # Playback cursor
-            cursor_x = tl_left + int(fi / (max_frames - 1) * tl_width)
-            cv2.line(canvas, (cursor_x, tl_y + 2), (cursor_x, tl_y + TIMELINE_H - 2),
-                     COLOR_TL_CURSOR, 2)
-
-        # "CONTEXT" / "EVENT" text on timeline
-        any_active = any(
-            any(ls <= fi <= le for ls, le, _ in locs)
-            for locs in cam_event_locals.values()
-        )
-        status_txt = "ACTIVITY" if any_active else "CONTEXT"
-        cv2.putText(canvas, status_txt, (tl_left + tl_width + 8, tl_y + TIMELINE_H - 10),
-                    FONT, 0.35, COLOR_TEXT, 1, FONT_AA)
+            # Camera label with frame counter
+            label = f"{cam}  [{fi + 1}/{max_frames}]"
+            cv2.putText(canvas, label, (x + 8, y + 22),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.55, COLOR_CAM, 2, cv2.LINE_AA)
 
         composed.append(canvas)
 
@@ -612,15 +408,14 @@ def compose_grid(frames_dict: Dict[str, List[np.ndarray]],
 # ============================================================================
 
 def write_video(frames: List[np.ndarray], output_path: Path, fps: float = 30.0) -> bool:
-    """Write frames to MP4 -- uses ffmpeg if available, cv2.VideoWriter fallback."""
+    """Write frames to MP4 — uses ffmpeg if available, cv2.VideoWriter fallback."""
     if not frames:
         return False
 
     h, w = frames[0].shape[:2]
-    if w % 2:
-        w -= 1
-    if h % 2:
-        h -= 1
+    # Ensure dimensions are even (required by libx264)
+    if w % 2: w -= 1
+    if h % 2: h -= 1
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -644,6 +439,7 @@ def write_video(frames: List[np.ndarray], output_path: Path, fps: float = 30.0) 
             return False
         return output_path.exists()
     else:
+        # Fallback: cv2.VideoWriter with mp4v codec
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         writer = cv2.VideoWriter(str(output_path), fourcc, fps, (w, h))
         if not writer.isOpened():
@@ -661,13 +457,9 @@ def write_video(frames: List[np.ndarray], output_path: Path, fps: float = 30.0) 
 
 def render_question(qa_data: dict, question_idx: int,
                     output_path: Path = None, verbose: bool = False) -> Optional[Path]:
-    """Render a single question into a self-contained validation video.
+    """Render a single question into a validation video.
 
-    Features:
-    - Full question text + all options + correct answer highlighted
-    - Blue bounding boxes on actors involved in the activity
-    - 5-second context before/after events
-    - Activity labels and timeline bar
+    Works for ALL question categories by using _extract_events().
     """
     qa_pairs = qa_data.get("qa_pairs", [])
     if question_idx >= len(qa_pairs):
@@ -679,15 +471,13 @@ def render_question(qa_data: dict, question_idx: int,
     category = q.get("category", "unknown")
     q_text = q.get("naturalized_question") or q.get("question_template", "")
     answer_text = q.get("correct_answer") or q.get("answer", "")
-    options = q.get("options", [])
-    correct_idx = q.get("correct_answer_index", -1)
 
-    print(f"\n{'=' * 60}")
+    print(f"\n{'='*60}")
     print(f"Q{question_idx}: {category.upper()}")
-    print(f"  {q_text[:120]}...")
+    print(f"  {q_text[:100]}...")
     print(f"  Answer: {answer_text[:80]}")
 
-    # Extract events from debug_info
+    # Extract events from debug_info (handles all category formats)
     events = _extract_events(q, slot)
     if not events:
         print(f"  SKIP: No video events found in debug_info")
@@ -698,9 +488,10 @@ def render_question(qa_data: dict, question_idx: int,
     for ev in events:
         cam_events[ev["camera"]].append(ev)
 
-    # Build per-camera metadata with 5-second padding
+    # Compute frame range per camera (union of all events on that camera)
     cam_info: Dict[str, dict] = {}
     for cam, evts in cam_events.items():
+        # Pick clip_file from first event (all events on same camera share clip)
         clip_file = evts[0]["clip_file"]
         fps = evts[0]["fps"]
         timing = extract_clip_timing(clip_file)
@@ -710,44 +501,27 @@ def render_question(qa_data: dict, question_idx: int,
 
         date, hour, start_time, end_time, site, _ = timing
 
-        # Individual event frame ranges for this camera
-        event_ranges = []
-        for e in evts:
-            if e.get("frame_range"):
-                event_ranges.append({
-                    "frame_range": tuple(e["frame_range"]),
-                    "actor_ids":   set(e.get("actor_ids", [])),
-                    "activity":    e.get("label", "activity"),
-                })
-
-        # Compute loading range: union of all events + 5s padding
-        ranges = [er["frame_range"] for er in event_ranges]
+        # Compute frame range — union of all events, with context padding
+        ranges = [e["frame_range"] for e in evts if e.get("frame_range")]
         if ranges:
-            padding_frames = int(fps * CONTEXT_PADDING_SEC)
-            f_start = max(0, min(r[0] for r in ranges) - padding_frames)
-            f_end = max(r[1] for r in ranges) + padding_frames
+            f_start = max(0, min(r[0] for r in ranges) - int(fps * 1.0))  # 1s before
+            f_end   = max(r[1] for r in ranges) + int(fps * 1.0)            # 1s after
         else:
-            # No frame range (summarization/counting): show first 10 seconds
+            # No frame range (summarization/counting) — show middle 5 seconds
             f_start = 0
-            f_end = int(fps * DEFAULT_CONTEXT_FRAMES / fps * 2)
-
-        # Union of all highlight actor IDs for this camera
-        all_highlight_ids: Set[int] = set()
-        for er in event_ranges:
-            all_highlight_ids.update(er["actor_ids"])
+            f_end = int(fps * DEFAULT_CONTEXT_SEC)
 
         cam_info[cam] = {
-            "clip_file":      clip_file,
-            "fps":            fps,
-            "date":           date,
-            "hour":           hour,
-            "start_time":     start_time,
-            "end_time":       end_time,
-            "site":           site,
-            "f_start":        f_start,
-            "f_end":          f_end,
-            "event_ranges":   event_ranges,
-            "highlight_ids":  all_highlight_ids,
+            "clip_file":  clip_file,
+            "fps":        fps,
+            "date":       date,
+            "hour":       hour,
+            "start_time": start_time,
+            "end_time":   end_time,
+            "site":       site,
+            "f_start":    f_start,
+            "f_end":      f_end,
+            "actor_ids":  list({aid for e in evts for aid in e.get("actor_ids", [])}),
         }
 
     if not cam_info:
@@ -792,57 +566,33 @@ def render_question(qa_data: dict, question_idx: int,
         print(f"  ERROR: No frames loaded for any camera")
         return None
 
-    # ---- Overlay bounding boxes with event-aware highlighting ----
+    # Overlay geom bounding boxes (scaled)
     for cam in frames_dict:
         boxes_by_frame = geom_dict.get(cam, {})
         if not boxes_by_frame:
             continue
-
         sx, sy = scales[cam]
-        info = cam_info[cam]
-        f_offset = info["f_start"]
-        event_ranges = info["event_ranges"]
-        highlight_ids = info["highlight_ids"]
-
+        f_offset = cam_info[cam]["f_start"]
         for fi in range(len(frames_dict[cam])):
             actual_frame = f_offset + fi
-            if actual_frame not in boxes_by_frame:
-                continue
+            if actual_frame in boxes_by_frame:
+                frames_dict[cam][fi] = overlay_boxes(
+                    frames_dict[cam][fi], boxes_by_frame[actual_frame], sx, sy)
 
-            # Check if this frame is within any event range on this camera
-            is_event = any(
-                er["frame_range"][0] <= actual_frame <= er["frame_range"][1]
-                for er in event_ranges
-            )
-
-            frames_dict[cam][fi] = overlay_boxes(
-                frames_dict[cam][fi],
-                boxes_by_frame[actual_frame],
-                sx, sy,
-                highlight_ids=highlight_ids if is_event else None,
-                is_event_frame=is_event,
-            )
-
-    # ---- Compose grid with header, labels, timeline ----
-    composed = compose_grid(
-        frames_dict, cam_info,
-        q_text, options, correct_idx,
-        category, question_idx, fps=30.0
-    )
+    # Compose grid
+    composed = compose_grid(frames_dict, q_text, answer_text, 30.0)
     if not composed:
         print(f"  ERROR: Grid composition produced no frames")
         return None
 
     # Output path
     if not output_path:
-        vid_dir = _get_video_output_dir(slot)
-        output_path = vid_dir / f"{slot}_q{question_idx}_{category}.mp4"
+        output_path = VIDEO_OUTPUT_DIR / f"{slot}_q{question_idx}_{category}.mp4"
 
-    print(f"  Writing {len(composed)} frames -> {output_path.name} ...", end="", flush=True)
+    print(f"  Writing {len(composed)} frames → {output_path.name} ...", end="", flush=True)
     if write_video(composed, output_path, 30.0):
         sz_mb = output_path.stat().st_size / (1024 * 1024)
-        duration_s = len(composed) / 30.0
-        print(f"  OK ({sz_mb:.1f} MB, {duration_s:.1f}s)")
+        print(f"  OK ({sz_mb:.1f} MB)")
         return output_path
     else:
         print(f"  FAILED")
@@ -855,7 +605,7 @@ def render_question(qa_data: dict, question_idx: int,
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Render question validation videos with activity highlighting")
+        description="Render question validation videos with multi-camera grids")
     parser.add_argument("--slot", help="Slot name (e.g., 2018-03-07.17-05.school)")
     parser.add_argument("--qa-file", help="QA JSON file path")
     parser.add_argument("--question-id", type=int, help="Question index to render (0-based)")
@@ -901,6 +651,7 @@ def main():
     else:
         indices = [0]
 
+    # Filter by category if requested
     if args.categories:
         cats = set(c.lower() for c in args.categories)
         indices = [i for i in indices if qa_pairs[i].get("category", "").lower() in cats]
@@ -916,12 +667,11 @@ def main():
         else:
             failures += 1
 
-    vid_dir = _get_video_output_dir(slot)
-    print(f"\n{'=' * 60}")
+    print(f"\n{'='*60}")
     print(f"Done: {successes} rendered, {failures} skipped/failed")
-    print(f"Output dir: {vid_dir}")
+    print(f"Output dir: {VIDEO_OUTPUT_DIR}")
     if successes:
-        print(f"Play:  ffplay {vid_dir}/{slot}_q*")
+        print(f"Play:  ffplay {VIDEO_OUTPUT_DIR}/{slot}_q*")
 
 
 if __name__ == "__main__":

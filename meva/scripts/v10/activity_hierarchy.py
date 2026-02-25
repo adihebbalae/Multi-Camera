@@ -149,6 +149,15 @@ def get_activity_entity_type(activity: str) -> str:
 
 def humanize_activity(activity: str) -> str:
     """Convert activity name to short human-readable form."""
+    # Special-case enter/exit scene to clarify MEVA camera-view semantics
+    _SPECIAL = {
+        "person_enters_scene_through_structure":
+            "enters the camera's view through a doorway",
+        "person_exits_scene_through_structure":
+            "leaves the camera's view through a doorway",
+    }
+    if activity in _SPECIAL:
+        return _SPECIAL[activity]
     # Remove entity prefix and replace underscores with spaces
     for prefix in ("person_", "vehicle_", "hand_"):
         if activity.startswith(prefix):

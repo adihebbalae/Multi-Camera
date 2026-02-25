@@ -50,8 +50,8 @@ OUTPUT_DIR = Path("/home/ah66742/data/entity_descriptions")
 # ============================================================================
 
 CROPS_PER_ACTOR = 5           # Crops to extract per actor track
-MIN_BBOX_HEIGHT = 25          # Min bbox height in pixels for usable crop
-MIN_BBOX_WIDTH = 10           # Min bbox width
+MIN_BBOX_HEIGHT = 144         # Min bbox height in pixels for usable crop (~consistent with 2% area filter)
+MIN_BBOX_WIDTH = 144          # Min bbox width (~consistent with 2% area filter)
 YOLO_CONF = 0.25              # YOLO detection confidence threshold
 YOLO_MODEL = "yolov8n.pt"    # Nano model (fast, sufficient for crops)
 

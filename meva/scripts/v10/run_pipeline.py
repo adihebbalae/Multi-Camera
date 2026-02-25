@@ -10,9 +10,9 @@ REMOVED from V9: re_identification, causality
 ADDED: best_camera (Camera Transition Logic)
 
 Usage:
-    python3 scripts/final/run_pipeline.py --slot "2018-03-11.11-25-00.school" -v
-    python3 scripts/final/run_pipeline.py --list-slots
-    python3 scripts/final/run_pipeline.py --slot "2018-03-11.11-25-00.school" --no-save
+    python3 scripts/v10/run_pipeline.py --slot "2018-03-11.11-25-00.school" -v
+    python3 scripts/v10/run_pipeline.py --list-slots
+    python3 scripts/v10/run_pipeline.py --slot "2018-03-11.11-25-00.school" --no-save
 """
 
 import json
@@ -40,21 +40,21 @@ try:
     from .generate_numerical import generate_numerical_qa
     from .generate_best_camera import generate_best_camera_qa
 except ImportError:
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    from scripts.final.parse_annotations import parse_slot_events, find_clips_for_slot
-    from scripts.final.build_scene_graph import build_scene_graph
-    from scripts.final.entity_resolution import resolve_entities
-    from scripts.final.person_descriptions import (
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from parse_annotations import parse_slot_events, find_clips_for_slot
+    from build_scene_graph import build_scene_graph
+    from entity_resolution import resolve_entities
+    from person_descriptions import (
         enrich_entities, is_mevid_supported, get_mevid_persons_for_slot,
         get_mevid_persons_with_cameras, load_person_database,
     )
-    from scripts.final.generate_temporal import generate_temporal_qa
-    from scripts.final.generate_spatial import generate_spatial_qa
-    from scripts.final.generate_perception import generate_perception_qa
-    from scripts.final.generate_scene_summary import generate_scene_summary_qa
-    from scripts.final.generate_event_ordering import generate_event_ordering_qa
-    from scripts.final.generate_numerical import generate_numerical_qa
-    from scripts.final.generate_best_camera import generate_best_camera_qa
+    from generate_temporal import generate_temporal_qa
+    from generate_spatial import generate_spatial_qa
+    from generate_perception import generate_perception_qa
+    from generate_scene_summary import generate_scene_summary_qa
+    from generate_event_ordering import generate_event_ordering_qa
+    from generate_numerical import generate_numerical_qa
+    from generate_best_camera import generate_best_camera_qa
 
 
 # ============================================================================
@@ -72,9 +72,9 @@ TARGET_EVENT_ORDERING = 2
 TARGET_PERCEPTION = 2       # includes attribute_verification if MEVID
 TARGET_SPATIAL = 3           # increased: ~70% slot hit rate requires 3/slot for 500 total
 TARGET_SUMMARIZATION = 1    # scene_summary (renamed for paper alignment)
-TARGET_COUNTING = 2         # increased: need 500 total, ~75% slot success rate
+TARGET_COUNTING = 1         # activity-counting only (entity-counting removed)
 TARGET_BEST_CAMERA = 3      # increased: Camera Transition Logic, ~70% hit rate
-# Total target: ~12 questions per slot
+# Total target: ~14 questions per slot
 
 
 # ============================================================================
@@ -535,15 +535,10 @@ def run_pipeline(slot: str, verbose: bool = False,
     for i, q in enumerate(unique_qa):
         q["question_id"] = f"final_{q['category']}_{i+1:03d}"
 
-    # Fix article agreement (a → an before vowels) in all text fields
-    for q in unique_qa:
-        if "question_template" in q:
-            q["question_template"] = fix_articles(q["question_template"])
-        if "options" in q:
-            q["options"] = [fix_articles(str(o)) for o in q["options"]]
-        if "correct_answer" in q:
-            q["correct_answer"] = fix_articles(str(q["correct_answer"]))
-    
+    # NOTE: article fixes (a→an) and text polish happen in naturalization.py,
+    # not here. Generators produce raw mechanical text; naturalization owns all
+    # wording/grammar changes.
+
     # Add video paths to each QA pair
     for q in unique_qa:
         q["video_paths"] = _build_video_paths(q, slot)

@@ -297,6 +297,8 @@ def generate_temporal_qa(sg: SceneGraph, resolved: ResolvedGraph,
     # Diversify selection: strong > medium > weak, MEVID-validated preferred
     used_pairs = set()
     used_activities = set()
+    used_event_ids: Set[str] = set()        # No event reuse across questions
+    used_activity_names: Set[str] = set()   # No activity string reuse across questions
     selected = []
     
     # Pass 1: strong connection + MEVID-validated (best quality)
@@ -304,12 +306,22 @@ def generate_temporal_qa(sg: SceneGraph, resolved: ResolvedGraph,
         if len(selected) >= count:
             break
         if c["connection_strength"] == "strong" and c["mevid_validated"]:
+            ea_id = c["event_a"].event_id
+            eb_id = c["event_b"].event_id
+            if ea_id in used_event_ids or eb_id in used_event_ids:
+                continue
+            if c["event_a"].activity in used_activity_names or c["event_b"].activity in used_activity_names:
+                continue
             cam_pair = (c["event_a"].camera_id, c["event_b"].camera_id)
             act_pair = (c["event_a"].activity, c["event_b"].activity)
             if cam_pair not in used_pairs or act_pair not in used_activities:
                 used_pairs.add(cam_pair)
                 used_activities.add(act_pair)
                 selected.append(c)
+                used_event_ids.add(ea_id)
+                used_event_ids.add(eb_id)
+                used_activity_names.add(c["event_a"].activity)
+                used_activity_names.add(c["event_b"].activity)
     
     # Pass 2: strong connection (entity cluster linked)
     for c in candidates:
@@ -318,12 +330,22 @@ def generate_temporal_qa(sg: SceneGraph, resolved: ResolvedGraph,
         if c in selected:
             continue
         if c["connection_strength"] == "strong":
+            ea_id = c["event_a"].event_id
+            eb_id = c["event_b"].event_id
+            if ea_id in used_event_ids or eb_id in used_event_ids:
+                continue
+            if c["event_a"].activity in used_activity_names or c["event_b"].activity in used_activity_names:
+                continue
             cam_pair = (c["event_a"].camera_id, c["event_b"].camera_id)
             act_pair = (c["event_a"].activity, c["event_b"].activity)
             if cam_pair not in used_pairs or act_pair not in used_activities:
                 used_pairs.add(cam_pair)
                 used_activities.add(act_pair)
                 selected.append(c)
+                used_event_ids.add(ea_id)
+                used_event_ids.add(eb_id)
+                used_activity_names.add(c["event_a"].activity)
+                used_activity_names.add(c["event_b"].activity)
     
     # Pass 3: medium connection (related activities)
     for c in candidates:
@@ -331,15 +353,35 @@ def generate_temporal_qa(sg: SceneGraph, resolved: ResolvedGraph,
             break
         if c in selected:
             continue
+        ea_id = c["event_a"].event_id
+        eb_id = c["event_b"].event_id
+        if ea_id in used_event_ids or eb_id in used_event_ids:
+            continue
+        if c["event_a"].activity in used_activity_names or c["event_b"].activity in used_activity_names:
+            continue
         if c["connection_strength"] == "medium":
             selected.append(c)
+            used_event_ids.add(ea_id)
+            used_event_ids.add(eb_id)
+            used_activity_names.add(c["event_a"].activity)
+            used_activity_names.add(c["event_b"].activity)
     
     # Pass 4: fill remaining from any candidates (score-sorted order)
     for c in candidates:
         if len(selected) >= count:
             break
         if c not in selected:
+            ea_id = c["event_a"].event_id
+            eb_id = c["event_b"].event_id
+            if ea_id in used_event_ids or eb_id in used_event_ids:
+                continue
+            if c["event_a"].activity in used_activity_names or c["event_b"].activity in used_activity_names:
+                continue
             selected.append(c)
+            used_event_ids.add(ea_id)
+            used_event_ids.add(eb_id)
+            used_activity_names.add(c["event_a"].activity)
+            used_activity_names.add(c["event_b"].activity)
     
     # Generate QA pairs
     qa_pairs = []
