@@ -28,7 +28,7 @@ python3 -m scripts.v10.run_pipeline \
   -v \
   --seed 42
 
-RAW_JSON="$OUTPUT_DIR/qa_pairs/$SLOT/$SLOT.final.raw.json"
+RAW_JSON="$OUTPUT_DIR/qa_pairs/$SLOT.final.raw.json"
 
 echo ""
 echo "=== Step 2: Naturalization (GPT — requires OPENAI_API_KEY) ==="

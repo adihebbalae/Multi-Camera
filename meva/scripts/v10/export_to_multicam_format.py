@@ -34,7 +34,8 @@ from typing import Dict, List, Any, Optional
 # User output directory — override with MEVA_OUTPUT_DIR env var
 _OUTPUT = Path(os.environ.get("OUTPUT_DIR") or os.environ.get("MEVA_OUTPUT_DIR") or str(Path.home() / "data"))
 INPUT_DIR = _OUTPUT / "qa_pairs"
-OUTPUT_DIR = Path("/nas/neurosymbolic/multi-cam-dataset/meva/qa_pairs")
+# Export destination — override with MEVA_MULTICAM_OUT env var
+OUTPUT_DIR = Path(os.environ.get("MEVA_MULTICAM_OUT") or "/nas/neurosymbolic/multi-cam-dataset/meva/data/qa_pairs")
 
 LETTER_MAP = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F"}
 
