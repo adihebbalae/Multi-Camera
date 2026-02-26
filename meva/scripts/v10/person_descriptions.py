@@ -10,6 +10,7 @@ Description priority:
   3. Activity-verb description (V7 style, no MEVID)
 """
 
+import os
 import re
 import json
 from pathlib import Path
@@ -22,9 +23,14 @@ from .activity_hierarchy import humanize_activity
 # Paths
 # ============================================================================
 
-PERSON_DB_PATH = Path("/home/ah66742/data/person_database_yolo.json")
-PERSON_DB_ORIG_PATH = Path("/home/ah66742/data/person_database.json")
-MEVID_SLOTS_PATH = Path("/home/ah66742/data/mevid_supported_slots.json")
+# Repo-relative data directory (meva/data/) — works for any clone location
+_REPO_DATA = Path(__file__).resolve().parent.parent.parent / "data"
+# User output directory — override with MEVA_OUTPUT_DIR env var
+_OUTPUT = Path(os.environ.get("MEVA_OUTPUT_DIR", str(Path.home() / "data")))
+
+PERSON_DB_PATH = _REPO_DATA / "person_database_yolo.json"
+PERSON_DB_ORIG_PATH = _REPO_DATA / "person_database.json"
+MEVID_SLOTS_PATH = _REPO_DATA / "mevid_supported_slots.json"
 
 
 # ============================================================================
@@ -375,7 +381,7 @@ def get_mevid_persons_with_cameras(slot: str) -> Dict[str, List[str]]:
 # ============================================================================
 
 # Geom-extracted description bank directory
-_GEOM_DESC_DIR = Path("/home/ah66742/data/entity_descriptions")
+_GEOM_DESC_DIR = _OUTPUT / "entity_descriptions"
 
 
 def _load_geom_descriptions(slot: str) -> Dict[str, str]:

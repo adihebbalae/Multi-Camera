@@ -9,14 +9,31 @@ FINAL run_pipeline.py — Main orchestrator for FINAL QA generation pipeline.
 REMOVED from V9: re_identification, causality
 ADDED: best_camera (Camera Transition Logic)
 
+Setup (run from the meva/ directory inside the repo):
+    cd /path/to/repo/meva
+    export PYTHONPATH=$PYTHONPATH:$(pwd)
+    export OPENAI_API_KEY=sk-...          # required only for naturalization step
+    export MEVA_OUTPUT_DIR=~/data         # optional: where QA output is saved (default: ~/data)
+
 Usage:
-    python3 scripts/v10/run_pipeline.py --slot "2018-03-11.11-25-00.school" -v
-    python3 scripts/v10/run_pipeline.py --list-slots
-    python3 scripts/v10/run_pipeline.py --slot "2018-03-11.11-25-00.school" --no-save
+    # Step 1 — generate raw QA (free, ~5s/slot)
+    python3 -m scripts.v10.run_pipeline --slot "2018-03-11.11-25.school" -v
+
+    # Step 2 — naturalize with GPT (costs tokens, requires OPENAI_API_KEY)
+    python3 -m scripts.v10.naturalize \\
+        --input $MEVA_OUTPUT_DIR/qa_pairs/2018-03-11.11-25.school/2018-03-11.11-25.school.final.raw.json \\
+        -v --yes
+
+    # Step 3 — export to multi-cam-dataset repo format
+    python3 -m scripts.v10.export_to_multicam_format --slot "2018-03-11.11-25.school"
+
+    # List all available slots
+    python3 -m scripts.v10.run_pipeline --list-slots
 """
 
 import json
 import argparse
+import os
 import random
 import sys
 import time
@@ -61,9 +78,14 @@ except ImportError:
 # Constants
 # ============================================================================
 
-OUTPUT_DIR = Path("/home/ah66742/data/qa_pairs")
+# Repo-relative data directory (meva/data/) — works for any clone location
+_REPO_DATA = Path(__file__).resolve().parent.parent.parent / "data"
+# User output directory — override with MEVA_OUTPUT_DIR env var
+_OUTPUT = Path(os.environ.get("MEVA_OUTPUT_DIR", str(Path.home() / "data")))
+
+OUTPUT_DIR = _OUTPUT / "qa_pairs"
 MEVA_MP4_BASE = Path("/nas/mars/dataset/MEVA/mp4s")
-CANONICAL_SLOTS_PATH = Path("/home/ah66742/data/canonical_slots.json")
+CANONICAL_SLOTS_PATH = _REPO_DATA / "canonical_slots.json"
 RANDOM_SEED = 42
 
 # 7 categories — target question counts per slot

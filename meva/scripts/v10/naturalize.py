@@ -44,8 +44,11 @@ from typing import List, Dict, Any, Optional, Tuple
 # Paths & Constants
 # ============================================================================
 
-QA_DIR = Path("/home/ah66742/data/qa_pairs")
-LOG_DIR = Path("/home/ah66742/data/gpt_logs")
+# User output directory — override with MEVA_OUTPUT_DIR env var
+_OUTPUT = Path(os.environ.get("MEVA_OUTPUT_DIR", str(Path.home() / "data")))
+
+QA_DIR = _OUTPUT / "qa_pairs"
+LOG_DIR = _OUTPUT / "gpt_logs"
 
 DEFAULT_MODEL = "gpt-4o-mini"
 DEFAULT_TEMPERATURE = 0.3  # Low: naturalize only, no creative drift

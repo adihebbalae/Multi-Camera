@@ -20,6 +20,7 @@ Usage:
 import argparse
 import json
 import math
+import os
 import re
 import cv2
 import numpy as np
@@ -49,7 +50,9 @@ FFMPEG_BIN = _find_ffmpeg()
 MEVA_MP4_ROOT = Path("/nas/mars/dataset/MEVA/mp4s")
 KITWARE_BASE = Path("/nas/mars/dataset/MEVA/meva-data-repo/annotation/DIVA-phase-2/MEVA/kitware")
 KITWARE_TRAINING_BASE = Path("/nas/mars/dataset/MEVA/meva-data-repo/annotation/DIVA-phase-2/MEVA/kitware-meva-training")
-QA_OUTPUT_DIR = Path("/home/ah66742/data/qa_pairs")
+# User output directory — override with MEVA_OUTPUT_DIR env var
+_OUTPUT = Path(os.environ.get("MEVA_OUTPUT_DIR", str(Path.home() / "data")))
+QA_OUTPUT_DIR = _OUTPUT / "qa_pairs"
 
 
 def _get_video_output_dir(slot: str) -> Path:

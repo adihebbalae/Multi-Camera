@@ -43,7 +43,9 @@ KITWARE_BASE = Path("/nas/mars/dataset/MEVA/meva-data-repo/annotation/DIVA-phase
 KITWARE_TRAINING_BASE = Path("/nas/mars/dataset/MEVA/meva-data-repo/annotation/DIVA-phase-2/MEVA/kitware-meva-training")
 AVI_BASE = Path("/nas/mars/dataset/MEVA/avis")    # Raw AVIs — lossless, better color
 MP4_BASE = Path("/nas/mars/dataset/MEVA/mp4s")     # Fallback (CRF 32 re-encode)
-OUTPUT_DIR = Path("/home/ah66742/data/entity_descriptions")
+# User output directory — override with MEVA_OUTPUT_DIR env var
+_OUTPUT = Path(os.environ.get("MEVA_OUTPUT_DIR", str(Path.home() / "data")))
+OUTPUT_DIR = _OUTPUT / "entity_descriptions"
 
 # ============================================================================
 # Constants

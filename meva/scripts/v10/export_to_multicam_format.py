@@ -25,12 +25,15 @@ Usage:
 
 import json
 import argparse
+import os
 import sys
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
 # Paths
-INPUT_DIR = Path("/home/ah66742/data/qa_pairs")
+# User output directory — override with MEVA_OUTPUT_DIR env var
+_OUTPUT = Path(os.environ.get("MEVA_OUTPUT_DIR", str(Path.home() / "data")))
+INPUT_DIR = _OUTPUT / "qa_pairs"
 OUTPUT_DIR = Path("/nas/neurosymbolic/multi-cam-dataset/meva/qa_pairs")
 
 LETTER_MAP = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F"}

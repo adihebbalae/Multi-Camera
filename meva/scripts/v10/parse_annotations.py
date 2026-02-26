@@ -6,6 +6,7 @@ Output: List of Event dicts with activity, camera, frame range, actors.
 """
 
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -19,7 +20,9 @@ MEVA_ROOT = Path("/nas/mars/dataset/MEVA")
 ANNOTATION_BASE = MEVA_ROOT / "meva-data-repo" / "annotation" / "DIVA-phase-2" / "MEVA"
 KITWARE_ROOT = ANNOTATION_BASE / "kitware"
 KITWARE_TRAINING_ROOT = ANNOTATION_BASE / "kitware-meva-training"
-SLOT_INDEX_PATH = Path("/home/ah66742/data/slot_index.json")
+# Repo-relative data directory (meva/data/) — works for any clone location
+_REPO_DATA = Path(__file__).resolve().parent.parent.parent / "data"
+SLOT_INDEX_PATH = _REPO_DATA / "slot_index.json"
 
 DEFAULT_FRAMERATE = 30.0
 
@@ -141,7 +144,7 @@ def _parse_activities_yml(path: Path, camera_id: str, site: str,
 # Slot-Level Annotation Discovery
 # ============================================================================
 
-CANONICAL_SLOTS_PATH = Path("/home/ah66742/data/canonical_slots.json")
+CANONICAL_SLOTS_PATH = _REPO_DATA / "canonical_slots.json"
 
 def _resolve_to_raw_slots(slot: str) -> List[str]:
     """Resolve a slot name to raw slot names.
