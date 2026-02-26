@@ -19,8 +19,8 @@ import sys
 from pathlib import Path
 from typing import Dict
 
-SLOT_INDEX_PATH = Path("/home/ah66742/data/slot_index.json")
-OUTPUT_PATH = Path("/home/ah66742/data/geom_slot_index.json")
+SLOT_INDEX_PATH = Path("/home/ah66742/data_back/slot_index.json")
+OUTPUT_PATH = Path("/home/ah66742/data_back/geom_slot_index.json")
 EXTRACTION_SCRIPT = Path("/home/ah66742/scripts/final/extract_entity_descriptions.py")
 
 

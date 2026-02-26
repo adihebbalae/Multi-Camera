@@ -40,8 +40,8 @@ from typing import Dict, List, Set, Optional
 # Paths
 # ============================================================================
 
-SLOT_INDEX_PATH = Path("/home/ah66742/data/geom_slot_index.json")
-OUTPUT_DIR = Path("/home/ah66742/data/entity_descriptions")
+SLOT_INDEX_PATH = Path("/home/ah66742/data_back/geom_slot_index.json")
+OUTPUT_DIR = Path("/home/ah66742/data_back/entity_descriptions")
 LOG_DIR = Path("/home/ah66742/output/extraction_logs")
 PROGRESS_FILE = LOG_DIR / "batch_progress.json"
 EXTRACTION_SCRIPT = Path("/home/ah66742/scripts/final/extract_entity_descriptions.py")
