@@ -25,7 +25,7 @@ All commands must be run from the **`meva/` directory** inside this repo:
 cd /path/to/repo/meva
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 export OPENAI_API_KEY=sk-...          # only needed for Step 2
-export MEVA_OUTPUT_DIR=~/data         # where QA JSON + logs are saved (default: ~/data)
+export OUTPUT_DIR=~/data              # where QA JSON + logs are saved (default: ~/data)
 ```
 
 ### Step 1 — Raw QA generation (free, ~5 seconds per slot)
@@ -131,4 +131,4 @@ $MEVA_OUTPUT_DIR/
 → Only needed for Step 2. Steps 1 and 3 are free.
 
 **Output goes to wrong directory**  
-→ Set `export MEVA_OUTPUT_DIR=/your/home/data` before running.
+→ Set `export OUTPUT_DIR=/your/home/data` before running.

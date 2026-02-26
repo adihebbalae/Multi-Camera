@@ -32,7 +32,7 @@ from typing import Dict, List, Any, Optional
 
 # Paths
 # User output directory — override with MEVA_OUTPUT_DIR env var
-_OUTPUT = Path(os.environ.get("MEVA_OUTPUT_DIR", str(Path.home() / "data")))
+_OUTPUT = Path(os.environ.get("OUTPUT_DIR") or os.environ.get("MEVA_OUTPUT_DIR") or str(Path.home() / "data"))
 INPUT_DIR = _OUTPUT / "qa_pairs"
 OUTPUT_DIR = Path("/nas/neurosymbolic/multi-cam-dataset/meva/qa_pairs")
 

@@ -18,7 +18,7 @@
 set -e
 
 SLOT="${1:-2018-03-11.11-25.school}"
-OUTPUT_DIR="${MEVA_OUTPUT_DIR:-$HOME/data}"
+OUTPUT_DIR="${OUTPUT_DIR:-$HOME/data}"
 
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 

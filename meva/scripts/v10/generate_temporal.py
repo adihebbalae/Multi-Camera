@@ -25,7 +25,7 @@ from .utils.mevid import find_mevid_persons_for_slot
 # Constants
 # ============================================================================
 
-MIN_GAP = 3.0
+MIN_GAP = 1.0
 MAX_GAP = 15.0
 FALLBACK_MAX_GAP = 20.0
 DEFAULT_FPS = 30.0

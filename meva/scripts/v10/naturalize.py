@@ -45,7 +45,7 @@ from typing import List, Dict, Any, Optional, Tuple
 # ============================================================================
 
 # User output directory — override with MEVA_OUTPUT_DIR env var
-_OUTPUT = Path(os.environ.get("MEVA_OUTPUT_DIR", str(Path.home() / "data")))
+_OUTPUT = Path(os.environ.get("OUTPUT_DIR") or os.environ.get("MEVA_OUTPUT_DIR") or str(Path.home() / "data"))
 
 QA_DIR = _OUTPUT / "qa_pairs"
 LOG_DIR = _OUTPUT / "gpt_logs"

@@ -13,7 +13,7 @@ Setup (run from the meva/ directory inside the repo):
     cd /path/to/repo/meva
     export PYTHONPATH=$PYTHONPATH:$(pwd)
     export OPENAI_API_KEY=sk-...          # required only for naturalization step
-    export MEVA_OUTPUT_DIR=~/data         # optional: where QA output is saved (default: ~/data)
+    export OUTPUT_DIR=~/data                # optional: where QA output is saved (default: ~/data)
 
 Usage:
     # Step 1 — generate raw QA (free, ~5s/slot)
@@ -81,10 +81,12 @@ except ImportError:
 # Repo-relative data directory (meva/data/) — works for any clone location
 _REPO_DATA = Path(__file__).resolve().parent.parent.parent / "data"
 # User output directory — override with MEVA_OUTPUT_DIR env var
-_OUTPUT = Path(os.environ.get("MEVA_OUTPUT_DIR", str(Path.home() / "data")))
+_OUTPUT = Path(os.environ.get("OUTPUT_DIR") or os.environ.get("MEVA_OUTPUT_DIR") or str(Path.home() / "data"))
 
 OUTPUT_DIR = _OUTPUT / "qa_pairs"
 MEVA_MP4_BASE = Path("/nas/mars/dataset/MEVA/mp4s")
+# Entity descriptions directory — override with MEVA_ENTITY_DESC_DIR env var
+_ENTITY_DESC_DIR = Path(os.environ.get("MEVA_ENTITY_DESC_DIR") or "/nas/mars/dataset/MEVA/entity_descriptions")
 CANONICAL_SLOTS_PATH = _REPO_DATA / "canonical_slots.json"
 RANDOM_SEED = 42
 
@@ -481,7 +483,7 @@ def run_pipeline(slot: str, verbose: bool = False,
     resolved = resolve_entities(sg, verbose=verbose)
     
     # Step 3.5: Auto-extract entity descriptions if not yet done
-    desc_path = Path("/home/ah66742/data/entity_descriptions") / f"{slot}.json"
+    desc_path = _ENTITY_DESC_DIR / f"{slot}.json"
     if not desc_path.exists():
         if verbose:
             print(f"\nStep 3.5: Extracting entity descriptions (YOLO+HSV)...")

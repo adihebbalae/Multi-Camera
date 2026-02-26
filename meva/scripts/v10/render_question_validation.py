@@ -51,7 +51,7 @@ MEVA_MP4_ROOT = Path("/nas/mars/dataset/MEVA/mp4s")
 KITWARE_BASE = Path("/nas/mars/dataset/MEVA/meva-data-repo/annotation/DIVA-phase-2/MEVA/kitware")
 KITWARE_TRAINING_BASE = Path("/nas/mars/dataset/MEVA/meva-data-repo/annotation/DIVA-phase-2/MEVA/kitware-meva-training")
 # User output directory — override with MEVA_OUTPUT_DIR env var
-_OUTPUT = Path(os.environ.get("MEVA_OUTPUT_DIR", str(Path.home() / "data")))
+_OUTPUT = Path(os.environ.get("OUTPUT_DIR") or os.environ.get("MEVA_OUTPUT_DIR") or str(Path.home() / "data"))
 QA_OUTPUT_DIR = _OUTPUT / "qa_pairs"
 
 

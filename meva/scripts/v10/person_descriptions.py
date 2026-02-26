@@ -26,7 +26,9 @@ from .activity_hierarchy import humanize_activity
 # Repo-relative data directory (meva/data/) — works for any clone location
 _REPO_DATA = Path(__file__).resolve().parent.parent.parent / "data"
 # User output directory — override with MEVA_OUTPUT_DIR env var
-_OUTPUT = Path(os.environ.get("MEVA_OUTPUT_DIR", str(Path.home() / "data")))
+_OUTPUT = Path(os.environ.get("OUTPUT_DIR") or os.environ.get("MEVA_OUTPUT_DIR") or str(Path.home() / "data"))
+# Entity descriptions directory — override with MEVA_ENTITY_DESC_DIR env var
+_ENTITY_DESC_DIR = Path(os.environ.get("MEVA_ENTITY_DESC_DIR") or "/nas/mars/dataset/MEVA/entity_descriptions")
 
 PERSON_DB_PATH = _REPO_DATA / "person_database_yolo.json"
 PERSON_DB_ORIG_PATH = _REPO_DATA / "person_database.json"
@@ -381,7 +383,7 @@ def get_mevid_persons_with_cameras(slot: str) -> Dict[str, List[str]]:
 # ============================================================================
 
 # Geom-extracted description bank directory
-_GEOM_DESC_DIR = _OUTPUT / "entity_descriptions"
+_GEOM_DESC_DIR = _ENTITY_DESC_DIR
 
 
 def _load_geom_descriptions(slot: str) -> Dict[str, str]:
@@ -506,9 +508,16 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
         print(f"  Entity enrichment: {mevid_count} MEVID, {geom_count} geom-color, "
               f"{fallback_count} fallback ({total} total)")
     
-    # Build set of entity IDs that got fallback (non-visual) descriptions
+    # Build set of PERSON entity IDs that got fallback (non-visual) descriptions.
+    # Non-person entities (vehicles, objects) always get generic descriptions like
+    # "a vehicle" — that's correct and complete, not a quality failure.
+    # Only person entities with generic fallbacks ("a person", "someone walking")
+    # degrade question quality, so only they are flagged here.
     fallback_eids = set()
     for eid, desc in entity_descriptions.items():
+        entity = sg.entities.get(eid)
+        if entity and entity.entity_type != "person":
+            continue  # vehicles/objects: "a vehicle" is acceptable, not fallback
         if not is_visual_description(desc):
             fallback_eids.add(eid)
 
