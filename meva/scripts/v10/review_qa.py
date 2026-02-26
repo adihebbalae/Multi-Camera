@@ -30,9 +30,11 @@ import textwrap
 from pathlib import Path
 from datetime import datetime
 
-QA_DIR = Path("/home/ah66742/data_back/qa_pairs")
-VIDEO_DIR = Path("/home/ah66742/output/validation_videos")
-AUDIT_DIR = Path("/home/ah66742/output/qa_audits")
+_OUTPUT = Path(os.environ.get("OUTPUT_DIR") or os.environ.get("MEVA_OUTPUT_DIR") or str(Path.home() / "data"))
+
+QA_DIR = _OUTPUT / "qa_pairs"
+VIDEO_DIR = _OUTPUT / "validation_videos"
+AUDIT_DIR = _OUTPUT / "qa_audits"
 AUDIT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ANSI colors

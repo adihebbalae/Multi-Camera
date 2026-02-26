@@ -19,9 +19,11 @@ import sys
 from pathlib import Path
 from typing import Dict
 
-SLOT_INDEX_PATH = Path("/home/ah66742/data_back/slot_index.json")
-OUTPUT_PATH = Path("/home/ah66742/data_back/geom_slot_index.json")
-EXTRACTION_SCRIPT = Path("/home/ah66742/scripts/final/extract_entity_descriptions.py")
+_REPO_DATA = Path(__file__).resolve().parent.parent.parent / "data"
+
+SLOT_INDEX_PATH = _REPO_DATA / "slot_index.json"
+OUTPUT_PATH = _REPO_DATA / "geom_slot_index.json"
+EXTRACTION_SCRIPT = Path(__file__).resolve().parent / "extract_entity_descriptions.py"
 
 
 def main():

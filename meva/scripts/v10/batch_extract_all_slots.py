@@ -29,6 +29,7 @@ Logs: /home/ah66742/output/extraction_logs/batch_extraction_TIMESTAMP.log
 
 import argparse
 import json
+import os
 import sys
 import time
 import subprocess
@@ -40,11 +41,14 @@ from typing import Dict, List, Set, Optional
 # Paths
 # ============================================================================
 
-SLOT_INDEX_PATH = Path("/home/ah66742/data_back/geom_slot_index.json")
-OUTPUT_DIR = Path("/home/ah66742/data_back/entity_descriptions")
-LOG_DIR = Path("/home/ah66742/output/extraction_logs")
+_REPO_DATA = Path(__file__).resolve().parent.parent.parent / "data"
+_OUTPUT = Path(os.environ.get("OUTPUT_DIR") or os.environ.get("MEVA_OUTPUT_DIR") or str(Path.home() / "data"))
+
+SLOT_INDEX_PATH = _REPO_DATA / "geom_slot_index.json"
+OUTPUT_DIR = Path(os.environ.get("MEVA_ENTITY_DESC_DIR") or "/nas/mars/dataset/MEVA/entity_descriptions")
+LOG_DIR = _OUTPUT / "extraction_logs"
 PROGRESS_FILE = LOG_DIR / "batch_progress.json"
-EXTRACTION_SCRIPT = Path("/home/ah66742/scripts/final/extract_entity_descriptions.py")
+EXTRACTION_SCRIPT = Path(__file__).resolve().parent / "extract_entity_descriptions.py"
 
 # ============================================================================
 # Progress Tracking
