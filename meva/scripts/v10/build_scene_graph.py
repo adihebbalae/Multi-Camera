@@ -19,7 +19,11 @@ from .activity_hierarchy import humanize_activity
 
 
 # 2% of 1920×1080 = 2,073,600 × 0.02 ≈ 41,472 px² (~200×208 px minimum)
+# For close-up cameras (G419, G420, G421 etc.) where people fill the frame
 MIN_BBOX_AREA = 41472
+# 0.1% of 1920×1080 ≈ 2,073 px² (~46×46 px minimum)
+# For wide-field outdoor KRTD cameras (G336, G328, G638 etc.) where people are small
+MIN_BBOX_AREA_KRTD = 2048
 
 # ============================================================================
 # Data Structures
@@ -240,13 +244,17 @@ def build_scene_graph(slot: str, events: List[Event],
                 events=entity_events.get(cam_id, {}).get(aid, []),
             )
 
-            # Filter out entities whose bounding boxes are too small
+            # Filter out entities whose bounding boxes are too small.
+            # Wide-field KRTD cameras have a much lower threshold since people
+            # appear small but are still valid for 3D projection.
             if entity.keyframe_bboxes:
                 areas = [(bb[2]-bb[0]) * (bb[3]-bb[1]) for bb in entity.keyframe_bboxes.values()]
                 median_area = sorted(areas)[len(areas)//2]
-                if median_area < MIN_BBOX_AREA:
+                is_krtd_cam = cameras[cam_id].has_krtd
+                threshold = MIN_BBOX_AREA_KRTD if is_krtd_cam else MIN_BBOX_AREA
+                if median_area < threshold:
                     if verbose:
-                        print(f"    Skipping {entity_id}: median bbox area {median_area} < {MIN_BBOX_AREA}")
+                        print(f"    Skipping {entity_id}: median bbox area {median_area} < {threshold}")
                     continue
 
             entities[entity_id] = entity
