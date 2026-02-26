@@ -208,7 +208,7 @@ def find_clips_for_slot(slot: str) -> List[Dict]:
             if not ann_dir.exists():
                 continue
 
-            for cam_id in info["cameras"]:
+            for cam_id in sorted(info["cameras"]):
                 if cam_id in cameras_seen:
                     continue
                 if cam_id not in info["sources"].get(source_name, []):
@@ -216,7 +216,7 @@ def find_clips_for_slot(slot: str) -> List[Dict]:
 
                 # Find matching activities.yml (minute-level match)
                 pattern = f"{date}.{slot_time}*{cam_id}*.activities.yml"
-                matches = list(ann_dir.glob(pattern))
+                matches = sorted(ann_dir.glob(pattern))
                 if matches:
                     act_file = matches[0]
                     clip_name = act_file.stem.replace(".activities", "")

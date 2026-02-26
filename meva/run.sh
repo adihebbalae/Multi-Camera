@@ -15,14 +15,15 @@
 #   pip install pyyaml numpy opencv-python openai
 #   (or: source /home/ah66742/venv/bin/activate)
 
-set -e
+# set -e
 
+export MEVA_OUTPUT_DIR="/nas/neurosymbolic/multi-cam-dataset/meva/data"
 SLOT="${1:-2018-03-11.11-25.school}"
-OUTPUT_DIR="${OUTPUT_DIR:-$HOME/data}"
+OUTPUT_DIR="/nas/neurosymbolic/multi-cam-dataset/meva/data"
 
-export PYTHONPATH=$PYTHONPATH:$(pwd)
+# export PYTHONPATH=$PYTHONPATH:$(pwd)
 
-echo "=== Step 1: Raw QA generation (slot: $SLOT) ==="
+# echo "=== Step 1: Raw QA generation (slot: $SLOT) ==="
 python3 -m scripts.v10.run_pipeline \
   --slot "$SLOT" \
   -v \
@@ -30,16 +31,16 @@ python3 -m scripts.v10.run_pipeline \
 
 RAW_JSON="$OUTPUT_DIR/qa_pairs/$SLOT.final.raw.json"
 
-echo ""
-echo "=== Step 2: Naturalization (GPT — requires OPENAI_API_KEY) ==="
-python3 -m scripts.v10.naturalize \
-  --input "$RAW_JSON" \
-  -v --yes
+# echo ""
+# echo "=== Step 2: Naturalization (GPT — requires OPENAI_API_KEY) ==="
+# python3 -m scripts.v10.naturalize \
+#   --input "$RAW_JSON" \
+#   -v --yes
 
-echo ""
-echo "=== Step 3: Export to multi-cam-dataset format ==="
-python3 -m scripts.v10.export_to_multicam_format \
-  --slot "$SLOT"
+# echo ""
+# echo "=== Step 3: Export to multi-cam-dataset format ==="
+# python3 -m scripts.v10.export_to_multicam_format \
+#   --slot "$SLOT"
 
-echo ""
-echo "Done. Output in $OUTPUT_DIR/qa_pairs/$SLOT/"
+# echo ""
+# echo "Done. Output in $OUTPUT_DIR/qa_pairs/$SLOT/"

@@ -205,7 +205,8 @@ def build_scene_graph(slot: str, events: List[Event],
     entities: Dict[str, Entity] = {}
     framerate = DEFAULT_FRAMERATE
     
-    for cam_id, actor_ids in entity_actor_ids.items():
+    for cam_id in sorted(entity_actor_ids.keys()):
+        actor_ids = sorted(entity_actor_ids[cam_id])
         cam_ranges = entity_frame_ranges.get(cam_id, {})
         cam_bboxes = entity_bboxes.get(cam_id, {})
         

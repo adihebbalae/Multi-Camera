@@ -367,7 +367,7 @@ def get_mevid_persons_with_cameras(slot: str) -> Dict[str, List[str]]:
     orig_persons = orig_db.get("persons", {})
     
     result = {}
-    for pid in mevid_persons:
+    for pid in sorted(mevid_persons):
         person_data = orig_persons.get(pid, {})
         person_cameras = set(person_data.get("cameras", {}).keys())
         # Intersect with this slot's MEVID cameras
