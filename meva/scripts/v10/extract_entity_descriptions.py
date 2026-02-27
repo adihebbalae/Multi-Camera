@@ -222,30 +222,105 @@ def extract_crops(video_path: Path,
 # ============================================================================
 
 def _hsv_to_color(h: float, s: float, v: float) -> str:
-    """Convert OpenCV HSV (H:0-180, S:0-255, V:0-255) to color name."""
+    """Convert OpenCV HSV (H:0-180, S:0-255, V:0-255) to ~25 CSS-friendly color names.
+
+    Expanded vocabulary for better entity disambiguation.  VLMs trained on web
+    data recognise names like "navy", "olive", "khaki" better than raw HSV.
+
+    Color map (OpenCV hue 0-180):
+      achromatic (S<40): black / charcoal / dark gray / gray / silver / ivory / white
+      chromatic by hue band:
+        0-10,170-180 red   → maroon / crimson / red
+        10-22        orange → rust / orange
+        22-35        yellow → khaki / gold / yellow
+        35-55        green  → olive / green
+        55-78        teal   → teal
+        78-95        blue   → teal-blue (low H), navy (low V)
+        95-115       blue   → blue
+        115-131      indigo → indigo
+        131-155      purple → plum / purple
+        155-170      pink   → mauve / pink
+    """
+    # --- Achromatic: low saturation ---
     if s < 40:
-        if v < 60:
+        if v < 30:
             return "black"
-        elif v < 150:
+        elif v < 60:
+            return "charcoal"
+        elif v < 100:
+            return "dark gray"
+        elif v < 130:
             return "gray"
+        elif v < 150:
+            return "silver"
         else:
+            # Slight warm tint → ivory
+            if 15 <= h <= 35 and s >= 15:
+                return "ivory"
             return "white"
+    # Very dark with some saturation
     if v < 40:
         return "black"
+
+    # --- Chromatic: hue-based ---
+    # Red (H wraps: 0-10 and 170-180)
     if h < 10 or h > 170:
+        if v < 100:
+            return "maroon"
+        elif s > 150:
+            return "crimson"
         return "red"
+
+    # Orange (10-22)
     elif h < 22:
+        if v < 120:
+            return "rust"
         return "orange"
+
+    # Yellow (22-35)
     elif h < 35:
+        if s < 80:
+            return "khaki"
+        elif s < 150:
+            return "gold"
         return "yellow"
-    elif h < 78:
+
+    # Green (35-55)
+    elif h < 55:
+        if v < 120:
+            return "olive"
         return "green"
-    elif h < 131:
+
+    # Teal-green (55-78)
+    elif h < 78:
+        return "teal"
+
+    # Blue range (78-131)
+    elif h < 95:
+        if s > 100 and v > 100:
+            return "teal"
+        if v < 100:
+            return "navy"
         return "blue"
+    elif h < 115:
+        if v < 100:
+            return "navy"
+        return "blue"
+    elif h < 131:
+        return "indigo"
+
+    # Purple (131-155)
     elif h < 155:
+        if v < 100:
+            return "plum"
         return "purple"
+
+    # Pink (155-170)
     elif h <= 170:
+        if s < 100:
+            return "mauve"
         return "pink"
+
     return "unknown"
 
 
@@ -552,19 +627,21 @@ def analyze_crops_segformer(crops: List[np.ndarray]) -> Dict:
 # Description Generation (template-based, free)
 # ============================================================================
 
-def build_description(attrs: Dict) -> str:
+def build_description(attrs: Dict, include_position: bool = False) -> str:
     """
     Build a natural description from structured attributes.
 
     Handles both old-style (upper_color/lower_color only) and new segformer-style
     (hair_color, lower_type, shoe_color, accessories) attributes.
 
-    Examples (segformer):
-      → "a person with dark hair, wearing a blue top and black pants, with white shoes"
-      → "a person wearing a red top and gray skirt, carrying a bag"
+    Optional positional/height hints for disambiguation.
 
-    Examples (old-style):
-      → "a person in a blue top and black pants carrying a backpack"
+    Examples (segformer):
+      → "a person with dark hair, wearing a navy top and khaki pants, silver shoes"
+      → "a person wearing a crimson top and gray skirt, carrying a bag"
+
+    Examples (with position):
+      → "a tall person with dark hair, wearing a navy top and khaki pants, on the left side"
     """
     hair = attrs.get("hair_color")
     upper = attrs.get("upper_color", "unknown")
@@ -574,7 +651,13 @@ def build_description(attrs: Dict) -> str:
     accessories = attrs.get("accessories", [])
     carried = attrs.get("carried_objects", [])
 
-    desc = "a person"
+    # Relative height from bbox (tall/medium/short)
+    height_hint = attrs.get("height_category")  # set by enrich step if available
+
+    desc = "a"
+    if height_hint and height_hint != "medium":
+        desc += f" {height_hint}"
+    desc += " person"
 
     # Hair color
     if hair and hair != "unknown":
@@ -603,6 +686,12 @@ def build_description(attrs: Dict) -> str:
     carried_items = (["bag"] if "bag" in accessories else []) + list(carried[:2])
     if carried_items:
         desc += f", carrying a {' and '.join(carried_items[:2])}"
+
+    # Spatial position hint (for disambiguation)
+    if include_position:
+        position = attrs.get("frame_position")  # "left", "center", "right"
+        if position and position != "center":
+            desc += f", on the {position} side"
 
     return desc
 

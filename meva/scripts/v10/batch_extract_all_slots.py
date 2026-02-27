@@ -110,16 +110,21 @@ def find_raw_slots_for_canonical(canonical_slot: str, slot_index: Dict) -> List[
     return raw_slots
 
 
-def run_extraction(slot: str, verbose: bool = False, dry_run: bool = False) -> Dict:
+def run_extraction(slot: str, verbose: bool = False, dry_run: bool = False,
+                   method: str = "yolo", force: bool = False) -> Dict:
     """
     Run extract_entity_descriptions.py on a single slot.
+    
+    Args:
+        method: 'yolo', 'segformer', or 'color_only'
+        force:  if True, re-extract even if output exists
     
     Returns: {"success": bool, "entities": int, "error": str or None}
     """
     output_path = OUTPUT_DIR / f"{slot}.json"
     
-    # Check if already exists and has data
-    if output_path.exists():
+    # Check if already exists and has data (skip if --force not set)
+    if output_path.exists() and not force:
         try:
             with open(output_path) as f:
                 data = json.load(f)
@@ -143,6 +148,7 @@ def run_extraction(slot: str, verbose: bool = False, dry_run: bool = False) -> D
         str(EXTRACTION_SCRIPT),
         "--slot", slot,
         "--output", str(output_path),
+        "--method", method,
     ]
     if verbose:
         cmd.append("-v")
@@ -198,7 +204,8 @@ def run_extraction(slot: str, verbose: bool = False, dry_run: bool = False) -> D
 # ============================================================================
 
 def process_all_slots(dry_run: bool = False, verbose: bool = False,
-                      resume: bool = False) -> Dict:
+                      resume: bool = False, method: str = "yolo",
+                      force: bool = False) -> Dict:
     """
     Process all canonical slots from slot_index.json.
     
@@ -278,7 +285,8 @@ def process_all_slots(dry_run: bool = False, verbose: bool = False,
         
         log(f"[{i:3d}/{len(canonical_slots)}] {canonical_slot} → {raw_slot}")
         
-        result = run_extraction(raw_slot, verbose=verbose, dry_run=dry_run)
+        result = run_extraction(raw_slot, verbose=verbose, dry_run=dry_run,
+                                  method=method, force=force)
         
         if result.get("skipped"):
             log(f"  ✓ SKIPPED (already exists, {result['entities']} entities)")
@@ -369,6 +377,11 @@ def main():
         help="Resume from previous run (skip completed slots)")
     parser.add_argument("--verbose", "-v", action="store_true",
         help="Verbose output from extraction script")
+    parser.add_argument("--method", default="yolo",
+        choices=["yolo", "segformer", "color_only"],
+        help="Extraction method (default: yolo)")
+    parser.add_argument("--force-reextract", action="store_true",
+        help="Force re-extraction even if descriptions already exist")
     
     args = parser.parse_args()
     
@@ -376,6 +389,8 @@ def main():
         dry_run=args.dry_run,
         verbose=args.verbose,
         resume=args.resume,
+        method=args.method,
+        force=args.force_reextract,
     )
     
     print("\n" + "="*60)

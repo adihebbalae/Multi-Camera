@@ -23,6 +23,13 @@ from .utils.krtd import (
 )
 from .utils.yaml_stream import get_bbox_at_frame
 
+# Scene context (optional — graceful degradation)
+try:
+    from .scene_context import get_scene_context, enrich_description_with_location
+    _HAS_SCENE_CONTEXT = True
+except ImportError:
+    _HAS_SCENE_CONTEXT = False
+
 DEFAULT_FPS = 30.0
 FRAME_WIDTH = 1920
 FRAME_HEIGHT = 1080
@@ -285,6 +292,27 @@ def generate_spatial_qa(sg: SceneGraph, resolved: ResolvedGraph,
         # V10: Use disambiguated descriptions if available, else MEVID/geom
         desc_a = cand.get("disambiguated_a") or entity_descs.get(cand["entity_a"], f"a person on camera {cand['camera_a']}")
         desc_b = cand.get("disambiguated_b") or entity_descs.get(cand["entity_b"], f"a person on camera {cand['camera_b']}")
+        
+        # V10: Enrich with spatial location context if available
+        if _HAS_SCENE_CONTEXT:
+            parts = sg.slot.split(".")
+            if len(parts) >= 3:
+                site = parts[2]
+                cam_model = load_camera_model(cand["camera_a"])
+                if cam_model is not None:
+                    # Get 3D point for entity A
+                    if ent_a.keyframe_bboxes:
+                        mid_a = min(ent_a.keyframe_bboxes.keys(),
+                                    key=lambda f: abs(f - (ent_a.first_frame + ent_a.last_frame)//2))
+                        pt_a = cam_model.bbox_foot_to_world(ent_a.keyframe_bboxes[mid_a])
+                        if pt_a is not None:
+                            desc_a = enrich_description_with_location(desc_a, pt_a, site)
+                    if ent_b.keyframe_bboxes:
+                        mid_b = min(ent_b.keyframe_bboxes.keys(),
+                                    key=lambda f: abs(f - (ent_b.first_frame + ent_b.last_frame)//2))
+                        pt_b = cam_model.bbox_foot_to_world(ent_b.keyframe_bboxes[mid_b])
+                        if pt_b is not None:
+                            desc_b = enrich_description_with_location(desc_b, pt_b, site)
         
         # V10: Cross-category enrichment — add temporal context to spatial questions
         time_a = f"{ent_a.first_sec:.0f}s"

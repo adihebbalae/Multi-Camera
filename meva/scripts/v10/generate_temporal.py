@@ -25,6 +25,13 @@ from .utils.mevid import find_mevid_persons_for_slot
 from .utils.krtd import load_camera_model, CameraModel, INDOOR_CAMERAS
 from .utils.yaml_stream import get_bbox_at_frame
 
+# Scene context (optional — graceful degradation)
+try:
+    from .scene_context import get_scene_context, enrich_description_with_location
+    _HAS_SCENE_CONTEXT = True
+except ImportError:
+    _HAS_SCENE_CONTEXT = False
+
 # ============================================================================
 # Constants
 # ============================================================================
@@ -300,6 +307,43 @@ def _get_event_description(event: Event, sg: SceneGraph,
     return f"a person {short_act}"
 
 
+def _enrich_with_location(desc: str, event: Event, sg: SceneGraph) -> str:
+    """Optionally append location context to an event description using 3D scene models.
+
+    e.g. "a person in navy top opens vehicle door" →
+         "a person in navy top opens vehicle door near the school"
+    """
+    if not _HAS_SCENE_CONTEXT:
+        return desc
+    # Extract site from slot name
+    parts = sg.slot.split(".")
+    if len(parts) < 3:
+        return desc
+    site = parts[2]
+    # Get entity bbox for 3D projection
+    cam_model = load_camera_model(event.camera_id)
+    if cam_model is None:
+        return desc
+    # Use midpoint frame bbox
+    mid_frame = int((event.start_frame + event.end_frame) / 2)
+    bbox = None
+    for actor in event.actors:
+        eid = f"{event.camera_id}_actor_{actor['actor_id']}"
+        entity = sg.entities.get(eid)
+        if entity and entity.keyframe_bboxes:
+            # Find nearest keyframe
+            nearest = min(entity.keyframe_bboxes.keys(),
+                          key=lambda f: abs(f - mid_frame))
+            bbox = entity.keyframe_bboxes[nearest]
+            break
+    if bbox is None:
+        return desc
+    point_3d = cam_model.bbox_foot_to_world(bbox)
+    if point_3d is None:
+        return desc
+    return enrich_description_with_location(desc, point_3d, site)
+
+
 def _short_option_label(desc: str, activity: str) -> str:
     """Build a short label for an option from the event description.
     
@@ -539,6 +583,10 @@ def generate_temporal_qa(sg: SceneGraph, resolved: ResolvedGraph,
         
         desc_a = _get_event_description(ea, sg, entity_descs, fallback_eids)
         desc_b = _get_event_description(eb, sg, entity_descs, fallback_eids)
+        
+        # V10: Enrich with spatial location context (e.g. "near the school")
+        desc_a = _enrich_with_location(desc_a, ea, sg)
+        desc_b = _enrich_with_location(desc_b, eb, sg)
         
         # V10: Ensure descriptions are distinct — if identical, add camera context
         if desc_a == desc_b:

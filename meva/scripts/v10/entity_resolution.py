@@ -1,13 +1,15 @@
 """
 V7 entity_resolution.py — Step 3: Cross-camera entity linking.
 
-Uses MEVID ground truth person IDs + heuristic temporal handoff for
-cross-camera entity resolution. Produces entity clusters where each
-cluster represents the same real-world person across cameras.
+Uses MEVID ground truth person IDs + heuristic temporal handoff + 3D spatial
+proximity for cross-camera entity resolution. Produces entity clusters where
+each cluster represents the same real-world person across cameras.
 
 V7: Added MEVID validation stats to ResolvedGraph output.
+V10: Added 3D spatial proximity + description similarity boosting.
 """
 
+import re
 from typing import Any, Dict, List, Optional, Set, Tuple
 from collections import defaultdict
 from dataclasses import dataclass, asdict
@@ -228,16 +230,128 @@ def _resolve_heuristic(sg: SceneGraph, verbose: bool = False) -> List[CrossCamer
 
 
 # ============================================================================
+# Enhanced Heuristic: 3D Proximity + Description Similarity
+# ============================================================================
+
+def _normalize_desc_tokens(desc: str) -> Set[str]:
+    """Normalize entity description to token set for comparison."""
+    if not desc:
+        return set()
+    desc = re.sub(r'[^\w\s]', ' ', desc.lower())
+    stop = {"a", "an", "the", "in", "on", "with", "and", "of", "wearing",
+            "carrying", "person", "someone", "individual"}
+    return {w for w in desc.split() if w not in stop and len(w) > 1}
+
+
+def _description_overlap(desc_a: str, desc_b: str) -> float:
+    """Token overlap ratio between two descriptions (0-1)."""
+    tokens_a = _normalize_desc_tokens(desc_a)
+    tokens_b = _normalize_desc_tokens(desc_b)
+    if not tokens_a or not tokens_b:
+        return 0.0
+    intersection = tokens_a & tokens_b
+    union = tokens_a | tokens_b
+    return len(intersection) / len(union) if union else 0.0
+
+
+def _enhance_links_with_3d(
+    sg: SceneGraph,
+    links: List[CrossCameraLink],
+    entity_descs: Optional[Dict[str, str]] = None,
+    verbose: bool = False,
+) -> List[CrossCameraLink]:
+    """
+    Boost or penalize heuristic link confidence using 3D spatial proximity
+    and entity description similarity.
+    
+    Combined score: 0.4 * temporal + 0.3 * spatial + 0.3 * description
+    
+    Args:
+        sg: Scene graph with entity data
+        links: Existing heuristic links (temporal handoff)
+        entity_descs: Optional {entity_id: description_text} map
+    """
+    try:
+        from .scene_context import compute_3d_matching_score
+    except ImportError:
+        if verbose:
+            print("  3D matching: scene_context not available, skipping")
+        return links
+    
+    enhanced = []
+    boost_count = 0
+    
+    for link in links:
+        ea = sg.entities.get(link.entity_a)
+        eb = sg.entities.get(link.entity_b)
+        
+        if ea is None or eb is None:
+            enhanced.append(link)
+            continue
+        
+        # Get last bbox of entity A, first bbox of entity B
+        bbox_a = None
+        bbox_b = None
+        
+        if ea.keyframe_bboxes:
+            max_frame = max(ea.keyframe_bboxes.keys())
+            bbox_a = ea.keyframe_bboxes[max_frame]
+        
+        if eb.keyframe_bboxes:
+            min_frame = min(eb.keyframe_bboxes.keys())
+            bbox_b = eb.keyframe_bboxes[min_frame]
+        
+        if bbox_a is None or bbox_b is None:
+            enhanced.append(link)
+            continue
+        
+        # Description overlap
+        desc_a = (entity_descs or {}).get(link.entity_a, "")
+        desc_b = (entity_descs or {}).get(link.entity_b, "")
+        desc_overlap = _description_overlap(desc_a, desc_b)
+        
+        # Compute 3D matching score
+        result = compute_3d_matching_score(
+            link.camera_a, bbox_a,
+            link.camera_b, bbox_b,
+            time_gap_sec=link.time_gap_sec or 5.0,
+            description_overlap=desc_overlap,
+        )
+        
+        if result is None:
+            enhanced.append(link)
+            continue
+        
+        # Update confidence with combined score
+        old_conf = link.confidence
+        new_conf = result["combined_score"]
+        link.confidence = round(new_conf, 2)
+        
+        if new_conf > old_conf:
+            boost_count += 1
+        
+        enhanced.append(link)
+    
+    if verbose and boost_count:
+        print(f"  3D enhancement: {boost_count}/{len(links)} links boosted")
+    
+    return enhanced
+
+
+# ============================================================================
 # Combined Entity Resolution
 # ============================================================================
 
-def resolve_entities(sg: SceneGraph, verbose: bool = False) -> ResolvedGraph:
+def resolve_entities(sg: SceneGraph, verbose: bool = False,
+                     entity_descs: Optional[Dict[str, str]] = None) -> ResolvedGraph:
     """
-    Run entity resolution: MEVID ground truth + heuristic temporal handoff.
+    Run entity resolution: MEVID ground truth + heuristic temporal handoff
+    + 3D spatial proximity + description similarity.
     
     Args:
         sg: Scene graph from build_scene_graph
         verbose: Print progress
+        entity_descs: Optional {entity_id: description} for desc matching
     
     Returns:
         ResolvedGraph with cross-camera links and entity clusters
@@ -250,6 +364,11 @@ def resolve_entities(sg: SceneGraph, verbose: bool = False) -> ResolvedGraph:
     
     # 2. Heuristic temporal handoff
     heuristic_links = _resolve_heuristic(sg, verbose)
+    
+    # 3. Enhance heuristic links with 3D proximity + description similarity
+    heuristic_links = _enhance_links_with_3d(
+        sg, heuristic_links, entity_descs, verbose
+    )
     
     # 3. Combine links and build clusters using Union-Find
     all_links = mevid_links + heuristic_links
