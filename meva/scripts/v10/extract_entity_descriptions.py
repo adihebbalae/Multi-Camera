@@ -1,24 +1,26 @@
 #!/usr/bin/env python3
 """
-V8 Entity Description Extractor — Extract visual descriptions from raw video + geom.yml.
+V10 Entity Description Extractor — Extract visual descriptions from raw video + geom.yml.
 
 For EVERY annotated actor in a slot, this script:
   1. Parses geom.yml → per-actor bounding boxes per frame
-  2. Extracts 5 representative crops from the MP4 video
-  3. Runs YOLO color analysis on each crop (upper/lower body colors, carried objects)
+  2. Extracts 5 representative crops from the video
+  3. Runs SegFormer human parsing (default) or YOLO+color analysis on each crop
   4. Aggregates via majority vote across crops
-  5. Generates template description: "a person in blue top and black pants carrying a backpack"
+  5. Generates rich description: "a person with dark hair, wearing a blue top and black pants"
 
-This gives EVERY entity a visual description (not just the 10% with MEVID matches),
-solving the temporal disambiguation problem where "a person enters scene" is ambiguous
-when there are 100+ such events.
+Methods:
+  segformer  — SegFormer human parsing (18 body-part classes, best quality) [default]
+  yolo       — YOLO person detection + fixed-split colors + carried objects
+  color-only — Fixed vertical splits (fastest, no model needed)
 
 Cost: $0 (all local, no API calls)
-Time: ~3-4 min per slot (mostly video decode + YOLO inference)
+Time: ~2-3 min per slot (segformer on GPU), ~3-4 min (YOLO)
 
 Usage:
-    python3 scripts/v8/extract_entity_descriptions.py --slot 2018-03-11.11-25-00.school -v
-    python3 scripts/v8/extract_entity_descriptions.py --slot 2018-03-11.11-25-00.school --dry-run
+    python3 scripts/v10/extract_entity_descriptions.py --slot 2018-03-11.11-25.school -v
+    python3 scripts/v10/extract_entity_descriptions.py --slot 2018-03-11.11-25.school --method yolo
+    python3 scripts/v10/extract_entity_descriptions.py --slot 2018-03-11.11-25.school --dry-run
 """
 
 import argparse
@@ -43,19 +45,23 @@ KITWARE_BASE = Path("/nas/mars/dataset/MEVA/meva-data-repo/annotation/DIVA-phase
 KITWARE_TRAINING_BASE = Path("/nas/mars/dataset/MEVA/meva-data-repo/annotation/DIVA-phase-2/MEVA/kitware-meva-training")
 AVI_BASE = Path("/nas/mars/dataset/MEVA/avis")    # Raw AVIs — lossless, better color
 MP4_BASE = Path("/nas/mars/dataset/MEVA/mp4s")     # Fallback (CRF 32 re-encode)
-# User output directory — override with MEVA_OUTPUT_DIR env var
-_OUTPUT = Path(os.environ.get("OUTPUT_DIR") or os.environ.get("MEVA_OUTPUT_DIR") or str(Path.home() / "data"))
-OUTPUT_DIR = _OUTPUT / "entity_descriptions"
+# Entity descriptions output — matches reader default in person_descriptions.py
+# Override with MEVA_ENTITY_DESC_DIR env var
+OUTPUT_DIR = Path(os.environ.get("MEVA_ENTITY_DESC_DIR") or "/nas/mars/dataset/MEVA/entity_descriptions")
 
 # ============================================================================
 # Constants
 # ============================================================================
 
 CROPS_PER_ACTOR = 5           # Crops to extract per actor track
-MIN_BBOX_HEIGHT = 144         # Min bbox height in pixels for usable crop (~consistent with 2% area filter)
-MIN_BBOX_WIDTH = 144          # Min bbox width (~consistent with 2% area filter)
+MIN_BBOX_HEIGHT = 144         # Min bbox height in pixels for usable crop
+MIN_BBOX_WIDTH = 48           # Min bbox width — person bboxes are tall & narrow (median W/H ≈ 0.54)
 YOLO_CONF = 0.25              # YOLO detection confidence threshold
 YOLO_MODEL = "yolov8n.pt"    # Nano model (fast, sufficient for crops)
+
+# SegFormer human parsing model
+SEGFORMER_MODEL = "mattmdjaga/segformer_b2_clothes"
+MIN_REGION_PIXELS = 50        # Min pixels for a body region to count
 
 # COCO carried-object classes
 CARRIED_OBJECTS = {
@@ -386,6 +392,163 @@ def analyze_crops_yolo(crops: List[np.ndarray]) -> Dict:
 
 
 # ============================================================================
+# SegFormer Human Parsing (semantic body-part segmentation)
+# ============================================================================
+
+_segformer_processor = None
+_segformer_model = None
+
+
+def _get_segformer():
+    """Lazy-load SegFormer human parsing model (GPU if available)."""
+    global _segformer_processor, _segformer_model
+    if _segformer_model is None:
+        import torch
+        from transformers import SegformerImageProcessor, SegformerForSemanticSegmentation
+        _segformer_processor = SegformerImageProcessor.from_pretrained(SEGFORMER_MODEL)
+        _segformer_model = SegformerForSemanticSegmentation.from_pretrained(SEGFORMER_MODEL)
+        if torch.cuda.is_available():
+            _segformer_model = _segformer_model.to("cuda")
+        _segformer_model.eval()
+    return _segformer_processor, _segformer_model
+
+
+def _get_segmentation_map(crop_bgr: np.ndarray, processor, model) -> np.ndarray:
+    """Run SegFormer inference on a BGR crop → per-pixel class ID map (H, W)."""
+    import torch
+    from PIL import Image
+    rgb = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2RGB)
+    pil_img = Image.fromarray(rgb)
+    inputs = processor(images=pil_img, return_tensors="pt")
+    device = next(model.parameters()).device
+    inputs = {k: v.to(device) for k, v in inputs.items()}
+    with torch.no_grad():
+        logits = model(**inputs).logits  # (1, 18, H/4, W/4)
+    upsampled = torch.nn.functional.interpolate(
+        logits, size=crop_bgr.shape[:2], mode="bilinear", align_corners=False
+    )
+    return upsampled.argmax(dim=1).squeeze().cpu().numpy()
+
+
+def _extract_mask_color(crop_bgr: np.ndarray, mask: np.ndarray) -> str:
+    """Extract dominant color from BGR pixels where mask is True."""
+    if mask.sum() < MIN_REGION_PIXELS:
+        return "unknown"
+    # Gather masked pixels as (N, 3)
+    pixels = crop_bgr[mask]
+    hsv = cv2.cvtColor(pixels.reshape(-1, 1, 3), cv2.COLOR_BGR2HSV)
+    h_mean = float(np.mean(hsv[:, 0, 0]))
+    s_mean = float(np.mean(hsv[:, 0, 1]))
+    v_mean = float(np.mean(hsv[:, 0, 2]))
+    return _hsv_to_color(h_mean, s_mean, v_mean)
+
+
+# SegFormer class IDs → semantic groups
+_SEG_HAIR = 2
+_SEG_UPPER = 4
+_SEG_SKIRT = 5
+_SEG_PANTS = 6
+_SEG_DRESS = 7
+_SEG_LSHOE = 9
+_SEG_RSHOE = 10
+_SEG_HAT = 1
+_SEG_SUNGLASSES = 3
+_SEG_BAG = 16
+_SEG_SCARF = 17
+
+
+def analyze_crops_segformer(crops: List[np.ndarray]) -> Dict:
+    """
+    Analyze crops with SegFormer human parsing (18 body-part classes).
+
+    Segments each crop into semantic regions (hair, upper-clothes, pants/skirt/dress,
+    shoes, etc.), extracts HSV color per region, detects accessories.
+    Majority-votes across crops for robust results.
+
+    Returns dict with:
+      hair_color, upper_color, lower_color, lower_type,
+      shoe_color, accessories, carried_objects
+    """
+    processor, model = _get_segformer()
+
+    hair_colors = []
+    upper_colors = []
+    lower_colors = []
+    shoe_colors = []
+    lower_types = []
+    accessories_per_crop = []
+
+    for crop in crops:
+        h, w = crop.shape[:2]
+        if h < 15 or w < 8:
+            continue
+
+        seg_map = _get_segmentation_map(crop, processor, model)
+
+        # Hair (class 2)
+        hair_colors.append(_extract_mask_color(crop, seg_map == _SEG_HAIR))
+
+        # Upper-clothes (class 4)
+        upper_colors.append(_extract_mask_color(crop, seg_map == _SEG_UPPER))
+
+        # Lower body: Pants(6), Skirt(5), Dress(7) — pick dominant
+        pants_px = (seg_map == _SEG_PANTS).sum()
+        skirt_px = (seg_map == _SEG_SKIRT).sum()
+        dress_px = (seg_map == _SEG_DRESS).sum()
+
+        if dress_px > max(pants_px, skirt_px) and dress_px >= MIN_REGION_PIXELS:
+            lower_colors.append(_extract_mask_color(crop, seg_map == _SEG_DRESS))
+            lower_types.append("dress")
+        elif skirt_px > pants_px and skirt_px >= MIN_REGION_PIXELS:
+            lower_colors.append(_extract_mask_color(crop, seg_map == _SEG_SKIRT))
+            lower_types.append("skirt")
+        elif pants_px >= MIN_REGION_PIXELS:
+            lower_colors.append(_extract_mask_color(crop, seg_map == _SEG_PANTS))
+            lower_types.append("pants")
+        else:
+            lower_colors.append("unknown")
+            lower_types.append("unknown")
+
+        # Shoes (left 9 + right 10)
+        shoe_mask = (seg_map == _SEG_LSHOE) | (seg_map == _SEG_RSHOE)
+        shoe_colors.append(_extract_mask_color(crop, shoe_mask))
+
+        # Accessories
+        crop_acc = []
+        if (seg_map == _SEG_HAT).sum() >= MIN_REGION_PIXELS:
+            crop_acc.append("hat")
+        if (seg_map == _SEG_SUNGLASSES).sum() >= MIN_REGION_PIXELS:
+            crop_acc.append("sunglasses")
+        if (seg_map == _SEG_BAG).sum() >= MIN_REGION_PIXELS:
+            crop_acc.append("bag")
+        if (seg_map == _SEG_SCARF).sum() >= MIN_REGION_PIXELS:
+            crop_acc.append("scarf")
+        accessories_per_crop.append(crop_acc)
+
+    # Majority votes
+    hair = _majority_vote(hair_colors)
+    upper = _majority_vote(upper_colors)
+    lower = _majority_vote(lower_colors)
+    shoes = _majority_vote(shoe_colors)
+    lower_type = _majority_vote(lower_types)
+
+    # Accessories: keep if seen in ≥2 crops (or any if ≤2 total)
+    acc_counter = Counter(a for crop_acc in accessories_per_crop for a in crop_acc)
+    threshold = 2 if len(crops) > 2 else 1
+    accessories = sorted(a for a, cnt in acc_counter.items() if cnt >= threshold)
+
+    return {
+        "hair_color": hair,
+        "upper_color": upper,
+        "lower_color": lower,
+        "lower_type": lower_type if lower_type != "unknown" else "pants",
+        "shoe_color": shoes,
+        "accessories": accessories,
+        "carried_objects": [],  # SegFormer detects bags; other objects need YOLO
+    }
+
+
+# ============================================================================
 # Description Generation (template-based, free)
 # ============================================================================
 
@@ -393,33 +556,55 @@ def build_description(attrs: Dict) -> str:
     """
     Build a natural description from structured attributes.
 
-    Examples:
-      {"upper_color": "blue", "lower_color": "black", "carried_objects": ["backpack"]}
+    Handles both old-style (upper_color/lower_color only) and new segformer-style
+    (hair_color, lower_type, shoe_color, accessories) attributes.
+
+    Examples (segformer):
+      → "a person with dark hair, wearing a blue top and black pants, with white shoes"
+      → "a person wearing a red top and gray skirt, carrying a bag"
+
+    Examples (old-style):
       → "a person in a blue top and black pants carrying a backpack"
-
-      {"upper_color": "gray", "lower_color": "green", "carried_objects": []}
-      → "a person in a gray top and green pants"
     """
-    parts = []
-
+    hair = attrs.get("hair_color")
     upper = attrs.get("upper_color", "unknown")
     lower = attrs.get("lower_color", "unknown")
+    lower_type = attrs.get("lower_type", "pants")
+    shoes = attrs.get("shoe_color")
+    accessories = attrs.get("accessories", [])
+    carried = attrs.get("carried_objects", [])
 
-    if upper != "unknown" and lower != "unknown":
-        parts.append(f"a person in a {upper} top and {lower} pants")
-    elif upper != "unknown":
-        parts.append(f"a person in a {upper} top")
-    elif lower != "unknown":
-        parts.append(f"a person in {lower} pants")
-    else:
-        parts.append("a person")
+    desc = "a person"
 
-    objects = attrs.get("carried_objects", [])
-    if objects:
-        obj_str = " and ".join(objects[:2])  # Max 2 objects
-        parts[0] += f" carrying a {obj_str}"
+    # Hair color
+    if hair and hair != "unknown":
+        desc += f" with {hair} hair"
 
-    return parts[0]
+    # Clothing
+    clothing_parts = []
+    if upper != "unknown":
+        clothing_parts.append(f"a {upper} top")
+    if lower != "unknown":
+        clothing_parts.append(f"{lower} {lower_type}")
+
+    if clothing_parts:
+        desc += ", wearing " + " and ".join(clothing_parts)
+
+    # Shoes
+    if shoes and shoes != "unknown":
+        desc += f", {shoes} shoes"
+
+    # Accessories (worn items: hat, sunglasses, scarf)
+    worn = [a for a in accessories if a in ("hat", "sunglasses", "scarf")]
+    if worn:
+        desc += f", with a {' and '.join(worn)}"
+
+    # Carried items (bag from segformer + YOLO objects)
+    carried_items = (["bag"] if "bag" in accessories else []) + list(carried[:2])
+    if carried_items:
+        desc += f", carrying a {' and '.join(carried_items[:2])}"
+
+    return desc
 
 
 # ============================================================================
@@ -509,16 +694,19 @@ def find_slot_files(slot: str) -> List[Dict]:
     return results
 
 
-def process_slot(slot: str, use_yolo: bool = True,
+def process_slot(slot: str, method: str = "segformer",
                  verbose: bool = False) -> Dict:
     """
     Full pipeline: extract descriptions for all actors in a slot.
+
+    Args:
+        method: "segformer" (default, richest), "yolo", or "color-only"
 
     Returns dict ready for JSON output:
     {
       "slot": "...",
       "cameras": {...},
-      "actors": {actor_id_str: {camera, upper_color, lower_color, objects, description}},
+      "actors": {actor_id_str: {camera, upper_color, lower_color, ..., description}},
       "stats": {...}
     }
     """
@@ -528,11 +716,18 @@ def process_slot(slot: str, use_yolo: bool = True,
     if verbose:
         print(f"\n  Slot: {slot}")
         print(f"  Found {len(files)} cameras with geom annotations")
+        print(f"  Method: {method}")
 
-    if use_yolo:
+    if method == "yolo":
         if verbose:
             print(f"  Loading YOLO model...", end="", flush=True)
         _get_yolo()
+        if verbose:
+            print(" done.")
+    elif method == "segformer":
+        if verbose:
+            print(f"  Loading SegFormer model...", end="", flush=True)
+        _get_segformer()
         if verbose:
             print(" done.")
 
@@ -587,20 +782,26 @@ def process_slot(slot: str, use_yolo: bool = True,
             if not crops:
                 continue
 
-            if use_yolo:
+            if method == "segformer":
+                attrs = analyze_crops_segformer(crops)
+            elif method == "yolo":
                 attrs = analyze_crops_yolo(crops)
             else:
                 attrs = analyze_crops_color_only(crops)
 
             desc = build_description(attrs)
 
-            # Store by camera_actorID (matching V8 entity ID format)
+            # Store by camera_actorID (matching entity ID format)
             entity_key = f"{cam}_actor_{actor_id}"
             all_actors[entity_key] = {
                 "actor_id": actor_id,
                 "camera": cam,
+                "hair_color": attrs.get("hair_color", "unknown"),
                 "upper_color": attrs.get("upper_color", "unknown"),
                 "lower_color": attrs.get("lower_color", "unknown"),
+                "lower_type": attrs.get("lower_type", "pants"),
+                "shoe_color": attrs.get("shoe_color", "unknown"),
+                "accessories": attrs.get("accessories", []),
                 "carried_objects": attrs.get("carried_objects", []),
                 "description": desc,
                 "num_crops": len(crops),
@@ -609,7 +810,7 @@ def process_slot(slot: str, use_yolo: bool = True,
 
         analyze_time = time.time() - t2
         if verbose:
-            print(f"    Analysis: {analyze_time:.1f}s ({'YOLO' if use_yolo else 'color-only'})")
+            print(f"    Analysis: {analyze_time:.1f}s ({method})")
 
         cam_stats[cam] = {
             "actors": len(actors),
@@ -627,7 +828,7 @@ def process_slot(slot: str, use_yolo: bool = True,
 
     result = {
         "slot": slot,
-        "method": "yolo" if use_yolo else "color_only",
+        "method": method,
         "total_actors": len(all_actors),
         "actors_with_colors": described,
         "actors_without_colors": len(all_actors) - described,
@@ -654,17 +855,27 @@ def process_slot(slot: str, use_yolo: bool = True,
 
 def main():
     parser = argparse.ArgumentParser(
-        description="V8 Entity Description Extractor — Geom + Video → YOLO descriptions",
+        description="V10 Entity Description Extractor — Geom + Video → rich descriptions",
     )
     parser.add_argument("--slot", "-s", required=True,
         help="Slot to process (e.g., 2018-03-11.11-25.school)")
+    parser.add_argument("--method", "-m", default="segformer",
+        choices=["segformer", "yolo", "color-only"],
+        help="Analysis method: segformer (best, default), yolo, color-only")
     parser.add_argument("--no-yolo", action="store_true",
-        help="Color-only analysis (no YOLO, faster but no carried objects)")
+        help="DEPRECATED: use --method color-only instead")
     parser.add_argument("--dry-run", action="store_true",
         help="Show what would be processed without extracting")
     parser.add_argument("--output", "-o",
-        help="Output path (default: data/entity_descriptions/{slot}.json)")
+        help=f"Output path (default: {OUTPUT_DIR}/{{slot}}.json)")
     parser.add_argument("--verbose", "-v", action="store_true")
+
+    args = parser.parse_args()
+
+    # Handle deprecated --no-yolo flag
+    method = args.method
+    if args.no_yolo and method == "segformer":
+        method = "color-only"
 
     args = parser.parse_args()
 
@@ -686,7 +897,7 @@ def main():
             print(f"    {cam}: {len(actors)} actors, {usable} usable, video={'YES' if has_video else 'NO'} ({vfmt})")
         return
 
-    result = process_slot(args.slot, use_yolo=not args.no_yolo, verbose=args.verbose)
+    result = process_slot(args.slot, method=method, verbose=args.verbose)
 
     # Save
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -703,8 +914,8 @@ def main():
         if desc in seen or desc == "a person":
             continue
         seen.add(desc)
-        print(f"    {info['camera']} actor ...{str(info['actor_id'])[-6:]}: {desc}")
-        if len(seen) >= 10:
+        print(f"    {info['camera']} actor {info['actor_id']:>6}: {desc}")
+        if len(seen) >= 15:
             break
 
 
