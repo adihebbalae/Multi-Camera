@@ -17,9 +17,24 @@
 
 # set -e
 
-export MEVA_OUTPUT_DIR="/nas/neurosymbolic/multi-cam-dataset/meva/data"
-SLOT="${1:-2018-03-11.11-25.school}"
+
 OUTPUT_DIR="/nas/neurosymbolic/multi-cam-dataset/meva/data"
+mkdir -p "$OUTPUT_DIR/qa_pairs/raw"
+ENV_FILE="/home/ah66742/.env"  # this is where OPENAI_API_KEY is
+export MEVA_OUTPUT_DIR="/nas/neurosymbolic/multi-cam-dataset/meva/data/"
+
+
+# Parse args: extract --n flag and positional slot
+NATURALIZE=false
+SLOT=""
+for arg in "$@"; do
+  if [[ "$arg" == "--n" ]]; then
+    NATURALIZE=true
+  elif [[ "$arg" != --* ]]; then
+    SLOT="$arg"
+  fi
+done
+SLOT="${SLOT:-2018-03-11.11-25.school}"
 
 # export PYTHONPATH=$PYTHONPATH:$(pwd)
 
@@ -29,13 +44,21 @@ python3 -m scripts.v10.run_pipeline \
   -v \
   --seed 42
 
-RAW_JSON="$OUTPUT_DIR/qa_pairs/$SLOT.final.raw.json"
+
+RAW_JSON="$OUTPUT_DIR/qa_pairs/raw/$SLOT.raw.json"
 
 # echo ""
 # echo "=== Step 2: Naturalization (GPT — requires OPENAI_API_KEY) ==="
-# python3 -m scripts.v10.naturalize \
-#   --input "$RAW_JSON" \
-#   -v --yes
+if $NATURALIZE; then
+  # Load .env for OPENAI_API_KEY if not already set
+  if [[ -z "$OPENAI_API_KEY" && -f "$ENV_FILE" ]]; then
+    set -a; source "$ENV_FILE"; set +a
+  fi
+  python3 -m scripts.v10.naturalize \
+    --input "$RAW_JSON" \
+    --output "$OUTPUT_DIR/qa_pairs/$SLOT.naturalized.json" \
+    -v --yes
+fi
 
 # echo ""
 # echo "=== Step 3: Export to multi-cam-dataset format ==="

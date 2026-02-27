@@ -83,7 +83,7 @@ _REPO_DATA = Path(__file__).resolve().parent.parent.parent / "data"
 # User output directory — override with MEVA_OUTPUT_DIR env var
 _OUTPUT = Path(os.environ.get("OUTPUT_DIR") or os.environ.get("MEVA_OUTPUT_DIR") or str(Path.home() / "data"))
 
-OUTPUT_DIR = _OUTPUT / "qa_pairs"
+OUTPUT_DIR = _OUTPUT / "qa_pairs" / "raw"
 MEVA_MP4_BASE = Path("/nas/mars/dataset/MEVA/mp4s")
 # Entity descriptions directory — override with MEVA_ENTITY_DESC_DIR env var
 _ENTITY_DESC_DIR = Path(os.environ.get("MEVA_ENTITY_DESC_DIR") or "/nas/mars/dataset/MEVA/entity_descriptions")
@@ -276,6 +276,10 @@ def is_duplicate_within_slot(new_q: dict, existing_qs: list) -> bool:
         elif cat == "best_camera":
             if (v_new.get("cluster_id") == v_old.get("cluster_id") and
                 v_new.get("question_type") == v_old.get("question_type")):
+                return True
+            # V10: Also dedup by question text / entity description
+            if (v_new.get("question_type") == v_old.get("question_type") and
+                v_new.get("entity_description") == v_old.get("entity_description")):
                 return True
     
     return False
@@ -677,7 +681,7 @@ def main():
     parser.add_argument("--slot", help="Slot name (e.g., 2018-03-11.11-25.school)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     parser.add_argument("--seed", type=int, default=RANDOM_SEED, help="Random seed")
-    parser.add_argument("--output", help="Output file path (default: data/qa_pairs/{slot}.final.raw.json)")
+    parser.add_argument("--output", help="Output file path (default: data/qa_pairs/raw/{slot}.raw.json)")
     parser.add_argument("--no-save", action="store_true", help="Don't save to file, just print")
     parser.add_argument("--list-slots", action="store_true",
                        help="List all canonical slots")
@@ -698,7 +702,7 @@ def main():
     # Save output
     if not args.no_save:
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-        out_path = Path(args.output) if args.output else OUTPUT_DIR / f"{args.slot}.final.raw.json"
+        out_path = Path(args.output) if args.output else OUTPUT_DIR / f"{args.slot}.raw.json"
         with open(out_path, "w") as f:
             json.dump(output, f, indent=2, default=str)
         print(f"\nSaved: {out_path}")

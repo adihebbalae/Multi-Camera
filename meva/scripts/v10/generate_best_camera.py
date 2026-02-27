@@ -180,7 +180,21 @@ def generate_best_camera_qa(sg: SceneGraph, resolved: ResolvedGraph,
     
     # Attempt to generate `count` questions
     candidate_list = list(candidates.items())
-    rng.shuffle(candidate_list)
+    
+    # V10: Sort candidates so entities with visual descriptions come first
+    # This avoids generating generic "a person" questions when better options exist
+    def _has_visual_desc(item):
+        cid, _ = item
+        desc = _get_entity_description(cid, sg, entity_descs, resolved)
+        return 0 if desc != "a person" else 1
+    candidate_list.sort(key=_has_visual_desc)
+    
+    # Shuffle within each priority group (visual first, then generic)
+    visual_cands = [c for c in candidate_list if _has_visual_desc(c) == 0]
+    generic_cands = [c for c in candidate_list if _has_visual_desc(c) == 1]
+    rng.shuffle(visual_cands)
+    rng.shuffle(generic_cands)
+    candidate_list = visual_cands + generic_cands
     
     for cluster_id, events_cams in candidate_list:
         if len(qa_pairs) >= count:

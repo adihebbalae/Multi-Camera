@@ -82,7 +82,26 @@ def _get_event_description(event: Event, sg: SceneGraph,
         if act_check in desc.lower() or activity_text.lower() in desc.lower():
             return f"{desc} on camera {event.camera_id}"
         return f"{desc}, {activity_text.lower()} on camera {event.camera_id}"
-    return f"Someone {activity_text.lower()} on camera {event.camera_id}"
+    
+    # Use fallback description if available (still better than "Someone")
+    if fallback_desc:
+        act_check = humanize_activity(event.activity).lower()
+        if act_check in fallback_desc.lower() or activity_text.lower() in fallback_desc.lower():
+            return f"{fallback_desc} on camera {event.camera_id}"
+        return f"{fallback_desc}, {activity_text.lower()} on camera {event.camera_id}"
+    
+    # Last resort: use geom description directly from entity_descs
+    for eid, entity in sg.entities.items():
+        if entity.camera_id == event.camera_id:
+            for actor in event.actors:
+                if actor["actor_id"] == entity.actor_id:
+                    d = entity_descs.get(eid)
+                    if d and d not in ("a person", "a vehicle", "someone"):
+                        if activity_text.lower() in d.lower():
+                            return f"{d} on camera {event.camera_id}"
+                        return f"{d}, {activity_text.lower()} on camera {event.camera_id}"
+    
+    return f"A person {activity_text.lower()} on camera {event.camera_id}"
 
 
 # ============================================================================
@@ -335,7 +354,7 @@ def _build_question_text(descriptions: List[str]) -> str:
         Identify the correct chronological order of the following events
         observed across the cameras:
         I. A person wearing a gray top, opening a facility door on camera G421
-        II. Someone entering a scene through a structure on camera G330
+        II. A person entering a scene through a structure on camera G330
         ...
         Which is the correct chronological order?
     """

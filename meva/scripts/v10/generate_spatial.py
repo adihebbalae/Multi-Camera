@@ -16,7 +16,7 @@ from .parse_annotations import Event, find_clips_for_slot, DEFAULT_FRAMERATE
 from .build_scene_graph import SceneGraph, Entity
 from .entity_resolution import ResolvedGraph
 from .person_descriptions import enrich_entities
-from .activity_hierarchy import humanize_activity
+from .activity_hierarchy import humanize_activity, humanize_activity_gerund
 from .utils.krtd import (
     load_camera_model, CameraModel, compute_entity_distance,
     classify_proximity, INDOOR_CAMERAS,
@@ -24,6 +24,44 @@ from .utils.krtd import (
 from .utils.yaml_stream import get_bbox_at_frame
 
 DEFAULT_FPS = 30.0
+FRAME_WIDTH = 1920
+FRAME_HEIGHT = 1080
+FRAME_EDGE_MARGIN = 10  # pixels
+
+
+def _is_bbox_clipping_frame(bbox: List[int], margin: int = FRAME_EDGE_MARGIN) -> bool:
+    """Check if a bounding box is clipping the frame edge."""
+    if not bbox or len(bbox) < 4:
+        return False
+    x1, y1, x2, y2 = bbox[:4]
+    return (x1 <= margin or y1 <= margin or
+            x2 >= FRAME_WIDTH - margin or y2 >= FRAME_HEIGHT - margin)
+
+
+def _disambiguate_description(desc: str, entity: Entity, sg: SceneGraph,
+                               other_desc: str) -> str:
+    """Add disambiguating context when two entities share the same description.
+    
+    Appends temporal or activity context to make descriptions unique.
+    """
+    # Find primary activity for this entity
+    primary_activity = None
+    for evt in sg.events:
+        if evt.camera_id == entity.camera_id:
+            for actor in evt.actors:
+                if actor["actor_id"] == entity.actor_id:
+                    primary_activity = evt.activity
+                    break
+            if primary_activity:
+                break
+    
+    # Add temporal context
+    time_str = f"at {entity.first_sec:.0f}s"
+    
+    if primary_activity:
+        act_gerund = humanize_activity_gerund(primary_activity)
+        return f"{desc} ({act_gerund.lower()} {time_str})"
+    return f"{desc} ({time_str})"
 
 
 # ============================================================================
@@ -78,6 +116,12 @@ def _find_spatial_candidates(sg: SceneGraph, verbose: bool = False) -> List[Dict
         
         pos = model.bbox_foot_to_world(bbox)
         if pos is None:
+            continue
+        
+        # V10: Skip entities whose bbox clips the frame edge
+        if _is_bbox_clipping_frame(bbox):
+            if verbose:
+                print(f"    Skipping {eid}: bbox clips frame edge {bbox}")
             continue
         
         entity_positions[eid] = {
@@ -155,13 +199,24 @@ def generate_spatial_qa(sg: SceneGraph, resolved: ResolvedGraph,
         return []
     
     # Filter out pairs with identical descriptions (indistinguishable entities)
+    # V10: Instead of just filtering, try to disambiguate with activity/time context
     filtered = []
     for c in candidates:
         desc_a = entity_descs.get(c["entity_a"], "")
         desc_b = entity_descs.get(c["entity_b"], "")
         if desc_a and desc_b and desc_a == desc_b:
-            if verbose:
-                print(f"    Filtering spatial pair: identical descriptions '{desc_a}'")
+            # Try to disambiguate
+            ent_a = c["entity_a_obj"]
+            ent_b = c["entity_b_obj"]
+            new_a = _disambiguate_description(desc_a, ent_a, sg, desc_b)
+            new_b = _disambiguate_description(desc_b, ent_b, sg, desc_a)
+            if new_a != new_b:
+                # Store disambiguated descriptions for use in question text
+                c["disambiguated_a"] = new_a
+                c["disambiguated_b"] = new_b
+                filtered.append(c)
+            elif verbose:
+                print(f"    Filtering spatial pair: cannot disambiguate '{desc_a}'")
             continue
         filtered.append(c)
     candidates = filtered
@@ -185,17 +240,37 @@ def generate_spatial_qa(sg: SceneGraph, resolved: ResolvedGraph,
     rng.shuffle(moderate)
     rng.shuffle(far)
     
+    # Dedup: track (desc_a, desc_b, camera) tuples to avoid identical-looking questions
+    def _dedup_key(c):
+        da = c.get("disambiguated_a") or entity_descs.get(c["entity_a"], "")
+        db = c.get("disambiguated_b") or entity_descs.get(c["entity_b"], "")
+        cam = c["camera_a"]
+        # Normalize order so (A,B) == (B,A)
+        pair = tuple(sorted([da, db]))
+        return (pair, cam)
+
+    seen_keys = set()
+    def _try_add(c, selected_list):
+        key = _dedup_key(c)
+        if key in seen_keys:
+            return False
+        seen_keys.add(key)
+        selected_list.append(c)
+        return True
+
     selected = []
     for bucket in [near, moderate, far]:
         if bucket and len(selected) < count:
-            selected.append(bucket[0])
+            for b in bucket:
+                if _try_add(b, selected):
+                    break
     
     remaining = near[1:] + moderate[1:] + far[1:]
     rng.shuffle(remaining)
     for c in remaining:
         if len(selected) >= count:
             break
-        selected.append(c)
+        _try_add(c, selected)
     
     qa_pairs = []
     
@@ -207,13 +282,20 @@ def generate_spatial_qa(sg: SceneGraph, resolved: ResolvedGraph,
         
         # All spatial questions are same-camera (filtered in _find_spatial_candidates)
         
-        # V8: Use MEVID descriptions
-        desc_a = entity_descs.get(cand["entity_a"], f"a person on camera {cand['camera_a']}")
-        desc_b = entity_descs.get(cand["entity_b"], f"a person on camera {cand['camera_b']}")
+        # V10: Use disambiguated descriptions if available, else MEVID/geom
+        desc_a = cand.get("disambiguated_a") or entity_descs.get(cand["entity_a"], f"a person on camera {cand['camera_a']}")
+        desc_b = cand.get("disambiguated_b") or entity_descs.get(cand["entity_b"], f"a person on camera {cand['camera_b']}")
+        
+        # V10: Cross-category enrichment — add temporal context to spatial questions
+        time_a = f"{ent_a.first_sec:.0f}s"
+        time_b = f"{ent_b.first_sec:.0f}s"
+        temporal_context = ""
+        if abs(ent_a.first_sec - ent_b.first_sec) > 10:
+            temporal_context = f" (around the {time_a}-{time_b} mark)"
         
         question = (
             f"How close are {desc_a} and {desc_b} "
-            f"in the scene visible on camera {cand['camera_a']}?"
+            f"in the scene visible on camera {cand['camera_a']}{temporal_context}?"
         )
         
         options = [

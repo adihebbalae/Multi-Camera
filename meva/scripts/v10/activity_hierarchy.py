@@ -178,8 +178,41 @@ _GERUND_MAP = {
     "drops": "dropping", "embraces": "embracing", "uses": "using",
     "makes": "making", "steals": "stealing", "starts": "starting",
     "stops": "stopping", "turns": "turning", "transfers": "transferring",
-    "reverses": "reversing",
+    "reverses": "reversing", "abandons": "abandoning",
+    "leaves": "leaving", "purchases": "purchasing",
 }
+
+
+def _conjugate_gerund(verb: str) -> str:
+    """Smart fallback: conjugate an unknown verb to its -ing form.
+
+    Handles common English patterns:
+      leaves → leaving, purchases → purchasing, transfers → transferring,
+      runs → running, sits → sitting, walks → walking
+    """
+    if verb in _GERUND_MAP:
+        return _GERUND_MAP[verb]
+    # Strip third-person 's'/'es' to get base form
+    if verb.endswith("es"):
+        base = verb[:-2]   # "leaves" → "leav", "purchases" → "purchas"
+    elif verb.endswith("s") and not verb.endswith("ss"):
+        base = verb[:-1]   # "abandons" → "abandon"
+    else:
+        base = verb
+    # Apply standard English gerund rules on base form
+    if base.endswith("ie"):       # "die" → "dying"
+        return base[:-2] + "ying"
+    if base.endswith("ee"):       # "see" → "seeing"
+        return base + "ing"
+    if base.endswith("e"):        # "leave" → "leaving", "make" → "making"
+        return base[:-1] + "ing"
+    # CVC doubling: short base ending in consonant-vowel-consonant
+    if (len(base) >= 3
+            and base[-1] not in "aeiouwxy"
+            and base[-2] in "aeiou"
+            and base[-3] not in "aeiou"):
+        return base + base[-1] + "ing"   # "run" → "running", "sit" → "sitting"
+    return base + "ing"
 
 
 def humanize_activity_gerund(activity: str) -> str:
@@ -191,7 +224,7 @@ def humanize_activity_gerund(activity: str) -> str:
     words = base.split()
     if words:
         first = words[0]
-        gerund = _GERUND_MAP.get(first, first + "ing")
+        gerund = _conjugate_gerund(first)
         rest = " ".join(words[1:])
         # Only add article if rest starts with a noun-like word
         # Skip if rest starts with preposition, adverb, article, or particle

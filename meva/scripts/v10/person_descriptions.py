@@ -444,7 +444,25 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
     assigned_persons: Dict[str, Set[str]] = {}  # camera → set of used person_ids
     
     for eid, entity in sg.entities.items():
-        if entity.entity_type != "person":
+        # Determine effective entity type: if entity is tagged as "vehicle"
+        # but participates ONLY in person_* activities, treat it as a person.
+        # This fixes annotation artifacts where types.yml misclassifies actors.
+        effective_type = entity.entity_type
+        if effective_type == "vehicle":
+            # Check if ALL activities for this entity start with 'person_'
+            entity_activities = []
+            for evt in sg.events:
+                if evt.camera_id == entity.camera_id:
+                    for actor in evt.actors:
+                        if actor["actor_id"] == entity.actor_id:
+                            entity_activities.append(evt.activity)
+            # If entity has person activities, treat as person
+            has_person_acts = any(a.startswith("person_") for a in entity_activities)
+            has_vehicle_acts = any(a.startswith("vehicle_") for a in entity_activities)
+            if has_person_acts and not has_vehicle_acts:
+                effective_type = "person"  # reclassify
+        
+        if effective_type != "person":
             entity_descriptions[eid] = "a vehicle"
             continue
         

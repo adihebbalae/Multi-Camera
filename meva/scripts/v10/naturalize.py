@@ -141,8 +141,34 @@ _GERUND_MAP = {
     "pulls": "pulling", "pushes": "pushing", "interacts": "interacting",
     "drops": "dropping", "embraces": "embracing", "uses": "using",
     "makes": "making", "steals": "stealing", "starts": "starting",
-    "stops": "stopping", "turns": "turning",
+    "stops": "stopping", "turns": "turning", "transfers": "transferring",
+    "reverses": "reversing", "abandons": "abandoning",
+    "leaves": "leaving", "purchases": "purchasing",
 }
+
+
+def _conjugate_gerund(verb: str) -> str:
+    """Smart fallback: conjugate an unknown verb to its -ing form."""
+    if verb in _GERUND_MAP:
+        return _GERUND_MAP[verb]
+    if verb.endswith("es"):
+        base = verb[:-2]
+    elif verb.endswith("s") and not verb.endswith("ss"):
+        base = verb[:-1]
+    else:
+        base = verb
+    if base.endswith("ie"):
+        return base[:-2] + "ying"
+    if base.endswith("ee"):
+        return base + "ing"
+    if base.endswith("e"):
+        return base[:-1] + "ing"
+    if (len(base) >= 3
+            and base[-1] not in "aeiouwxy"
+            and base[-2] in "aeiou"
+            and base[-3] not in "aeiou"):
+        return base + base[-1] + "ing"
+    return base + "ing"
 
 _NO_ARTICLE = frozenset({
     "up", "down", "on", "off", "out", "in", "to", "from",
@@ -168,7 +194,7 @@ def _humanize_gerund(activity: str) -> str:
         return base.capitalize()
 
     first = words[0]
-    gerund = _GERUND_MAP.get(first, first + "ing")
+    gerund = _conjugate_gerund(first)
     rest = " ".join(words[1:])
 
     if rest:
@@ -643,8 +669,11 @@ and must not be changed.
 
 Priority order (resolve conflicts by rank):
 1. Preserve factual meaning exactly — never alter facts, person descriptions \
-(clothing colors, carried objects), activities, spatial terms, or answer options
-2. Ensure flawless grammar, punctuation, and natural phrasing
+(clothing colors, carried objects), spatial terms, or answer options
+2. Ensure flawless grammar, punctuation, and natural phrasing — FIX any \
+garbled verb forms (e.g. "leavesing" → "leaving", "transfersing" → \
+"transferring", "purchasesing" → "purchasing"). These are template bugs, \
+not intentional text.
 3. Apply creative stylistic variation — use different sentence openings, \
 structures, and vocabulary each time. Avoid formulaic patterns like always \
 starting with "In this scene..." or "Looking at the cameras..."
@@ -654,13 +683,17 @@ starting with "In this scene..." or "Looking at the cameras..."
 - Do NOT change the meaning of the question.
 - Do NOT add new facts or details not present in the original.
 - Do NOT remove constraints or simplify the logical requirement.
-- Do NOT alter person descriptions (clothing colors, carried objects).
+- Do NOT alter person descriptions (clothing colors, carried objects) — but \
+DO fix obvious grammar errors within them (broken verb conjugations, garbled \
+words, missing articles).
 - Do not change answer options.
 - Camera identifiers (e.g., G421) in question text are acceptable ONLY for \
 perception and re-identification questions where cameras are inherent.
 - For PERCEPTION questions ("What activity..." / "Which camera..."), maintain \
 the direct question form but you may vary surrounding wording naturally.
-- Only improve grammar, clarity, and naturalness.
+- You MAY rephrase robotic activity descriptions into natural English \
+(e.g. "entering scene through structure" → "walking in through a doorway").
+- Fix all grammar, spelling, and conjugation errors.
 
 ## Ontology Translation
 Translate robotic activity labels into natural human prose. Examples:

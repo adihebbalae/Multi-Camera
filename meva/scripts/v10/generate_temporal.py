@@ -11,7 +11,9 @@ import random
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from .parse_annotations import Event
+import numpy as np
+
+from .parse_annotations import Event, find_clips_for_slot
 from .build_scene_graph import SceneGraph, Entity
 from .entity_resolution import ResolvedGraph
 from .person_descriptions import enrich_entities, get_mevid_persons_with_cameras
@@ -20,6 +22,8 @@ from .activity_hierarchy import (
     are_related, get_relationship, get_relationship_strength, humanize_activity,
 )
 from .utils.mevid import find_mevid_persons_for_slot
+from .utils.krtd import load_camera_model, CameraModel, INDOOR_CAMERAS
+from .utils.yaml_stream import get_bbox_at_frame
 
 # ============================================================================
 # Constants
@@ -29,6 +33,124 @@ MIN_GAP = 1.0
 MAX_GAP = 15.0
 FALLBACK_MAX_GAP = 20.0
 DEFAULT_FPS = 30.0
+# Cross-camera duplicate detection: if two events have same activity,
+# 3D positions within this distance AND time within this window,
+# they are likely the same real-world event seen by different cameras.
+CROSS_CAM_DEDUP_DISTANCE_M = 5.0    # meters
+CROSS_CAM_DEDUP_TIME_SEC = 8.0      # seconds
+# Frame boundary margin for bbox-in-frame validation
+FRAME_WIDTH = 1920
+FRAME_HEIGHT = 1080
+FRAME_EDGE_MARGIN = 10  # pixels from edge to consider "clipping"
+
+
+# ============================================================================
+# Cross-Camera Event Deduplication
+# ============================================================================
+
+def _is_bbox_clipping_frame(bbox: List[int], margin: int = FRAME_EDGE_MARGIN) -> bool:
+    """Check if a bounding box is clipping the frame edge (entity likely out of view)."""
+    if not bbox or len(bbox) < 4:
+        return False
+    x1, y1, x2, y2 = bbox[:4]
+    return (x1 <= margin or y1 <= margin or 
+            x2 >= FRAME_WIDTH - margin or y2 >= FRAME_HEIGHT - margin)
+
+
+def _get_event_3d_position(event: Event, sg: SceneGraph) -> Optional[np.ndarray]:
+    """Get approximate 3D world position for an event using KRTD projection.
+    
+    Uses the first person actor's bbox at the event's mid-frame.
+    Returns ENU coordinates or None if projection fails.
+    """
+    if event.camera_id in INDOOR_CAMERAS:
+        return None
+    model = load_camera_model(event.camera_id)
+    if model is None:
+        return None
+    
+    # Find bbox for first person actor
+    mid_frame = (event.start_frame + event.end_frame) // 2
+    for eid, entity in sg.entities.items():
+        if entity.camera_id != event.camera_id:
+            continue
+        for actor in event.actors:
+            if actor["actor_id"] == entity.actor_id and entity.entity_type == "person":
+                # Look for bbox near mid_frame
+                if entity.keyframe_bboxes:
+                    closest = min(entity.keyframe_bboxes.keys(),
+                                 key=lambda f: abs(int(f) - mid_frame))
+                    if abs(int(closest) - mid_frame) <= 30:  # within 1 second
+                        bbox = entity.keyframe_bboxes[closest]
+                        pos = model.bbox_foot_to_world(bbox)
+                        return pos
+    return None
+
+
+def _is_likely_duplicate_event(ea: Event, eb: Event, sg: SceneGraph) -> bool:
+    """Check if two cross-camera events are likely the same real-world event.
+    
+    Two events are duplicates if they:
+    1. Have the same activity type
+    2. Are temporally close (within CROSS_CAM_DEDUP_TIME_SEC)
+    3. Have similar 3D positions (within CROSS_CAM_DEDUP_DISTANCE_M)
+    
+    This catches the case where out-of-sync cameras record the same
+    real-world action at slightly different timestamps.
+    """
+    # Must be same activity for duplicate detection
+    if ea.activity != eb.activity:
+        return False
+    
+    # Must be on different cameras (same-camera = not duplicates)
+    if ea.camera_id == eb.camera_id:
+        return False
+    
+    # Check temporal proximity
+    time_gap = abs(ea.start_sec - eb.start_sec)
+    if time_gap > CROSS_CAM_DEDUP_TIME_SEC:
+        return False
+    
+    # If we can get 3D positions, check spatial proximity
+    pos_a = _get_event_3d_position(ea, sg)
+    pos_b = _get_event_3d_position(eb, sg)
+    
+    if pos_a is not None and pos_b is not None:
+        dist = float(np.linalg.norm(pos_a - pos_b))
+        if dist < CROSS_CAM_DEDUP_DISTANCE_M:
+            return True  # Same place, same time, same activity = duplicate
+        # If they're far apart, they're distinct events even with same activity
+        return False
+    
+    # Without 3D positions, use heuristic: same activity + close time = likely dup
+    # Be conservative — only flag if very close temporally
+    if time_gap <= 3.0:
+        return True
+    
+    return False
+
+
+def _event_has_visible_bbox(event: Event, sg: SceneGraph) -> bool:
+    """Check if the event's primary actor has a bbox that is fully within the frame.
+    
+    Rejects actors whose bounding boxes clip the frame edge, since they
+    may not be visually identifiable from the camera angle.
+    """
+    mid_frame = (event.start_frame + event.end_frame) // 2
+    for eid, entity in sg.entities.items():
+        if entity.camera_id != event.camera_id:
+            continue
+        for actor in event.actors:
+            if actor["actor_id"] == entity.actor_id:
+                if entity.keyframe_bboxes:
+                    closest = min(entity.keyframe_bboxes.keys(),
+                                 key=lambda f: abs(int(f) - mid_frame))
+                    if abs(int(closest) - mid_frame) <= 30:
+                        bbox = entity.keyframe_bboxes[closest]
+                        if not _is_bbox_clipping_frame(bbox):
+                            return True
+                        return False  # bbox clips edge
+    return True  # No bbox data — assume visible (don't block)
 
 
 # ============================================================================
@@ -157,14 +279,25 @@ def _get_event_description(event: Event, sg: SceneGraph,
                             return desc
                         return f"{desc} {short_act}"
     
-    # If only fallback was found, use generic form
-    if best_desc and (not fallback_eids):
+    # If only fallback was found, use it (better than "someone")
+    if best_desc:
         if short_act in best_desc:
             return best_desc
         return f"{best_desc} {short_act}"
     
-    # Fallback: V7-style
-    return f"someone {short_act}"
+    # Last resort: use any available description from entity_descs
+    for eid, entity in sg.entities.items():
+        if entity.camera_id == event.camera_id:
+            for actor in event.actors:
+                if actor["actor_id"] == entity.actor_id:
+                    desc = entity_descs.get(eid)
+                    if desc and desc not in ("a person", "a vehicle", "someone"):
+                        if short_act in desc:
+                            return desc
+                        return f"{desc} {short_act}"
+    
+    # Absolute fallback: use "a person" instead of "someone"
+    return f"a person {short_act}"
 
 
 def _short_option_label(desc: str, activity: str) -> str:
@@ -192,7 +325,12 @@ def _find_temporal_candidates(events: List[Event], sg: SceneGraph,
                               resolved: ResolvedGraph,
                               mevid_person_cameras: Dict[int, Set[str]],
                               max_gap: float = MAX_GAP) -> List[Dict]:
-    """Find cross-camera event pairs within temporal gap constraints."""
+    """Find cross-camera event pairs within temporal gap constraints.
+    
+    V10 additions:
+    - Rejects pairs that are likely the same real-world event (cross-camera dedup)
+    - Rejects events whose actors have bbox clipping the frame edge
+    """
     candidates = []
     seen = set()
     
@@ -218,6 +356,14 @@ def _find_temporal_candidates(events: List[Event], sg: SceneGraph,
             if key in seen:
                 continue
             seen.add(key)
+            
+            # V10: Cross-camera event dedup — reject duplicate events
+            if _is_likely_duplicate_event(first, second, sg):
+                continue
+            
+            # V10: Bbox-in-frame validation — reject actors clipping frame edge
+            if not _event_has_visible_bbox(first, sg) or not _event_has_visible_bbox(second, sg):
+                continue
             
             conn = _score_connection(first, second, sg, resolved, mevid_person_cameras)
             candidates.append({
@@ -394,11 +540,28 @@ def generate_temporal_qa(sg: SceneGraph, resolved: ResolvedGraph,
         desc_a = _get_event_description(ea, sg, entity_descs, fallback_eids)
         desc_b = _get_event_description(eb, sg, entity_descs, fallback_eids)
         
+        # V10: Ensure descriptions are distinct — if identical, add camera context
+        if desc_a == desc_b:
+            desc_a = f"{desc_a} (on camera {ea.camera_id})"
+            desc_b = f"{desc_b} (on camera {eb.camera_id})"
+        
+        # V10: Cross-category enrichment — add spatial context (camera ID)
+        # This helps ground the temporal question spatially
+        if f"camera" not in desc_a.lower():
+            desc_a_enriched = f"{desc_a} on camera {ea.camera_id}"
+        else:
+            desc_a_enriched = desc_a
+        if f"camera" not in desc_b.lower():
+            desc_b_enriched = f"{desc_b} on camera {eb.camera_id}"
+        else:
+            desc_b_enriched = desc_b
+        
         # Build short option labels from descriptions (no camera IDs)
         short_a = _short_option_label(desc_a, ea.activity)
         short_b = _short_option_label(desc_b, eb.activity)
         
-        question = f"{desc_a} and {desc_b} -- which occurred first?"
+        # Use enriched descriptions (with camera context) in question text
+        question = f"{desc_a_enriched} and {desc_b_enriched} -- which occurred first?"
         
         options = [
             f"{short_a} occurred first",
@@ -409,7 +572,7 @@ def generate_temporal_qa(sg: SceneGraph, resolved: ResolvedGraph,
         correct_idx = 0
         
         if rng.random() < 0.5:
-            question = f"{desc_b} and {desc_a} -- which occurred first?"
+            question = f"{desc_b_enriched} and {desc_a_enriched} -- which occurred first?"
             options = [
                 f"{short_b} occurred first",
                 f"{short_a} occurred first",

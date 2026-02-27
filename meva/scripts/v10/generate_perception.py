@@ -159,10 +159,10 @@ def generate_perception_qa(sg: SceneGraph, resolved: ResolvedGraph,
         correct_idx = options.index(f"Camera {correct_cam}")
         
         human_act = humanize_activity(act)
-        # Use gerund form for natural sentence: "Which camera captures someone opening a door?"
+        # Use gerund form for natural sentence: "Which camera captures a person opening a door?"
         gerund_act = humanize_activity_gerund(act)
         gerund_lower = gerund_act[0].lower() + gerund_act[1:]
-        question = f"Which camera captures someone {gerund_lower}?"
+        question = f"Which camera captures a person {gerund_lower}?"
         
         rep_event = activity_events[act][0] if activity_events[act] else None
         
@@ -243,10 +243,41 @@ def generate_perception_qa(sg: SceneGraph, resolved: ResolvedGraph,
             desc = get_person_description(pid)
             gpt_desc = pdata.get("gpt_description", "")
             
+            # V10: Build a contextual question that identifies WHICH person
+            # Find an activity this person performs on this camera
+            person_activity = None
+            for evt in sg.events:
+                if evt.camera_id == cam:
+                    for actor in evt.actors:
+                        # Try to match MEVID person to event actor
+                        eid = f"{cam}_actor_{actor['actor_id']}"
+                        entity = sg.entities.get(eid)
+                        if entity and hasattr(entity, '_mevid_person_id') and entity._mevid_person_id == pid:
+                            person_activity = evt.activity
+                            break
+                    if person_activity:
+                        break
+            
+            # Build contextual person identifier
+            if person_activity:
+                act_gerund = humanize_activity_gerund(person_activity)
+                person_context = f"A person {act_gerund.lower()} is visible on camera {cam}."
+            else:
+                # Use partial description to identify without revealing answer
+                lower_color = pdata.get("primary_lower_color", "unknown")
+                if attr_opts["attribute_type"] == "upper_color" and lower_color != "unknown":
+                    person_context = f"A person wearing {lower_color} pants is visible on camera {cam}."
+                else:
+                    upper_color = pdata.get("primary_upper_color", "unknown")
+                    if attr_opts["attribute_type"] == "lower_color" and upper_color != "unknown":
+                        person_context = f"A person in a {upper_color} top is visible on camera {cam}."
+                    else:
+                        person_context = f"A person is visible on camera {cam}."
+            
             # Frame the question: show the person on a camera, ask about attribute
             if attr_opts["attribute_type"] == "upper_color":
                 question = (
-                    f"A person is visible on camera {cam}. "
+                    f"{person_context} "
                     f"What color is their upper body clothing?"
                 )
             elif attr_opts["attribute_type"] == "lower_color":
