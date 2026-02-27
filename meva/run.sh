@@ -13,7 +13,7 @@
 #
 # REQUIREMENTS:
 #   pip install pyyaml numpy opencv-python openai
-#   (or: source /home/ah66742/venv/bin/activate)
+#   (or: source your-venv/bin/activate)
 
 # set -e
 

@@ -7,13 +7,14 @@ Parses MEVID annotation data to find:
 3. MEVID-supported slots (slots where cross-camera persons exist)
 """
 
+import os
 import re
 from pathlib import Path
 from collections import defaultdict
 from typing import Dict, List, Set, Tuple, Optional
 
-MEVID_DATA_DIR = Path("/nas/mars/dataset/MEVA/mevid_data/mevid-v1-annotation-data")
-MEVID_URLS = Path("/nas/mars/dataset/MEVA/mevid_data/mevid-v1-video-URLS.txt")
+MEVID_DATA_DIR = Path(os.environ.get("MEVA_MEVID_DATA_DIR") or "/nas/mars/dataset/MEVA/mevid_data/mevid-v1-annotation-data")
+MEVID_URLS = Path(os.environ.get("MEVA_MEVID_URLS") or "/nas/mars/dataset/MEVA/mevid_data/mevid-v1-video-URLS.txt")
 
 # Regex for MEVID image filename: {PersonID}O{OutfitID}C{CameraID}T{TrackletID}F{Frame}.jpg
 MEVID_NAME_RE = re.compile(r'^(\d{4})O(\d{3})C(\d+)T(\d{3})F(\d{5})\.jpg$')

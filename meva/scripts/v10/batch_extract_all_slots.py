@@ -22,9 +22,9 @@ Usage:
 Cost: $0 (local YOLO, no API calls)
 Time: ~3-4 min per slot × 390 slots = ~20 hours
 
-Output: /home/ah66742/data/entity_descriptions/{canonical_slot}.json
-Progress: /home/ah66742/output/extraction_logs/batch_progress.json
-Logs: /home/ah66742/output/extraction_logs/batch_extraction_TIMESTAMP.log
+Output: $MEVA_ENTITY_DESC_DIR/{canonical_slot}.json  (or /nas/mars/dataset/MEVA/entity_descriptions/)
+Progress: $MEVA_OUTPUT_DIR/extraction_logs/batch_progress.json
+Logs: $MEVA_OUTPUT_DIR/extraction_logs/batch_extraction_TIMESTAMP.log
 """
 
 import argparse

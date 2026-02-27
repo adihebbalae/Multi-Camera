@@ -2,8 +2,8 @@
 """
 export_to_multicam_format.py — Transform FINAL naturalized QA to multi-cam-dataset schema.
 
-Reads:  /home/ah66742/data/qa_pairs/{slot}.final.naturalized.json
-Writes: /nas/neurosymbolic/multi-cam-dataset/meva/qa_pairs/{slot}.json
+Reads:  $MEVA_OUTPUT_DIR/qa_pairs/{slot}.final.naturalized.json
+Writes: $MEVA_MULTICAM_OUT/{slot}.json  (or /nas/neurosymbolic/multi-cam-dataset/meva/qa_pairs/)
 
 Target schema matches agibot / ego-exo4d format:
   {
