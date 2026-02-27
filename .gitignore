@@ -181,7 +181,6 @@ cython_debug/
 env
 *.pyc
 output/
-data/
 lm_cache
 .idea
 build
@@ -213,7 +212,7 @@ LLaVA/
 temp/
 InternVL/
 logs/
-data/
+/data/
 llava-video/
 Video-MME/
 VATEX/
