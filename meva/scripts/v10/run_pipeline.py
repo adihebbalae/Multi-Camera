@@ -49,6 +49,7 @@ try:
     from .person_descriptions import (
         enrich_entities, is_mevid_supported, get_mevid_persons_for_slot,
         get_mevid_persons_with_cameras, load_person_database,
+        merge_cross_camera_descriptions, differentiate_within_camera,
     )
     from .generate_temporal import generate_temporal_qa
     from .generate_spatial import generate_spatial_qa
@@ -65,6 +66,7 @@ except ImportError:
     from person_descriptions import (
         enrich_entities, is_mevid_supported, get_mevid_persons_for_slot,
         get_mevid_persons_with_cameras, load_person_database,
+        merge_cross_camera_descriptions, differentiate_within_camera,
     )
     from generate_temporal import generate_temporal_qa
     from generate_spatial import generate_spatial_qa
@@ -426,6 +428,85 @@ def _rename_category(q: dict) -> dict:
     return q
 
 
+def _compute_question_ambiguity(qa_pairs: List[Dict],
+                                entity_descs: Dict[str, str],
+                                sg) -> Dict[str, Any]:
+    """
+    Compute per-question ambiguity: for each entity referenced in a question,
+    how many other entities on the same camera share the same description?
+    
+    Returns:
+        Dict with:
+          - per_question: list of {question_id, max_ambiguity, entities}
+          - avg_ambiguity: average max_ambiguity across questions  
+          - worst_questions: top 5 most ambiguous questions
+          - fully_unique: count of questions where all refs are unique
+    """
+    # Build camera → description → count map
+    cam_desc_counts: Dict[str, Dict[str, int]] = {}
+    cam_desc_eids: Dict[str, Dict[str, List[str]]] = {}
+    for eid, desc in entity_descs.items():
+        entity = sg.entities.get(eid)
+        if not entity:
+            continue
+        cam = entity.camera_id
+        if cam not in cam_desc_counts:
+            cam_desc_counts[cam] = {}
+            cam_desc_eids[cam] = {}
+        cam_desc_counts[cam][desc] = cam_desc_counts[cam].get(desc, 0) + 1
+        if desc not in cam_desc_eids[cam]:
+            cam_desc_eids[cam][desc] = []
+        cam_desc_eids[cam][desc].append(eid)
+    
+    per_question = []
+    for q in qa_pairs:
+        verification = q.get("verification", {})
+        max_ambiguity = 0
+        entity_ambiguities = []
+        
+        # Collect all entity descriptions referenced in this question
+        for evt_key in ("event_a", "event_b", "event"):
+            evt_info = verification.get(evt_key, {})
+            cam = evt_info.get("camera", "")
+            desc = evt_info.get("description", "")
+            if cam and desc and cam in cam_desc_counts:
+                count = cam_desc_counts[cam].get(desc, 1)
+                ambiguity = count - 1  # 0 = unique, N = N other entities share desc
+                max_ambiguity = max(max_ambiguity, ambiguity)
+                entity_ambiguities.append({
+                    "camera": cam,
+                    "description_preview": desc[:50],
+                    "same_desc_count": count,
+                    "ambiguity": ambiguity,
+                })
+        
+        per_question.append({
+            "question_id": q.get("question_id", ""),
+            "category": q.get("category", ""),
+            "max_ambiguity": max_ambiguity,
+            "entities": entity_ambiguities,
+        })
+    
+    # Aggregate stats
+    ambiguities = [pq["max_ambiguity"] for pq in per_question]
+    if not ambiguities:
+        return {"per_question": [], "avg_ambiguity": 0, "worst_questions": [],
+                "fully_unique": 0, "total": 0, "pct_unique": 100.0}
+    
+    fully_unique = sum(1 for a in ambiguities if a == 0)
+    avg_amb = sum(ambiguities) / len(ambiguities) if ambiguities else 0
+    worst = sorted(per_question, key=lambda x: x["max_ambiguity"], reverse=True)[:5]
+    
+    return {
+        "per_question": per_question,
+        "avg_ambiguity": round(avg_amb, 2),
+        "worst_questions": worst,
+        "fully_unique": fully_unique,
+        "total": len(per_question),
+        "pct_unique": round(100 * fully_unique / len(per_question), 1) if per_question else 0,
+    }
+
+
 # ============================================================================
 # Main Pipeline
 # ============================================================================
@@ -525,12 +606,21 @@ def run_pipeline(slot: str, verbose: bool = False,
     entity_descs, desc_counts, fallback_eids = enrich_entities(sg, verbose=verbose)
     
     mevid_cnt = desc_counts["mevid"]
+    vlm_cnt = desc_counts.get("vlm", 0)
     geom_cnt = desc_counts["geom"]
     fallback_cnt = desc_counts["fallback"]
     
     if verbose:
-        print(f"  {mevid_cnt} MEVID + {geom_cnt} geom-color + "
+        print(f"  {mevid_cnt} MEVID + {vlm_cnt} VLM + {geom_cnt} geom-color + "
               f"{fallback_cnt} fallback / {len(entity_descs)} total")
+    
+    # Step 4b: Cross-camera clustering + height differentiation
+    if verbose:
+        print(f"\nStep 4b: Cross-camera clustering + differentiation...")
+    entity_descs = merge_cross_camera_descriptions(
+        entity_descs, resolved, sg, verbose=verbose)
+    entity_descs = differentiate_within_camera(
+        entity_descs, sg, verbose=verbose)
     
     # Step 5-11: Generate QA pairs (6 categories)
     if verbose:
@@ -596,6 +686,17 @@ def run_pipeline(slot: str, verbose: bool = False,
         else:
             print(f"  All questions passed validation")
     
+    # Step 13: Per-question ambiguity analysis
+    ambiguity = _compute_question_ambiguity(unique_qa, entity_descs, sg)
+    if verbose:
+        print(f"\nStep 13: Ambiguity analysis...")
+        print(f"  {ambiguity['fully_unique']}/{ambiguity['total']} questions fully unique "
+              f"({ambiguity['pct_unique']}%)")
+        print(f"  Avg max-ambiguity: {ambiguity['avg_ambiguity']}")
+        if ambiguity['worst_questions']:
+            print(f"  Worst: {ambiguity['worst_questions'][0]['question_id']} "
+                  f"(ambiguity={ambiguity['worst_questions'][0]['max_ambiguity']})")
+    
     # Build output
     cameras_in_slot = sorted(sg.cameras.keys())
     person_cameras = get_mevid_persons_with_cameras(slot)
@@ -617,7 +718,7 @@ def run_pipeline(slot: str, verbose: bool = False,
         "version": "final",
         "annotation_source": "kitware",
         "entity_resolution_source": "mevid+heuristic",
-        "description_source": "mevid_yolo+geom_color",
+        "description_source": "mevid_yolo+vlm+geom_color",
         "generator": "final_pipeline",
         "seed": seed,
         "cameras": cameras_in_slot,
@@ -634,11 +735,19 @@ def run_pipeline(slot: str, verbose: bool = False,
         "category_counts": cat_counts,
         "stats": {
             "entities_with_mevid_descriptions": mevid_cnt,
+            "entities_with_vlm_descriptions": vlm_cnt,
             "entities_with_geom_descriptions": geom_cnt,
             "entities_with_fallback_descriptions": fallback_cnt,
             "attribute_verification_questions": attr_verification,
             "best_camera_questions": cat_counts.get("best_camera", 0),
             "questions_with_debug_info": sum(1 for q in unique_qa if "debug_info" in q),
+        },
+        "ambiguity": {
+            "avg_ambiguity": ambiguity["avg_ambiguity"],
+            "pct_unique": ambiguity["pct_unique"],
+            "fully_unique": ambiguity["fully_unique"],
+            "total_questions": ambiguity["total"],
+            "worst_questions": ambiguity["worst_questions"],
         },
         "validation_issues": len(issues),
         "generation_time_sec": round(time.time() - t0, 2),
@@ -653,7 +762,7 @@ def run_pipeline(slot: str, verbose: bool = False,
         print(f"  ---")
         print(f"  Cameras:    {cameras_in_slot}")
         print(f"  Events:     {len(events)}")
-        print(f"  Entities:   {len(sg.entities)} ({mevid_cnt} MEVID + {geom_cnt} geom)")
+        print(f"  Entities:   {len(sg.entities)} ({mevid_cnt} MEVID + {vlm_cnt} VLM + {geom_cnt} geom)")
         print(f"  MEVID persons: {sorted(mevid_persons)}")
         print(f"  Cross-cam clusters: {len(resolved.entity_clusters)}")
         print(f"  Validation issues: {len(issues)}")

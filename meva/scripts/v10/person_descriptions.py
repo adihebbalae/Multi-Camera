@@ -29,6 +29,8 @@ _REPO_DATA = Path(__file__).resolve().parent.parent.parent / "data"
 _OUTPUT = Path(os.environ.get("OUTPUT_DIR") or os.environ.get("MEVA_OUTPUT_DIR") or str(Path.home() / "data"))
 # Entity descriptions directory — override with MEVA_ENTITY_DESC_DIR env var
 _ENTITY_DESC_DIR = Path(os.environ.get("MEVA_ENTITY_DESC_DIR") or "/nas/mars/dataset/MEVA/entity_descriptions")
+# VLM description directory (InternVL2.5-8B output)
+_VLM_DESC_DIR = _ENTITY_DESC_DIR / "vlm"
 
 PERSON_DB_PATH = _REPO_DATA / "person_database_yolo.json"
 PERSON_DB_ORIG_PATH = _REPO_DATA / "person_database.json"
@@ -506,14 +508,35 @@ def _load_geom_descriptions(slot: str) -> Dict[str, str]:
         return {}
 
 
+def _load_vlm_descriptions(slot: str) -> Dict[str, str]:
+    """
+    Load VLM-generated descriptions (InternVL2.5-8B) for a slot.
+    These are rich natural-language descriptions from video crops.
+    Returns Dict[entity_id → description], e.g. "G330_actor_123" → "a man in a dark blue jacket..."
+    """
+    vlm_path = _VLM_DESC_DIR / f"{slot}.vlm.json"
+    if not vlm_path.exists():
+        return {}
+    try:
+        with open(vlm_path) as f:
+            data = json.load(f)
+        descs = data.get("descriptions", {})
+        # Filter out empty/generic descriptions
+        return {eid: desc for eid, desc in descs.items()
+                if desc and len(desc) > 10 and desc.lower() != "a person"}
+    except (json.JSONDecodeError, KeyError):
+        return {}
+
+
 def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
     """
     Enrich scene graph entities with visual descriptions.
     
     Priority:
       1. MEVID descriptions (GPT/YOLO from MEVID crops — highest quality)
-      2. Geom-extracted descriptions (HSV color from raw AVI + geom.yml bbox)
-      3. Activity-verb fallback ("a person walking")
+      2. VLM descriptions (InternVL2.5-8B from video crops — rich NL)
+      3. Geom-extracted descriptions (SegFormer color from raw AVI + bbox)
+      4. Activity-verb fallback ("a person walking")
     
     The geom-extracted layer covers ALL annotated actors (not just MEVID's ~10%),
     giving every entity a color-based description for disambiguation.
@@ -528,6 +551,7 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
     slot = sg.slot
     person_cameras = get_mevid_persons_with_cameras(slot)
     geom_descs = _load_geom_descriptions(slot)
+    vlm_descs = _load_vlm_descriptions(slot)
     
     # Build reverse map: camera_id → [person_ids on this camera]
     camera_persons: Dict[str, List[str]] = {}
@@ -539,6 +563,7 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
     
     entity_descriptions: Dict[str, str] = {}
     mevid_count = 0
+    vlm_count = 0
     geom_count = 0
     fallback_count = 0
     
@@ -613,7 +638,16 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
                 elif verbose and best_pid:
                     print(f"    {eid}: MEVID rejected (color_score={best_score:.1f} < -0.5, using geom)")
         
-        # Priority 2: Geom-extracted color description (from raw AVI + bbox)
+        # Priority 2: VLM description (InternVL2.5-8B from video crops)
+        if eid in vlm_descs:
+            desc = vlm_descs[eid]
+            entity_descriptions[eid] = desc
+            vlm_count += 1
+            if verbose:
+                print(f"    {eid}: VLM → {desc[:60]}...")
+            continue
+
+        # Priority 3: Geom-extracted color description (SegFormer + bbox)
         if eid in geom_descs:
             desc = geom_descs[eid]
             entity_descriptions[eid] = desc
@@ -622,7 +656,7 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
                 print(f"    {eid}: geom → {desc}")
             continue
         
-        # Priority 3: Activity-verb fallback (V7 style)
+        # Priority 4: Activity-verb fallback (V7 style)
         primary_activity = None
         for evt in sg.events:
             if evt.camera_id == entity.camera_id:
@@ -643,9 +677,9 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
         fallback_count += 1
     
     if verbose:
-        total = mevid_count + geom_count + fallback_count
-        print(f"  Entity enrichment: {mevid_count} MEVID, {geom_count} geom-color, "
-              f"{fallback_count} fallback ({total} total)")
+        total = mevid_count + vlm_count + geom_count + fallback_count
+        print(f"  Entity enrichment: {mevid_count} MEVID, {vlm_count} VLM, "
+              f"{geom_count} geom-color, {fallback_count} fallback ({total} total)")
     
     # Build set of PERSON entity IDs that got fallback (non-visual) descriptions.
     # Non-person entities (vehicles, objects) always get generic descriptions like
@@ -661,5 +695,387 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
             fallback_eids.add(eid)
 
     return (entity_descriptions,
-            {"mevid": mevid_count, "geom": geom_count, "fallback": fallback_count},
+            {"mevid": mevid_count, "vlm": vlm_count, "geom": geom_count, "fallback": fallback_count},
             fallback_eids)
+
+
+# ============================================================================
+# Cross-Camera Clustering — Unify descriptions for cross-camera entities
+# ============================================================================
+
+# Standard color palette: map exotic HSV names → standard ~12 colors
+_COLOR_CONSOLIDATION = {
+    "navy": "dark blue", "indigo": "dark blue",
+    "teal": "teal", "olive": "olive",
+    "charcoal": "dark gray", "rust": "brown",
+    "plum": "purple", "mauve": "pink",
+    "gold": "yellow", "khaki": "tan",
+    "ivory": "white", "beige": "tan",
+    "crimson": "red", "maroon": "dark red",
+    "silver": "gray",
+}
+
+
+def _consolidate_color(color: str) -> str:
+    """Map exotic color names to standard palette for better matching."""
+    if not color or color == "unknown":
+        return color
+    return _COLOR_CONSOLIDATION.get(color.lower(), color.lower())
+
+
+def _height_category(avg_crop_height: float) -> str:
+    """Categorize entity height from average crop pixel height.
+
+    Height thresholds calibrated for MEVA surveillance cameras:
+      - Tall: > 200px (close to camera or genuinely tall)
+      - Short: < 100px (far from camera or genuinely short)
+      - Average: in between (majority)
+
+    Returns empty string if height doesn't meaningfully differentiate.
+    """
+    if avg_crop_height >= 200:
+        return "tall"
+    elif avg_crop_height <= 80:
+        return "short"
+    return ""
+
+
+def _majority_vote_attr(values: List[str]) -> str:
+    """Return the most common non-unknown value, or 'unknown'.
+    
+    For color attributes, groups similar colors (e.g., navy/dark blue/indigo)
+    before voting, but returns the RAW most-common color (not consolidated)
+    to preserve display richness.
+    """
+    valid = [v for v in values if v and v != "unknown"]
+    if not valid:
+        return "unknown"
+    from collections import Counter
+    
+    # Group by consolidated color for voting strength, but return raw winner
+    consolidated_groups = {}  # consolidated_color → [raw_colors]
+    for v in valid:
+        c = _consolidate_color(v)
+        if c not in consolidated_groups:
+            consolidated_groups[c] = []
+        consolidated_groups[c].append(v)
+    
+    # Find the consolidated group with most votes
+    best_group = max(consolidated_groups.values(), key=len)
+    # Return the most common raw color within that group
+    return Counter(best_group).most_common(1)[0][0]
+
+
+def _merge_accessories(acc_lists: List[List[str]]) -> List[str]:
+    """Merge accessory lists — keep items appearing in 2+ sources."""
+    from collections import Counter
+    all_items = Counter()
+    for acc in acc_lists:
+        for item in set(acc):  # deduplicate within each source
+            all_items[item] += 1
+    # Keep items appearing in at least 1 source (any evidence is useful)
+    return sorted(set(all_items.keys()))
+
+
+def _build_description(attrs: dict) -> str:
+    """Build a natural description string from merged attributes.
+
+    Uses the same format as extract_entity_descriptions.py for consistency.
+    Includes 68b fields: texture (striped/patterned) and brightness (dark/light).
+    """
+    parts = []
+
+    # Hair
+    hair = attrs.get("hair_color", "unknown")
+    if hair != "unknown":
+        parts.append(f"with {hair} hair")
+
+    # Clothing — include brightness + texture qualifiers if available
+    upper = attrs.get("upper_color", "unknown")
+    lower = attrs.get("lower_color", "unknown")
+    lower_type = attrs.get("lower_type", "pants")
+    upper_brightness = attrs.get("upper_brightness", "")
+    lower_brightness = attrs.get("lower_brightness", "")
+    upper_texture = attrs.get("upper_texture", "")
+    lower_texture = attrs.get("lower_texture", "")
+
+    clothing = []
+    if upper != "unknown":
+        # Build qualifier: "dark patterned navy" or just "navy"
+        upper_quals = []
+        if upper_brightness and upper_brightness not in ("", "medium"):
+            upper_quals.append(upper_brightness)
+        if upper_texture and upper_texture not in ("", "solid"):
+            upper_quals.append(upper_texture)
+        qualifier = " ".join(upper_quals)
+        if qualifier:
+            clothing.append(f"a {qualifier} {upper} top")
+        else:
+            clothing.append(f"a {upper} top")
+    if lower != "unknown":
+        lower_quals = []
+        if lower_brightness and lower_brightness not in ("", "medium"):
+            lower_quals.append(lower_brightness)
+        if lower_texture and lower_texture not in ("", "solid"):
+            lower_quals.append(lower_texture)
+        qualifier = " ".join(lower_quals)
+        if qualifier:
+            clothing.append(f"{qualifier} {lower} {lower_type}")
+        else:
+            clothing.append(f"{lower} {lower_type}")
+
+    if clothing:
+        parts.append("wearing " + " and ".join(clothing))
+
+    # Shoes
+    shoe = attrs.get("shoe_color", "unknown")
+    if shoe != "unknown":
+        parts.append(f"{shoe} shoes")
+
+    # Accessories
+    accessories = attrs.get("accessories", [])
+    if accessories:
+        parts.append("with " + ", ".join(accessories))
+
+    if not parts:
+        return "a person"
+
+    return "a person " + ", ".join(parts)
+
+
+def merge_cross_camera_descriptions(
+    entity_descs: Dict[str, str],
+    resolved,  # ResolvedGraph
+    sg,       # SceneGraph
+    verbose: bool = False,
+) -> Dict[str, str]:
+    """
+    Post-processing: unify descriptions for cross-camera entity clusters.
+
+    For each entity cluster (same person seen on multiple cameras):
+      1. Collect raw SegFormer attributes from all entities in the cluster
+      2. Majority-vote on each attribute across cameras
+      3. Merge accessories/carried objects (union)
+      4. Build a single unified description
+      5. Assign it to ALL entities in the cluster
+
+    Also adds height hints to differentiate same-description entities
+    within a single camera.
+
+    Args:
+        entity_descs: Current entity_id → description mapping
+        resolved: ResolvedGraph from entity_resolution
+        sg: SceneGraph with entity data
+        verbose: Print progress
+
+    Returns:
+        Updated entity_descs with unified cross-camera descriptions
+    """
+    if not resolved.entity_clusters:
+        if verbose:
+            print("  Cross-camera clustering: no clusters to merge")
+        return entity_descs
+
+    # Load raw SegFormer actor data for attribute-level merging
+    desc_path = _ENTITY_DESC_DIR / f"{sg.slot}.json"
+    raw_actors = {}
+    if desc_path.exists():
+        try:
+            with open(desc_path) as f:
+                raw_data = json.load(f)
+            raw_actors = raw_data.get("actors", {})
+        except (json.JSONDecodeError, KeyError):
+            pass
+
+    merged_count = 0
+    enriched_count = 0
+
+    for cluster in resolved.entity_clusters:
+        entity_ids = cluster.entities
+        if len(entity_ids) < 2:
+            continue
+
+        # Collect attributes from all entities in cluster
+        hair_colors = []
+        upper_colors = []
+        lower_colors = []
+        lower_types = []
+        shoe_colors = []
+        upper_textures = []
+        lower_textures = []
+        upper_brightnesses = []
+        lower_brightnesses = []
+        all_accessories = []
+        all_carried = []
+        heights = []
+
+        for eid in entity_ids:
+            actor_data = raw_actors.get(eid, {})
+            if not actor_data:
+                continue
+
+            hair_colors.append(actor_data.get("hair_color", "unknown"))
+            # Use RAW colors for majority vote (display) — NOT consolidated
+            # Color consolidation is only for cross-camera matching similarity
+            upper_colors.append(actor_data.get("upper_color", "unknown"))
+            lower_colors.append(actor_data.get("lower_color", "unknown"))
+            lower_types.append(actor_data.get("lower_type", "pants"))
+            shoe_colors.append(actor_data.get("shoe_color", "unknown"))
+            upper_textures.append(actor_data.get("upper_texture", ""))
+            lower_textures.append(actor_data.get("lower_texture", ""))
+            upper_brightnesses.append(actor_data.get("upper_brightness", ""))
+            lower_brightnesses.append(actor_data.get("lower_brightness", ""))
+            all_accessories.append(actor_data.get("accessories", []))
+            all_carried.append(actor_data.get("carried_objects", []))
+            h = actor_data.get("avg_crop_height", 0)
+            if h > 0:
+                heights.append(h)
+
+        if not upper_colors:
+            continue  # No raw data available for this cluster
+
+        # Majority vote on each attribute
+        merged_attrs = {
+            "hair_color": _majority_vote_attr(hair_colors),
+            "upper_color": _majority_vote_attr(upper_colors),
+            "lower_color": _majority_vote_attr(lower_colors),
+            "lower_type": _majority_vote_attr(lower_types),
+            "shoe_color": _majority_vote_attr(shoe_colors),
+            "upper_texture": _majority_vote_attr(upper_textures),
+            "lower_texture": _majority_vote_attr(lower_textures),
+            "upper_brightness": _majority_vote_attr(upper_brightnesses),
+            "lower_brightness": _majority_vote_attr(lower_brightnesses),
+            "accessories": _merge_accessories(all_accessories + all_carried),
+        }
+
+        # Build unified description
+        unified = _build_description(merged_attrs)
+
+        # Count how many attributes the unified version has vs individual ones
+        old_descs = {eid: entity_descs.get(eid, "a person") for eid in entity_ids}
+
+        # Assign to all entities in cluster
+        for eid in entity_ids:
+            old = entity_descs.get(eid, "a person")
+            # Only upgrade — don't replace a richer MEVID description with a simpler one
+            if unified != "a person" and (
+                not is_visual_description(old) or
+                len(unified) >= len(old)
+            ):
+                entity_descs[eid] = unified
+                if unified != old:
+                    enriched_count += 1
+
+        merged_count += 1
+
+        if verbose and merged_count <= 3:
+            print(f"    Cluster {cluster.cluster_id}: {len(entity_ids)} entities "
+                  f"across {cluster.cameras}")
+            for eid in entity_ids[:2]:
+                print(f"      {eid}: {old_descs.get(eid, '?')[:50]} → {unified[:50]}")
+
+    if verbose:
+        print(f"  Cross-camera clustering: {merged_count} clusters merged, "
+              f"{enriched_count} descriptions unified")
+
+    return entity_descs
+
+
+def differentiate_within_camera(
+    entity_descs: Dict[str, str],
+    sg,  # SceneGraph
+    verbose: bool = False,
+) -> Dict[str, str]:
+    """
+    Add differentiating attributes for entities with identical descriptions
+    on the same camera.
+
+    Strategy:
+      - Group entities by (camera, description)
+      - For groups with >1 entity, add height category if available
+      - This makes "a person wearing a navy top and black pants" into
+        "a tall person wearing a navy top and black pants"
+
+    Args:
+        entity_descs: entity_id → description mapping
+        sg: SceneGraph with entity data
+        verbose: Print stats
+
+    Returns:
+        Updated entity_descs with differentiated descriptions
+    """
+    # Load raw actor data for height info
+    desc_path = _ENTITY_DESC_DIR / f"{sg.slot}.json"
+    raw_actors = {}
+    if desc_path.exists():
+        try:
+            with open(desc_path) as f:
+                raw_data = json.load(f)
+            raw_actors = raw_data.get("actors", {})
+        except (json.JSONDecodeError, KeyError):
+            pass
+
+    if not raw_actors:
+        return entity_descs
+
+    # Group entities by (camera, description)
+    from collections import defaultdict
+    cam_desc_groups: Dict[tuple, list] = defaultdict(list)
+    for eid, desc in entity_descs.items():
+        entity = sg.entities.get(eid)
+        if not entity or entity.entity_type != "person":
+            continue
+        cam_desc_groups[(entity.camera_id, desc)].append(eid)
+
+    differentiated = 0
+    for (cam, desc), eids in cam_desc_groups.items():
+        if len(eids) < 2:
+            continue
+
+        # Get heights for entities in this group
+        eid_heights = {}
+        for eid in eids:
+            actor_data = raw_actors.get(eid, {})
+            h = actor_data.get("avg_crop_height", 0)
+            if h > 0:
+                eid_heights[eid] = h
+
+        if not eid_heights:
+            continue
+
+        # Compute relative height categories within this group
+        heights = sorted(eid_heights.values())
+        if len(heights) < 2:
+            continue
+
+        median_h = heights[len(heights) // 2]
+        spread = max(heights) - min(heights)
+
+        # Only differentiate if there's meaningful height spread (>30% of median)
+        if spread < median_h * 0.3:
+            continue
+
+        for eid in eids:
+            h = eid_heights.get(eid)
+            if h is None:
+                continue
+
+            # Relative categorization within the group
+            if h > median_h * 1.2:
+                prefix = "tall"
+            elif h < median_h * 0.8:
+                prefix = "short"
+            else:
+                continue  # Near median — don't label
+
+            old_desc = entity_descs[eid]
+            # Insert height after "a " — "a person..." → "a tall person..."
+            if old_desc.startswith("a person"):
+                new_desc = f"a {prefix} person" + old_desc[len("a person"):]
+                entity_descs[eid] = new_desc
+                differentiated += 1
+
+    if verbose:
+        print(f"  Height differentiation: {differentiated} entities labeled tall/short")
+
+    return entity_descs
