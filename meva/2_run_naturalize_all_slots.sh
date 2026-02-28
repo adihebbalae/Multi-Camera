@@ -9,6 +9,11 @@ VERBOSE="true"
 export MEVA_OUTPUT_DIR="/nas/neurosymbolic/multi-cam-dataset/meva/data_all_slots/"
 mkdir -p "$MEVA_OUTPUT_DIR/qa_pairs/raw"
 
+TIMESTAMP="$(date +"%Y%m%d-%H%M%S")"
+LOG_DIR="${MEVA_OUTPUT_DIR}/logs"
+mkdir -p "$LOG_DIR"
+exec > >(tee -a "${LOG_DIR}/${TIMESTAMP}_2_run_naturalize_all_slots.log") 2>&1
+
 count=0
 while IFS= read -r slot; do
   if [[ -z "$slot" ]]; then
