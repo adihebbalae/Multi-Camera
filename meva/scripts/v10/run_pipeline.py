@@ -129,6 +129,10 @@ def _build_video_paths(q: dict, slot: str) -> List[str]:
     hour = slot.split(".")[1].split("-")[0]  # "11"
     slot_dir = MEVA_MP4_BASE / date / hour / slot
     
+    # Prefer including all videos for the slot, if available.
+    if slot_dir.exists():
+        return sorted(str(p) for p in slot_dir.glob("*.mp4"))
+
     paths = []
     seen = set()
     

@@ -6,6 +6,7 @@ Convert MEVA naturalized QA JSONs into standardized per-category formats.
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -53,6 +54,20 @@ def _question_text(qa: Dict[str, Any]) -> str:
     return qa.get("naturalized_question") or qa.get("question_template") or ""
 
 
+def _camera_name_from_basename(basename: str) -> str:
+    match = re.search(r"(G\d{3})", basename)
+    camera_id = match.group(1) if match else Path(basename).stem
+    return f"Camera {camera_id}"
+
+
+def _camera_names(video_paths: Optional[List[str]]) -> Dict[str, str]:
+    camera_names: Dict[str, str] = {}
+    for video_path in video_paths or []:
+        basename = Path(video_path).name
+        camera_names[basename] = _camera_name_from_basename(basename)
+    return camera_names
+
+
 def _metadata_base(slot: str, qa: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "slot": slot,
@@ -62,6 +77,7 @@ def _metadata_base(slot: str, qa: Dict[str, Any]) -> Dict[str, Any]:
         "requires_multi_camera": qa.get("requires_multi_camera"),
         "verification": qa.get("verification"),
         "debug_info": qa.get("debug_info"),
+        "camera_names": _camera_names(qa.get("video_paths")),
     }
 
 
