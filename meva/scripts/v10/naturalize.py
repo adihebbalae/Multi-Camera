@@ -740,9 +740,9 @@ CATEGORY_EXAMPLES = {
         "example_output": '{"question": "Which of these happened first: a person in gray with green pants and a black backpack walking in through a structure, or a person in a blue top and green pants interacting with someone?", "reasoning": "The person in gray entered through the structure before the blue-topped person interacted with anyone."}',
     },
     "spatial": {
-        "hint": "Spatial distance question about two people. CRITICAL: Do NOT mention camera IDs (like G421), timestamps (like 'at 45 seconds', 'around the 2:10 mark'), or raw time references. Use only visual appearance descriptions (clothing, hair, objects) to identify people. VARY phrasing. Return ONLY {question, reasoning}.",
-        "example_input": 'How close are a person wearing a blue top and blue pants, with a black hoodie featuring a graphic design on the back and a person wearing a white hoodie with a Puma logo, camouflage pants, and a camouflage cap in the scene?',
-        "example_output": '{"question": "How far apart would you say the person in blue with the black graphic hoodie is from the one wearing a white Puma hoodie and camo pants?", "reasoning": "Their positions in the scene place them approximately 6 meters apart."}',
+        "hint": "Spatial closest-approach question about how close two people come to each other. CRITICAL: Do NOT mention camera IDs (like G421), timestamps (like 'at 45 seconds', 'around the 2:10 mark'), or raw time references. Use only visual appearance descriptions (clothing, hair, objects) to identify people. VARY phrasing. Return ONLY {question, reasoning}.",
+        "example_input": 'How close do a person wearing a blue top and blue pants, with a black hoodie featuring a graphic design on the back and a person wearing a white hoodie with a Puma logo, camouflage pants, and a camouflage cap come to each other in the scene?',
+        "example_output": '{"question": "How close do the person in blue with the black graphic hoodie and the one in a white Puma hoodie with camo pants get to each other?", "reasoning": "Their closest approach places them approximately 6 meters apart, keeping them at a moderate distance throughout."}',
     },
     "perception": {
         "hint": "Perception question about activities or visual attributes. Camera references are part of the question — keep them. IMPORTANT: Preserve 'What activity...' and 'Which camera...' question structures EXACTLY — do NOT rephrase to 'Can you identify...' or 'Identify the camera...'. Only fix grammar and smooth descriptions. Return ONLY {question, reasoning}.",
@@ -770,9 +770,9 @@ CATEGORY_EXAMPLES = {
         "example_output": '{"question": "Once the individual grabbed an item from the ground, what did they most likely do next?", "reasoning": "Picking up an object is commonly followed by putting it down in another location."}',
     },
     "numerical": {
-        "hint": "Counting question about activities across cameras. CRITICAL: Do NOT mention specific camera IDs (like G421) in the question. Rephrase the counting query naturally — vary sentence structure but preserve the exact scope. Return ONLY {question, reasoning}.",
-        "example_input": "How many cameras capture at least one instance of talking to person?",
-        "example_output": '{"question": "Across the available camera feeds, on how many of them can you spot at least one conversation taking place?", "reasoning": "Conversations were observed on 5 of the available camera feeds."}',
+        "hint": "Counting question about activities across cameras. CRITICAL: Do NOT mention specific camera IDs (like G421) in the question. Rephrase the counting query naturally — vary sentence structure but preserve the exact scope. IMPORTANT: The reasoning will be provided separately — you ONLY need to return {question, reasoning} where reasoning preserves ALL numbers from the original reasoning EXACTLY. Do NOT change any count or number in the reasoning.",
+        "example_input": "How many times does someone perform the action of opening a vehicle door across all cameras in this slot?",
+        "example_output": '{"question": "Across the available camera feeds, how many times can you observe someone opening a vehicle door?", "reasoning": "Opening a vehicle door was observed 8 times across 2 cameras."}',
     },
 
     "best_camera": {
@@ -850,13 +850,18 @@ def _naturalize_question(
     # Verification context for reasoning (as plain English)
     if category == "temporal" and "gap_sec" in verification:
         parts.append(f"\nCONTEXT: The gap between events is {verification['gap_sec']} seconds.")
-    elif category == "spatial" and "distance_meters" in verification:
-        parts.append(f"\nCONTEXT: Distance between entities is {verification['distance_meters']} meters.")
+    elif category == "spatial" and "min_distance_meters" in verification:
+        parts.append(f"\nCONTEXT: Closest approach distance between entities is {verification['min_distance_meters']} meters.")
     elif category == "best_camera":
         correct_cam = verification.get("correct_camera", "")
         entrance_time = verification.get("entrance_time_sec", 0)
         if correct_cam:
             parts.append(f"\nCONTEXT: First entrance on {correct_cam} at {entrance_time}s.")
+
+    # For counting questions: pass the deterministic reasoning so GPT preserves numbers
+    original_reasoning = question.get("reasoning", "")
+    if category in ("numerical", "counting") and original_reasoning:
+        parts.append(f"\nORIGINAL REASONING (preserve all numbers exactly): {original_reasoning}")
 
     user_message = "\n".join(parts)
 
@@ -948,13 +953,30 @@ def naturalize_batch(
             failures += 1
             nat_q["naturalized_question"] = q["question_template"]
             nat_q["naturalized_options"] = q["options"]
-            nat_q["reasoning"] = ""
+            nat_q["reasoning"] = q.get("reasoning", "")  # preserve raw reasoning on failure
             nat_q["naturalization_failed"] = True
         else:
             nat_q["naturalized_question"] = result["naturalized_question"]
             nat_q["naturalized_options"] = result["naturalized_options"]
             nat_q["reasoning"] = result["reasoning"]
             total_tokens += result["usage"]["total_tokens"]
+            
+            # Post-naturalization safety: for counting questions, verify the
+            # correct answer number appears in the reasoning. If GPT changed
+            # it, fall back to the raw deterministic reasoning.
+            if q["category"] in ("numerical", "counting"):
+                correct_answer = q.get("correct_answer", "")
+                raw_reasoning = q.get("reasoning", "")
+                nat_reasoning = nat_q["reasoning"]
+                if correct_answer and nat_reasoning:
+                    # Check if the correct count appears in naturalized reasoning
+                    if correct_answer not in nat_reasoning and raw_reasoning:
+                        if verbose:
+                            print(f"    WARNING: Counting reasoning corrupted "
+                                  f"(correct={correct_answer}, not found in "
+                                  f"'{nat_reasoning[:80]}...'). Using raw reasoning.")
+                        nat_q["reasoning"] = raw_reasoning
+                        nat_q["reasoning_restored_from_raw"] = True
 
         naturalized_pairs.append(nat_q)
 

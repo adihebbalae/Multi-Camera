@@ -2,11 +2,12 @@
 """
 FINAL run_pipeline.py — Main orchestrator for FINAL QA generation pipeline.
 
-7 categories (matching paper taxonomy):
-  temporal(2) + event_ordering(2) + perception(2) + spatial(2)
-  + summarization(1) + counting(1) + best_camera(2) = ~12 Qs/slot
+6 categories (matching paper taxonomy):
+  temporal(2) + event_ordering(2) + spatial(3)
+  + summarization(1) + counting(1) + best_camera(3) = ~12 Qs/slot
 
 REMOVED from V9: re_identification, causality
+REMOVED: perception (killed — not useful for benchmark)
 ADDED: best_camera (Camera Transition Logic)
 
 Setup (run from the meva/ directory inside the repo):
@@ -51,7 +52,7 @@ try:
     )
     from .generate_temporal import generate_temporal_qa
     from .generate_spatial import generate_spatial_qa
-    from .generate_perception import generate_perception_qa
+    # from .generate_perception import generate_perception_qa  # KILLED: perception category removed
     from .generate_scene_summary import generate_scene_summary_qa
     from .generate_event_ordering import generate_event_ordering_qa
     from .generate_numerical import generate_numerical_qa
@@ -67,7 +68,7 @@ except ImportError:
     )
     from generate_temporal import generate_temporal_qa
     from generate_spatial import generate_spatial_qa
-    from generate_perception import generate_perception_qa
+    # from generate_perception import generate_perception_qa  # KILLED: perception category removed
     from generate_scene_summary import generate_scene_summary_qa
     from generate_event_ordering import generate_event_ordering_qa
     from generate_numerical import generate_numerical_qa
@@ -90,11 +91,11 @@ _ENTITY_DESC_DIR = Path(os.environ.get("MEVA_ENTITY_DESC_DIR") or "/nas/mars/dat
 CANONICAL_SLOTS_PATH = _REPO_DATA / "canonical_slots.json"
 RANDOM_SEED = 42
 
-# 7 categories — max question counts per slot (soft ceilings, not rigid targets)
+# 6 categories — max question counts per slot (soft ceilings, not rigid targets)
 # Generators produce all valid candidates and cap at MAX.
 MAX_TEMPORAL = 2
 MAX_EVENT_ORDERING = 2
-MAX_PERCEPTION = 2           # includes attribute_verification if MEVID
+# MAX_PERCEPTION = 2           # KILLED: perception category removed
 MAX_SPATIAL = 3              # ~70% slot hit rate requires 3/slot for 500 total
 MAX_SUMMARIZATION = 1        # scene_summary (renamed for paper alignment)
 MAX_COUNTING = 1             # activity-counting only (entity-counting removed)
@@ -317,10 +318,10 @@ def validate_temporal(q: dict) -> List[str]:
 def validate_spatial(q: dict) -> List[str]:
     errors = []
     v = q.get("verification", {})
-    d = v.get("distance_meters")
+    d = v.get("min_distance_meters")
     proximity = v.get("proximity")
     if d is None:
-        errors.append("Missing distance_meters")
+        errors.append("Missing min_distance_meters")
         return errors
     if proximity == "near" and d > 5.0:
         errors.append(f"Near but distance={d}m (should be <=5m)")
@@ -328,6 +329,10 @@ def validate_spatial(q: dict) -> List[str]:
         errors.append(f"Moderate but distance={d}m (should be 5-15m)")
     elif proximity == "far" and d <= 15.0:
         errors.append(f"Far but distance={d}m (should be >15m)")
+    # Validate cross-paths flag consistency
+    crosses = v.get("crosses_paths", False)
+    if crosses and d > 2.0:
+        errors.append(f"crosses_paths=True but distance={d}m (should be <=2m)")
     return errors
 
 
@@ -387,7 +392,7 @@ def validate_all(qa_pairs: List[dict]) -> Dict[str, List[str]]:
     validators = {
         "temporal": validate_temporal,
         "spatial": validate_spatial,
-        "perception": validate_perception,
+        # "perception": validate_perception,  # KILLED
         "summarization": validate_summarization,
         "event_ordering": validate_event_ordering,
         "counting": validate_counting,
@@ -527,9 +532,9 @@ def run_pipeline(slot: str, verbose: bool = False,
         print(f"  {mevid_cnt} MEVID + {geom_cnt} geom-color + "
               f"{fallback_cnt} fallback / {len(entity_descs)} total")
     
-    # Step 5-11: Generate QA pairs (7 categories)
+    # Step 5-11: Generate QA pairs (6 categories)
     if verbose:
-        print(f"\nStep 5-11: Generating questions (7 categories)...")
+        print(f"\nStep 5-11: Generating questions (6 categories)...")
     
     temporal_qa = generate_temporal_qa(sg, resolved, entity_descs, rng,
                                        count=MAX_TEMPORAL, verbose=verbose,
@@ -537,8 +542,10 @@ def run_pipeline(slot: str, verbose: bool = False,
     ordering_qa = generate_event_ordering_qa(sg, resolved, entity_descs, rng,
                                               count=MAX_EVENT_ORDERING, verbose=verbose,
                                               fallback_eids=fallback_eids)
-    perception_qa = generate_perception_qa(sg, resolved, entity_descs, rng,
-                                           count=MAX_PERCEPTION, verbose=verbose)
+    # KILLED: perception category removed
+    # perception_qa = generate_perception_qa(sg, resolved, entity_descs, rng,
+    #                                        count=MAX_PERCEPTION, verbose=verbose)
+    perception_qa = []
     spatial_qa = generate_spatial_qa(sg, resolved, entity_descs, rng,
                                      count=MAX_SPATIAL, verbose=verbose,
                                      fallback_eids=fallback_eids)
@@ -682,7 +689,7 @@ def list_canonical_slots():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="FINAL QA Pipeline (7 categories)")
+    parser = argparse.ArgumentParser(description="FINAL QA Pipeline (6 categories)")
     parser.add_argument("--slot", help="Slot name (e.g., 2018-03-11.11-25.school)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     parser.add_argument("--seed", type=int, default=RANDOM_SEED, help="Random seed")

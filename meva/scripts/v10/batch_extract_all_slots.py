@@ -50,6 +50,21 @@ LOG_DIR = _OUTPUT / "extraction_logs"
 PROGRESS_FILE = LOG_DIR / "batch_progress.json"
 EXTRACTION_SCRIPT = Path(__file__).resolve().parent / "extract_entity_descriptions.py"
 
+
+def _normalize_slot_name(slot: str) -> str:
+    """Normalize slot name to short format used by the pipeline.
+
+    Geom index uses: 2018-03-05.13-10-00.admin  (with seconds)
+    Pipeline expects: 2018-03-05.13-10.admin    (without seconds)
+    """
+    import re
+    # Match date.HH-MM-SS.site and strip the -SS
+    m = re.match(r'^(\d{4}-\d{2}-\d{2})\.(\d{2}-\d{2})-\d{2}\.(.+)$', slot)
+    if m:
+        return f"{m.group(1)}.{m.group(2)}.{m.group(3)}"
+    return slot
+
+
 # ============================================================================
 # Progress Tracking
 # ============================================================================
@@ -121,20 +136,23 @@ def run_extraction(slot: str, verbose: bool = False, dry_run: bool = False,
     
     Returns: {"success": bool, "entities": int, "error": str or None}
     """
-    output_path = OUTPUT_DIR / f"{slot}.json"
+    # Normalize slot name to short format (e.g. 2018-03-05.13-10.admin)
+    short_slot = _normalize_slot_name(slot)
+    output_path = OUTPUT_DIR / f"{short_slot}.json"
     
     # Check if already exists and has data (skip if --force not set)
     if output_path.exists() and not force:
         try:
             with open(output_path) as f:
                 data = json.load(f)
-            entity_count = len([k for k in data.keys() if "_actor_" in k])
+            entity_count = len(data.get("actors", {}))
             if entity_count > 0:
                 return {
                     "success": True,
                     "entities": entity_count,
                     "error": None,
                     "skipped": True,
+                    "method": data.get("method", "unknown"),
                 }
         except Exception:
             pass  # corrupted file, re-extract
@@ -177,6 +195,7 @@ def run_extraction(slot: str, verbose: bool = False, dry_run: bool = False,
                 "success": True,
                 "entities": entity_count,
                 "error": None,
+                "method": data.get("method", "unknown"),
             }
         else:
             return {
@@ -252,12 +271,25 @@ def process_all_slots(dry_run: bool = False, verbose: bool = False,
         print(msg)
         log_file.write(msg + "\n")
     
+    # Deduplicate: multiple raw variants map to same short slot name
+    # e.g. 2018-03-05.13-10-00.bus and 2018-03-05.13-10-01.bus → 2018-03-05.13-10.bus
+    seen_short = set()
+    deduped_slots = []
+    for cs in canonical_slots:
+        short = _normalize_slot_name(cs)
+        if short not in seen_short:
+            seen_short.add(short)
+            deduped_slots.append(cs)
+    
+    log(f"Unique short slots: {len(deduped_slots)} (from {len(canonical_slots)} raw variants)")
+
     # Process each canonical slot
     log(f"\n{'='*60}")
     log(f"Batch Entity Description Extraction")
     log(f"{'='*60}")
     log(f"Mode: {'DRY-RUN' if dry_run else 'FULL EXTRACTION'}")
-    log(f"Canonical slots: {len(canonical_slots)}")
+    log(f"Method: {method}")
+    log(f"Canonical slots: {len(deduped_slots)}")
     log(f"Resume: {resume}")
     log(f"Log: {log_path}")
     log(f"Progress: {PROGRESS_FILE}")
@@ -267,7 +299,7 @@ def process_all_slots(dry_run: bool = False, verbose: bool = False,
     start_time = time.time()
     total_entities = progress.get("total_entities_extracted", 0)
     
-    for i, canonical_slot in enumerate(canonical_slots, 1):
+    for i, canonical_slot in enumerate(deduped_slots, 1):
         # Skip if already completed
         if canonical_slot in completed_set:
             continue
@@ -276,20 +308,21 @@ def process_all_slots(dry_run: bool = False, verbose: bool = False,
         raw_slots = find_raw_slots_for_canonical(canonical_slot, slot_index)
         
         if not raw_slots:
-            log(f"[{i:3d}/{len(canonical_slots)}] {canonical_slot}: NO RAW VARIANTS")
+            log(f"[{i:3d}/{len(deduped_slots)}] {canonical_slot}: NO RAW VARIANTS")
             skipped_set.add(canonical_slot)
             continue
         
         # Use first raw variant (they share same geom files)
         raw_slot = raw_slots[0]
         
-        log(f"[{i:3d}/{len(canonical_slots)}] {canonical_slot} → {raw_slot}")
+        log(f"[{i:3d}/{len(deduped_slots)}] {canonical_slot} → {raw_slot}")
         
         result = run_extraction(raw_slot, verbose=verbose, dry_run=dry_run,
                                   method=method, force=force)
         
         if result.get("skipped"):
-            log(f"  ✓ SKIPPED (already exists, {result['entities']} entities)")
+            existing_method = result.get("method", "unknown")
+            log(f"  ✓ SKIPPED (already exists, {result['entities']} entities, method={existing_method})")
             skipped_set.add(canonical_slot)
         elif result.get("dry_run"):
             log(f"  ✓ DRY-RUN OK")
@@ -314,9 +347,9 @@ def process_all_slots(dry_run: bool = False, verbose: bool = False,
         if i > 0 and not dry_run:
             elapsed = time.time() - start_time
             avg_time = elapsed / i
-            remaining = (len(canonical_slots) - i) * avg_time
+            remaining = (len(deduped_slots) - i) * avg_time
             eta_hours = remaining / 3600
-            log(f"  Progress: {i}/{len(canonical_slots)} ({i*100//len(canonical_slots)}%), "
+            log(f"  Progress: {i}/{len(deduped_slots)} ({i*100//len(deduped_slots)}%), "
                 f"ETA: {eta_hours:.1f}h\n")
     
     # Final stats
@@ -351,7 +384,7 @@ def process_all_slots(dry_run: bool = False, verbose: bool = False,
     save_progress(progress)
     
     return {
-        "total_slots": len(canonical_slots),
+        "total_slots": len(deduped_slots),
         "completed": len(completed_set),
         "skipped": len(skipped_set),
         "failed": len(failed_set),

@@ -384,7 +384,7 @@ def check_duplicates(qa_pairs: List[dict]) -> List[Issue]:
     """
     Detect duplicate/near-duplicate questions within a slot:
     - Exact text match
-    - Fuzzy match: >80% token overlap
+    - Fuzzy match: >90% token overlap
     - Same entity pair (verification.entity_a + entity_b)
     - Same category + same correct_answer
     """
@@ -418,14 +418,20 @@ def check_duplicates(qa_pairs: List[dict]) -> List[Issue]:
                 ))
                 continue
 
-            # 2. Fuzzy match: >80% token overlap
-            overlap = _token_overlap_ratio(qi_tokens, qj_tokens)
-            if overlap > 0.80:
-                issues.append(Issue(
-                    qi_id, "near_duplicate", WARNING,
-                    f"Near-duplicate of {qj_id} ({overlap:.0%} token overlap)",
-                    "Rephrase or replace one of the questions"
-                ))
+            # 2. Fuzzy match: >90% token overlap
+            # Skip for categories with structurally similar templates
+            # (spatial, best_camera) — these naturally share template words
+            # but reference different entities. True duplicates are caught
+            # by the entity pair check (#3) instead.
+            _TEMPLATE_CATS = {"spatial", "best_camera"}
+            if qi_cat not in _TEMPLATE_CATS or qj_cat not in _TEMPLATE_CATS:
+                overlap = _token_overlap_ratio(qi_tokens, qj_tokens)
+                if overlap > 0.90:
+                    issues.append(Issue(
+                        qi_id, "near_duplicate", WARNING,
+                        f"Near-duplicate of {qj_id} ({overlap:.0%} token overlap)",
+                        "Rephrase or replace one of the questions"
+                    ))
 
             # 3. Same entity pair check
             ea_i = qi_ver.get("entity_a", qi_ver.get("event_a", {}).get("description", ""))
@@ -503,13 +509,23 @@ def check_generic_descriptions(qa_pairs: List[dict]) -> List[Issue]:
         # Check for generic descriptions in question text
         for generic in _GENERIC_DESCS:
             if generic in question_text.lower():
-                # Only flag if it's the main entity reference (not part of larger desc)
-                # Check by looking at surrounding context
-                pattern = re.compile(
-                    r'(?:^|\s)' + re.escape(generic) + r'(?:\s+(?:who|that|on|in|at|opens|closes|exits|enters|walks|sits|stands|talks|carries|picks|puts|rides|reads|loads|unloads)\b)',
+                # Only flag if it's a truly generic reference (no clothing/appearance follows)
+                # Skip if followed by clothing descriptors ("a person in blue", "a person wearing")
+                # or comma+clothing ("a person, wearing a ...")
+                clothing_pattern = re.compile(
+                    r'(?:^|\s)' + re.escape(generic) +
+                    r'(?:[,\s]+(?:wearing|in\s+(?:a\s+)?(?:blue|red|green|black|white|gray|grey|dark|light|navy|teal|indigo|brown|beige|olive|pink|purple|plum|maroon|khaki|camo|charcoal)\b|with\s+(?:a\s+)?(?:blue|red|green|black|white|gray|dark|hat|bag|backpack|hoodie|jacket)\b))',
                     re.I
                 )
-                if pattern.search(question_text):
+                if clothing_pattern.search(question_text):
+                    continue  # Has clothing descriptor — not generic
+                
+                # Check by looking at surrounding context for activity verbs
+                activity_pattern = re.compile(
+                    r'(?:^|\s)' + re.escape(generic) + r'(?:\s+(?:who|that|opens|closes|exits|enters|walks|sits|stands|talks|carries|picks|puts|rides|reads|loads|unloads)\b)',
+                    re.I
+                )
+                if activity_pattern.search(question_text):
                     issues.append(Issue(
                         qid, "generic_description", WARNING,
                         f"Generic entity reference '{generic}' used in question text",
