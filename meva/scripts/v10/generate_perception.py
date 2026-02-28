@@ -191,7 +191,10 @@ def generate_perception_qa(sg: SceneGraph, resolved: ResolvedGraph,
             # Issue 7: Include visual description for specificity
             question = f"Which camera captures {best_desc} {gerund_lower}?"
         
-        distractors = get_camera_distractors([correct_cam], all_cameras, rng, n=3)
+        # Exclude ALL cameras that have the same activity from distractors
+        # to avoid multi-correct ambiguity
+        exclude_cams = sorted(correct_cams)
+        distractors = get_camera_distractors(exclude_cams, all_cameras, rng, n=3)
         
         if len(distractors) < 2:
             continue

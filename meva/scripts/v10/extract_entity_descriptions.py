@@ -54,8 +54,10 @@ OUTPUT_DIR = Path(os.environ.get("MEVA_ENTITY_DESC_DIR") or "/nas/mars/dataset/M
 # ============================================================================
 
 CROPS_PER_ACTOR = 5           # Crops to extract per actor track
-MIN_BBOX_HEIGHT = 144         # Min bbox height in pixels for usable crop
-MIN_BBOX_WIDTH = 48           # Min bbox width — person bboxes are tall & narrow (median W/H ≈ 0.54)
+MIN_BBOX_HEIGHT = 144         # Min bbox height for SegFormer (needs detail for segmentation)
+MIN_BBOX_HEIGHT_COLOR = 40    # Min bbox height for HSV color-only fallback (just needs colors)
+MIN_BBOX_WIDTH = 48           # Min bbox width for SegFormer crops
+MIN_BBOX_WIDTH_COLOR = 16     # Min bbox width for HSV color-only fallback
 YOLO_CONF = 0.25              # YOLO detection confidence threshold
 YOLO_MODEL = "yolov8n.pt"    # Nano model (fast, sufficient for crops)
 
@@ -627,6 +629,11 @@ def analyze_crops_segformer(crops: List[np.ndarray]) -> Dict:
 # Description Generation (template-based, free)
 # ============================================================================
 
+def _article(word: str) -> str:
+    """Return 'an' if word starts with a vowel sound, else 'a'."""
+    return "an" if word and word[0].lower() in "aeiou" else "a"
+
+
 def build_description(attrs: Dict, include_position: bool = False) -> str:
     """
     Build a natural description from structured attributes.
@@ -654,7 +661,7 @@ def build_description(attrs: Dict, include_position: bool = False) -> str:
     # Relative height from bbox (tall/medium/short)
     height_hint = attrs.get("height_category")  # set by enrich step if available
 
-    desc = "a"
+    desc = _article(height_hint if height_hint and height_hint != "medium" else "person")
     if height_hint and height_hint != "medium":
         desc += f" {height_hint}"
     desc += " person"
@@ -666,7 +673,7 @@ def build_description(attrs: Dict, include_position: bool = False) -> str:
     # Clothing
     clothing_parts = []
     if upper != "unknown":
-        clothing_parts.append(f"a {upper} top")
+        clothing_parts.append(f"{_article(upper)} {upper} top")
     if lower != "unknown":
         clothing_parts.append(f"{lower} {lower_type}")
 
@@ -680,12 +687,12 @@ def build_description(attrs: Dict, include_position: bool = False) -> str:
     # Accessories (worn items: hat, sunglasses, scarf)
     worn = [a for a in accessories if a in ("hat", "sunglasses", "scarf")]
     if worn:
-        desc += f", with a {' and '.join(worn)}"
+        desc += f", with {_article(worn[0])} {' and '.join(worn)}"
 
     # Carried items (bag from segformer + YOLO objects)
     carried_items = (["bag"] if "bag" in accessories else []) + list(carried[:2])
     if carried_items:
-        desc += f", carrying a {' and '.join(carried_items[:2])}"
+        desc += f", carrying {_article(carried_items[0])} {' and '.join(carried_items[:2])}"
 
     # Spatial position hint (for disambiguation)
     if include_position:
@@ -851,17 +858,22 @@ def process_slot(slot: str, method: str = "segformer",
             cam_stats[cam] = {"actors": 0, "usable": 0, "skipped": "no_actors"}
             continue
 
-        # Extract crops
+        # Extract crops — use lower threshold to capture distant actors too
         t1 = time.time()
+        # Two-tier: extract at lower threshold, then decide analysis method per actor
+        extraction_min_h = MIN_BBOX_HEIGHT_COLOR if method == "segformer" else MIN_BBOX_HEIGHT
+        extraction_min_w = MIN_BBOX_WIDTH_COLOR if method == "segformer" else MIN_BBOX_WIDTH
         crops_by_actor = extract_crops(
             video_path, actors,
             max_crops=CROPS_PER_ACTOR,
-            min_h=MIN_BBOX_HEIGHT, min_w=MIN_BBOX_WIDTH,
+            min_h=extraction_min_h, min_w=extraction_min_w,
         )
         decode_time = time.time() - t1
 
         usable = len(crops_by_actor)
         total_crops = sum(len(c) for c in crops_by_actor.values())
+        segformer_count = 0
+        color_fallback_count = 0
         if verbose:
             print(f"    Usable actors: {usable}/{len(actors)} ({total_crops} crops, {decode_time:.1f}s decode)")
 
@@ -871,12 +883,17 @@ def process_slot(slot: str, method: str = "segformer",
             if not crops:
                 continue
 
-            if method == "segformer":
+            # Two-tier analysis: use SegFormer for large crops, color-only for small
+            avg_h = float(np.mean([c.shape[0] for c in crops]))
+            if method == "segformer" and avg_h >= MIN_BBOX_HEIGHT:
                 attrs = analyze_crops_segformer(crops)
+                segformer_count += 1
             elif method == "yolo":
                 attrs = analyze_crops_yolo(crops)
             else:
                 attrs = analyze_crops_color_only(crops)
+                if method == "segformer":
+                    color_fallback_count += 1
 
             desc = build_description(attrs)
 
@@ -899,7 +916,10 @@ def process_slot(slot: str, method: str = "segformer",
 
         analyze_time = time.time() - t2
         if verbose:
-            print(f"    Analysis: {analyze_time:.1f}s ({method})")
+            tier_info = ""
+            if method == "segformer" and color_fallback_count > 0:
+                tier_info = f" ({segformer_count} segformer, {color_fallback_count} color-fallback)"
+            print(f"    Analysis: {analyze_time:.1f}s ({method}){tier_info}")
 
         cam_stats[cam] = {
             "actors": len(actors),
@@ -907,6 +927,8 @@ def process_slot(slot: str, method: str = "segformer",
             "total_crops": total_crops,
             "decode_sec": round(decode_time, 1),
             "analyze_sec": round(analyze_time, 1),
+            "segformer_count": segformer_count,
+            "color_fallback_count": color_fallback_count,
         }
 
     total_time = time.time() - t0
@@ -975,15 +997,20 @@ def main():
         for cf in files:
             cam = cf["camera"]
             actors = parse_geom(cf["geom_path"])
-            usable = sum(1 for aid in actors
+            usable_segformer = sum(1 for aid in actors
                         for frames in [actors[aid].values()]
                         if any((bb[2]-bb[0]) >= MIN_BBOX_WIDTH and
                                (bb[3]-bb[1]) >= MIN_BBOX_HEIGHT
                                for bb in frames))
+            usable_color = sum(1 for aid in actors
+                        for frames in [actors[aid].values()]
+                        if any((bb[2]-bb[0]) >= MIN_BBOX_WIDTH_COLOR and
+                               (bb[3]-bb[1]) >= MIN_BBOX_HEIGHT_COLOR
+                               for bb in frames))
             vp = cf["video_path"]
             has_video = vp and vp.exists()
             vfmt = cf.get("video_format", "none")
-            print(f"    {cam}: {len(actors)} actors, {usable} usable, video={'YES' if has_video else 'NO'} ({vfmt})")
+            print(f"    {cam}: {len(actors)} actors, {usable_segformer} segformer-ready, {usable_color} color-ready, video={'YES' if has_video else 'NO'} ({vfmt})")
         return
 
     result = process_slot(args.slot, method=method, verbose=args.verbose)

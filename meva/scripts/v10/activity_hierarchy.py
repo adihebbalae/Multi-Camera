@@ -234,7 +234,8 @@ def humanize_activity_gerund(activity: str) -> str:
         if rest:
             first_rest = rest.split()[0]
             if first_rest not in _no_article:
-                rest = "a " + rest
+                article = "an" if first_rest[0].lower() in "aeiou" else "a"
+                rest = f"{article} " + rest
         result = f"{gerund} {rest}".strip() if rest else gerund
         return result.capitalize()
     return base.capitalize()

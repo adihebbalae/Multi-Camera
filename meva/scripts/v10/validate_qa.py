@@ -174,20 +174,20 @@ def check_reasoning_consistency(qa_pairs: List[dict]) -> List[Issue]:
 
         # --- Counting: number extraction ---
         elif cat == "counting":
-            # Extract numbers from reasoning
-            nums_in_reasoning = re.findall(r'\b(\d+)\b', reasoning)
+            # Extract the primary count from reasoning (the one after "observed X times")
             correct_count = verification.get("correct_count")
-            if correct_count is not None and nums_in_reasoning:
-                # Check final number or most-mentioned number
-                num_counts = Counter(int(n) for n in nums_in_reasoning)
-                most_common_num = num_counts.most_common(1)[0][0]
-                if most_common_num != correct_count and int(nums_in_reasoning[-1]) != correct_count:
-                    issues.append(Issue(
-                        qid, "reasoning_consistency", ERROR,
-                        f"Reasoning mentions count {most_common_num}, "
-                        f"but correct_count is {correct_count}",
-                        "Regenerate reasoning with correct count"
-                    ))
+            if correct_count is not None:
+                # Look for the stated count: "observed N time(s)"
+                observed_match = re.search(r'observed\s+(\d+)\s+time', reasoning)
+                if observed_match:
+                    stated_count = int(observed_match.group(1))
+                    if stated_count != correct_count:
+                        issues.append(Issue(
+                            qid, "reasoning_consistency", ERROR,
+                            f"Reasoning says 'observed {stated_count} times', "
+                            f"but correct_count is {correct_count}",
+                            "Regenerate reasoning with correct count"
+                        ))
 
         # --- Event ordering: sequence match ---
         elif cat == "event_ordering":
