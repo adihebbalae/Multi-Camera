@@ -862,16 +862,20 @@ def _naturalize_question(
 
     for attempt in range(MAX_RETRIES):
         try:
-            response = client.chat.completions.create(
-                model=model,
-                temperature=temperature,
-                response_format={"type": "json_object"},
-                messages=[
+            request_args = {
+                "model": model,
+                "temperature": temperature,
+                "response_format": {"type": "json_object"},
+                "messages": [
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": user_message},
                 ],
-                max_tokens=400,
-            )
+            }
+            if model.startswith("gpt-5"):
+                request_args["max_completion_tokens"] = 400
+            else:
+                request_args["max_tokens"] = 400
+            response = client.chat.completions.create(**request_args)
 
             result = json.loads(response.choices[0].message.content)
 
