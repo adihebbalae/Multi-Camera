@@ -292,21 +292,34 @@ def _has_appearance_info(desc: str) -> bool:
 
 def _extract_person_desc(entity_description: str, activity: str = "") -> str:
     """
-    Extract just the person appearance, stripping any embedded activity text.
+    Extract just the entity appearance, stripping any embedded activity text.
 
     Input: "the person wearing a gray upper body garment... enters scene"
     Output: "a person wearing a gray top and green pants, carrying a black backpack"
 
     Input: "a person interacts with person" (fallback, no appearance)
     Output: "a person"
+
+    Input: "a vehicle" (vehicle entity)
+    Output: "a vehicle"
     """
     if not entity_description:
+        # Use activity prefix to determine entity type
+        if activity.startswith("vehicle_"):
+            return "a vehicle"
         return "a person"
 
     desc = entity_description.strip()
 
+    # Preserve vehicle descriptions as-is
+    if desc.lower().startswith("a vehicle") or desc.lower() == "vehicle":
+        return desc if desc.lower().startswith("a ") else "a " + desc
+
     # Check if this is a real appearance description vs. activity fallback
     if not _has_appearance_info(desc):
+        # Use activity prefix to determine entity type
+        if activity.startswith("vehicle_"):
+            return "a vehicle"
         return "a person"
 
     # Remove embedded activity text after the description
@@ -400,6 +413,8 @@ def _preprocess_temporal(qa: Dict, strip_camera_refs: bool = True) -> Dict:
         d = desc.rstrip('.')
         cam_ref = f" on camera {cam}" if cam and with_camera else ""
         if d.lower() in ("a person", "someone"):
+            return f"{d} {act}{cam_ref}"
+        if d.lower() in ("a vehicle",):
             return f"{d} {act}{cam_ref}"
         return f"{d}, {act}{cam_ref}"
 
@@ -686,6 +701,8 @@ starting with "In this scene..." or "Looking at the cameras..."
 - Do NOT alter person descriptions (clothing colors, carried objects) — but \
 DO fix obvious grammar errors within them (broken verb conjugations, garbled \
 words, missing articles).
+- Do NOT change "a vehicle" to "a person" or vice versa — entity type is \
+factually significant. Vehicles and persons are different entities.
 - Do not change answer options.
 - Camera identifiers (e.g., G421) in question text are acceptable ONLY for \
 perception and re-identification questions where cameras are inherent.

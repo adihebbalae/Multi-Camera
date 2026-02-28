@@ -31,6 +31,13 @@ try:
 except ImportError:
     _HAS_3D_DEDUP = False
 
+# Camera overlap detection for aggressive dedup on overlapping FOVs
+try:
+    from .utils.camera_overlap import cameras_overlap
+    _HAS_OVERLAP = True
+except ImportError:
+    _HAS_OVERLAP = False
+
 
 # ============================================================================
 # Constants
@@ -105,6 +112,10 @@ def _dedup_activity_count(events_for_activity: list,
     merged into a single cluster (counted as one occurrence).  Events on
     the SAME camera are always counted separately.
 
+    For cameras with KNOWN FOV overlap (e.g. admin G326/G329), the time
+    window is widened to ±8 seconds since the same event is very likely
+    to appear in both cameras with some annotation timing variation.
+
     Issue 6: Also uses 3D position matching when available for more accurate dedup.
     Issue 10: Returns cluster details for key_frames in QA output.
 
@@ -112,6 +123,9 @@ def _dedup_activity_count(events_for_activity: list,
     cluster_details: List[Dict] with one entry per cluster, each containing
     {camera, start_sec, end_sec, start_frame, event_id, clip_file}.
     """
+    DEDUP_WINDOW_DEFAULT = 2.0   # seconds for non-overlapping cameras
+    DEDUP_WINDOW_OVERLAP = 8.0   # seconds for overlapping cameras
+
     sorted_evts = sorted(events_for_activity, key=lambda e: e.start_sec)
     clusters: List[list] = []
     for evt in sorted_evts:
@@ -121,12 +135,20 @@ def _dedup_activity_count(events_for_activity: list,
                 if evt.camera_id == c_evt.camera_id:
                     continue  # Same camera = always distinct
 
+                # Determine time window based on camera overlap
+                if _HAS_OVERLAP and cameras_overlap(evt.camera_id, c_evt.camera_id):
+                    time_window = DEDUP_WINDOW_OVERLAP
+                else:
+                    time_window = DEDUP_WINDOW_DEFAULT
+
                 # Time-based check
-                if abs(evt.start_sec - c_evt.start_sec) > 2.0:
+                if abs(evt.start_sec - c_evt.start_sec) > time_window:
                     continue
 
                 # Issue 6: 3D position check when available
-                if _HAS_3D_DEDUP and sg is not None:
+                # Skip 3D check for overlapping cameras (same FOV = same location)
+                if (_HAS_3D_DEDUP and sg is not None
+                        and not (_HAS_OVERLAP and cameras_overlap(evt.camera_id, c_evt.camera_id))):
                     import numpy as np
                     pos_a = _get_event_3d_position(evt, sg)
                     pos_b = _get_event_3d_position(c_evt, sg)

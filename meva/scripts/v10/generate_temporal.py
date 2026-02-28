@@ -20,6 +20,7 @@ from .person_descriptions import enrich_entities, get_mevid_persons_with_cameras
 from .distractor_bank import get_distractors
 from .activity_hierarchy import (
     are_related, get_relationship, get_relationship_strength, humanize_activity,
+    get_activity_entity_type,
 )
 from .utils.mevid import find_mevid_persons_for_slot
 from .utils.krtd import load_camera_model, CameraModel, INDOOR_CAMERAS
@@ -94,6 +95,14 @@ def _get_event_3d_position(event: Event, sg: SceneGraph) -> Optional[np.ndarray]
     return None
 
 
+# Camera overlap detection for aggressive dedup on overlapping FOVs
+try:
+    from .utils.camera_overlap import cameras_overlap as _cameras_overlap
+    _HAS_OVERLAP = True
+except ImportError:
+    _HAS_OVERLAP = False
+
+
 def _is_likely_duplicate_event(ea: Event, eb: Event, sg: SceneGraph) -> bool:
     """Check if two cross-camera events are likely the same real-world event.
     
@@ -102,8 +111,8 @@ def _is_likely_duplicate_event(ea: Event, eb: Event, sg: SceneGraph) -> bool:
     2. Are temporally close (within CROSS_CAM_DEDUP_TIME_SEC)
     3. Have similar 3D positions (within CROSS_CAM_DEDUP_DISTANCE_M)
     
-    This catches the case where out-of-sync cameras record the same
-    real-world action at slightly different timestamps.
+    For cameras with known FOV overlap, the time window is applied more
+    aggressively (any temporal proximity = likely duplicate).
     """
     # Must be same activity for duplicate detection
     if ea.activity != eb.activity:
@@ -113,8 +122,17 @@ def _is_likely_duplicate_event(ea: Event, eb: Event, sg: SceneGraph) -> bool:
     if ea.camera_id == eb.camera_id:
         return False
     
+    # Check if cameras have known overlap
+    overlap = _HAS_OVERLAP and _cameras_overlap(ea.camera_id, eb.camera_id)
+    
     # Check temporal proximity
     time_gap = abs(ea.start_sec - eb.start_sec)
+    if overlap:
+        # Overlapping cameras: wider time window, skip 3D check
+        if time_gap <= CROSS_CAM_DEDUP_TIME_SEC:
+            return True
+        return False
+    
     if time_gap > CROSS_CAM_DEDUP_TIME_SEC:
         return False
     
@@ -303,8 +321,9 @@ def _get_event_description(event: Event, sg: SceneGraph,
                             return desc
                         return f"{desc} {short_act}"
     
-    # Absolute fallback: use "a person" instead of "someone"
-    return f"a person {short_act}"
+    # Absolute fallback: use correct entity type (person vs vehicle)
+    entity_type = get_activity_entity_type(event.activity)
+    return f"a {entity_type} {short_act}"
 
 
 def _enrich_with_location(desc: str, event: Event, sg: SceneGraph) -> str:

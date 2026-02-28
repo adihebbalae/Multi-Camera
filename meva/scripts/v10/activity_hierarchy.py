@@ -148,13 +148,39 @@ def get_activity_entity_type(activity: str) -> str:
 
 
 def humanize_activity(activity: str) -> str:
-    """Convert activity name to short human-readable form."""
-    # Special-case enter/exit scene to clarify MEVA camera-view semantics
+    """Convert activity name to short human-readable form.
+
+    Special-cases vague names and vehicle activities to produce sensible
+    descriptions.  The plain prefix-strip is the fallback.
+    """
     _SPECIAL = {
+        # Scene entry / exit — clarify MEVA camera-view semantics
         "person_enters_scene_through_structure":
             "enters the camera's view through a doorway",
         "person_exits_scene_through_structure":
             "leaves the camera's view through a doorway",
+        # Vague / ambiguous person activities — more descriptive
+        "hand_interacts_with_person":
+            "physically interacts with another person",
+        "person_interacts_with_laptop":
+            "uses a laptop",
+        "person_transfers_object":
+            "hands an object to someone",
+        "person_carries_heavy_object":
+            "carries a heavy object",
+        "person_abandons_package":
+            "leaves a package behind",
+        "person_steals_object":
+            "takes an object",
+        # Vehicle activities — keep "vehicle" context in the verb phrase
+        "vehicle_starts":       "starts moving",
+        "vehicle_stops":        "comes to a stop",
+        "vehicle_reverses":     "reverses",
+        "vehicle_turns_left":   "turns left",
+        "vehicle_turns_right":  "turns right",
+        "vehicle_makes_u_turn": "makes a U-turn",
+        "vehicle_drops_off_person": "drops off a person",
+        "vehicle_picks_up_person":  "picks up a person",
     }
     if activity in _SPECIAL:
         return _SPECIAL[activity]
@@ -220,6 +246,36 @@ def humanize_activity_gerund(activity: str) -> str:
     Convert activity to gerund form for sentence construction.
     e.g. 'person_opens_facility_door' → 'Opening a facility door'
     """
+    # Direct gerund overrides for special-cased activities
+    _GERUND_SPECIAL = {
+        "person_enters_scene_through_structure":
+            "Entering the camera's view through a doorway",
+        "person_exits_scene_through_structure":
+            "Leaving the camera's view through a doorway",
+        "hand_interacts_with_person":
+            "Physically interacting with another person",
+        "person_interacts_with_laptop":
+            "Using a laptop",
+        "person_transfers_object":
+            "Handing an object to someone",
+        "person_carries_heavy_object":
+            "Carrying a heavy object",
+        "person_abandons_package":
+            "Leaving a package behind",
+        "person_steals_object":
+            "Taking an object",
+        "vehicle_starts":       "Starting to move",
+        "vehicle_stops":        "Coming to a stop",
+        "vehicle_reverses":     "Reversing",
+        "vehicle_turns_left":   "Turning left",
+        "vehicle_turns_right":  "Turning right",
+        "vehicle_makes_u_turn": "Making a U-turn",
+        "vehicle_drops_off_person": "Dropping off a person",
+        "vehicle_picks_up_person":  "Picking up a person",
+    }
+    if activity in _GERUND_SPECIAL:
+        return _GERUND_SPECIAL[activity]
+
     base = humanize_activity(activity)  # e.g. 'opens facility door'
     words = base.split()
     if words:

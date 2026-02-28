@@ -502,10 +502,28 @@ def _load_geom_descriptions(slot: str) -> Dict[str, str]:
     try:
         with open(desc_path) as f:
             data = json.load(f)
-        return {eid: info["description"] for eid, info in data.get("actors", {}).items()
+        descs = {eid: info["description"] for eid, info in data.get("actors", {}).items()
                 if info.get("description") and info["description"] != "a person"}
+        # Clean up geom descriptions: remove "unknown" qualifiers, fix articles
+        return {eid: _clean_geom_description(desc) for eid, desc in descs.items()}
     except (json.JSONDecodeError, KeyError):
         return {}
+
+
+def _clean_geom_description(desc: str) -> str:
+    """Clean a pre-formatted geom description string.
+
+    Removes "unknown" qualifier words and fixes article agreement (a→an
+    before vowels).  Does NOT consolidate colors — specific colors like
+    indigo, navy, teal are kept for better entity differentiation.
+    """
+    import re
+    result = desc
+    # Remove "unknown" qualifier
+    result = re.sub(r'\bunknown\s+', '', result, flags=re.IGNORECASE)
+    # Fix article agreement: "a indigo" → "an indigo", "a olive" → "an olive"
+    result = re.sub(r'\ba\s+([aeiou])', r'an \1', result, flags=re.IGNORECASE)
+    return result
 
 
 def _load_vlm_descriptions(slot: str) -> Dict[str, str]:
@@ -790,7 +808,7 @@ def _build_description(attrs: dict) -> str:
     if hair != "unknown":
         parts.append(f"with {hair} hair")
 
-    # Clothing — include brightness + texture qualifiers if available
+    # Clothing — keep specific colors (indigo, navy, teal etc.) for differentiation
     upper = attrs.get("upper_color", "unknown")
     lower = attrs.get("lower_color", "unknown")
     lower_type = attrs.get("lower_type", "pants")
@@ -803,20 +821,26 @@ def _build_description(attrs: dict) -> str:
     if upper != "unknown":
         # Build qualifier: "dark patterned navy" or just "navy"
         upper_quals = []
-        if upper_brightness and upper_brightness not in ("", "medium"):
+        # Skip brightness qualifier if the consolidated color already includes it
+        # (e.g., "dark blue" already implies "dark", so don't say "dark dark blue")
+        if (upper_brightness and upper_brightness not in ("", "medium", "unknown")
+                and not upper.startswith(upper_brightness)):
             upper_quals.append(upper_brightness)
-        if upper_texture and upper_texture not in ("", "solid"):
+        if upper_texture and upper_texture not in ("", "solid", "unknown"):
             upper_quals.append(upper_texture)
         qualifier = " ".join(upper_quals)
         if qualifier:
-            clothing.append(f"a {qualifier} {upper} top")
+            article = "an" if qualifier[0].lower() in "aeiou" else "a"
+            clothing.append(f"{article} {qualifier} {upper} top")
         else:
-            clothing.append(f"a {upper} top")
+            article = "an" if upper[0].lower() in "aeiou" else "a"
+            clothing.append(f"{article} {upper} top")
     if lower != "unknown":
         lower_quals = []
-        if lower_brightness and lower_brightness not in ("", "medium"):
+        if (lower_brightness and lower_brightness not in ("", "medium", "unknown")
+                and not lower.startswith(lower_brightness)):
             lower_quals.append(lower_brightness)
-        if lower_texture and lower_texture not in ("", "solid"):
+        if lower_texture and lower_texture not in ("", "solid", "unknown"):
             lower_quals.append(lower_texture)
         qualifier = " ".join(lower_quals)
         if qualifier:
