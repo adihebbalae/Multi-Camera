@@ -36,7 +36,7 @@ FRAME_HEIGHT = 1080
 FRAME_EDGE_MARGIN = 10  # pixels
 
 # Sampling: sample every N frames for distance computation
-SAMPLE_EVERY = 30  # ~1 second at 30fps
+SAMPLE_EVERY = 15  # ~0.5 second at 30fps (finer than 30 to catch brief encounters)
 
 # Cross-paths threshold: if minimum distance <= this, entities "cross paths"
 CROSS_PATHS_THRESHOLD_M = 2.0
@@ -123,25 +123,30 @@ def _compute_closest_approach(
     bboxes_a: Dict[int, List[int]],
     bboxes_b: Dict[int, List[int]],
     camera_model: CameraModel,
-) -> Tuple[Optional[float], Optional[int], Optional[List[int]], Optional[List[int]]]:
+) -> Tuple[Optional[float], Optional[int], Optional[List[int]], Optional[List[int]],
+           Optional[List[Tuple[int, float, List[int], List[int]]]]]:
     """Compute closest approach between two entities on the same camera.
     
     Finds the frame where the 3D distance between the two entities is minimized
     across their overlapping time window.
     
-    Returns: (min_distance_m, closest_frame, bbox_a_at_frame, bbox_b_at_frame)
-             or (None, None, None, None) if no valid overlap.
+    Returns: (min_distance_m, closest_frame, bbox_a_at_frame, bbox_b_at_frame,
+              distance_trajectory)
+    distance_trajectory is a list of (frame, distance_m, bbox_a, bbox_b) tuples
+    in chronological order, used for cross-paths verification.
+    Returns (None, None, None, None, None) if no valid overlap.
     """
-    # Find overlapping frames (both actors have bboxes)
+    # Collect all frame pairs (exact or nearest-neighbor matched)
     frames_a = set(bboxes_a.keys())
     frames_b = set(bboxes_b.keys())
     common_frames = sorted(frames_a & frames_b)
     
-    if not common_frames:
+    frame_pairs: List[Tuple[int, int]] = []
+    if common_frames:
+        frame_pairs = [(f, f) for f in common_frames]
+    else:
         # No exact frame matches - try nearest-neighbor matching
-        # within a tolerance of 2*SAMPLE_EVERY frames
         tolerance = 2 * SAMPLE_EVERY
-        paired_frames = []
         sorted_b = sorted(frames_b)
         for fa in sorted(frames_a):
             best_fb = None
@@ -154,47 +159,20 @@ def _compute_closest_approach(
                 if fb > fa + tolerance:
                     break
             if best_fb is not None and best_dist <= tolerance:
-                paired_frames.append((fa, best_fb))
-        
-        if not paired_frames:
-            return None, None, None, None
-        
-        min_dist = float('inf')
-        closest_frame = None
-        closest_bbox_a = None
-        closest_bbox_b = None
-        
-        for fa, fb in paired_frames:
-            ba = bboxes_a[fa]
-            bb = bboxes_b[fb]
-            if _is_bbox_clipping_frame(ba) or _is_bbox_clipping_frame(bb):
-                continue
-            pos_a = camera_model.bbox_foot_to_world(ba)
-            pos_b = camera_model.bbox_foot_to_world(bb)
-            if pos_a is None or pos_b is None:
-                continue
-            dist = float(np.linalg.norm(pos_a - pos_b))
-            if dist > MAX_REASONABLE_DISTANCE_M:
-                continue
-            if dist < min_dist:
-                min_dist = dist
-                closest_frame = fa
-                closest_bbox_a = ba
-                closest_bbox_b = bb
-        
-        if closest_frame is None:
-            return None, None, None, None
-        return min_dist, closest_frame, closest_bbox_a, closest_bbox_b
+                frame_pairs.append((fa, best_fb))
     
-    # Common frames exist - compute distance at each
+    if not frame_pairs:
+        return None, None, None, None, None
+    
     min_dist = float('inf')
     closest_frame = None
     closest_bbox_a = None
     closest_bbox_b = None
+    trajectory: List[Tuple[int, float, List[int], List[int]]] = []
     
-    for frame in common_frames:
-        ba = bboxes_a[frame]
-        bb = bboxes_b[frame]
+    for fa, fb in sorted(frame_pairs):
+        ba = bboxes_a[fa]
+        bb = bboxes_b[fb]
         if _is_bbox_clipping_frame(ba) or _is_bbox_clipping_frame(bb):
             continue
         pos_a = camera_model.bbox_foot_to_world(ba)
@@ -204,15 +182,81 @@ def _compute_closest_approach(
         dist = float(np.linalg.norm(pos_a - pos_b))
         if dist > MAX_REASONABLE_DISTANCE_M:
             continue
+        trajectory.append((fa, dist, ba, bb))
         if dist < min_dist:
             min_dist = dist
-            closest_frame = frame
+            closest_frame = fa
             closest_bbox_a = ba
             closest_bbox_b = bb
     
     if closest_frame is None:
-        return None, None, None, None
-    return min_dist, closest_frame, closest_bbox_a, closest_bbox_b
+        return None, None, None, None, None
+    return min_dist, closest_frame, closest_bbox_a, closest_bbox_b, trajectory
+
+
+# Threshold for "far enough" that the entities are clearly separated
+# before/after the close encounter (used for cross-paths verification)
+_CROSS_PATHS_FAR_THRESHOLD_M = 5.0
+
+
+def _is_true_crossing(
+    trajectory: List[Tuple[int, float, List[int], List[int]]],
+    min_dist: float,
+) -> bool:
+    """Verify that a cross-paths encounter is a true crossing:
+    entities approach from separate positions, pass very close (<=2m),
+    and separate again — with their bbox horizontal centers swapping
+    relative position (A was left of B, then A is right of B, or vice versa).
+    
+    Requirements:
+    1. min_dist <= CROSS_PATHS_THRESHOLD_M (already checked by caller)
+    2. Distance goes from >5m to <=2m and back to >5m (far→close→far)
+    3. Bbox horizontal centers swap relative order across the encounter
+    """
+    if not trajectory or len(trajectory) < 3:
+        return False
+    
+    # Find the index of the closest approach
+    min_idx = min(range(len(trajectory)), key=lambda i: trajectory[i][1])
+    
+    # Check far→close: is there a frame BEFORE the closest approach where
+    # distance > _CROSS_PATHS_FAR_THRESHOLD_M?
+    far_before = any(trajectory[i][1] > _CROSS_PATHS_FAR_THRESHOLD_M
+                     for i in range(min_idx))
+    # Check close→far: is there a frame AFTER the closest approach where
+    # distance > _CROSS_PATHS_FAR_THRESHOLD_M?
+    far_after = any(trajectory[i][1] > _CROSS_PATHS_FAR_THRESHOLD_M
+                    for i in range(min_idx + 1, len(trajectory)))
+    
+    if not (far_before and far_after):
+        return False
+    
+    # Check bbox horizontal center swap:
+    # Before the encounter, A is left/right of B.
+    # After the encounter, A should be on the opposite side.
+    def _bbox_center_x(bbox):
+        return (bbox[0] + bbox[2]) / 2.0
+    
+    # Use the first frame where distance > far threshold (before encounter)
+    pre_frame = None
+    for i in range(min_idx):
+        if trajectory[i][1] > _CROSS_PATHS_FAR_THRESHOLD_M:
+            pre_frame = trajectory[i]
+    # Use the last frame where distance > far threshold (after encounter)
+    post_frame = None
+    for i in range(len(trajectory) - 1, min_idx, -1):
+        if trajectory[i][1] > _CROSS_PATHS_FAR_THRESHOLD_M:
+            post_frame = trajectory[i]
+    
+    if pre_frame is None or post_frame is None:
+        return False
+    
+    # Compare horizontal positions: did A and B swap sides?
+    pre_diff = _bbox_center_x(pre_frame[2]) - _bbox_center_x(pre_frame[3])  # A_x - B_x
+    post_diff = _bbox_center_x(post_frame[2]) - _bbox_center_x(post_frame[3])  # A_x - B_x
+    
+    # Sign change = they swapped horizontal position
+    return (pre_diff > 0) != (post_diff > 0)
 
 
 # ============================================================================
@@ -304,10 +348,11 @@ def _find_spatial_candidates(sg: SceneGraph, verbose: bool = False) -> List[Dict
                 if overlap_end <= overlap_start:
                     continue  # no temporal overlap
                 
-                # Compute closest approach
-                min_dist, closest_frame, bbox_a, bbox_b = _compute_closest_approach(
+                # Compute closest approach + trajectory
+                result = _compute_closest_approach(
                     bboxes_a, bboxes_b, model
                 )
+                min_dist, closest_frame, bbox_a, bbox_b, trajectory = result
                 
                 if min_dist is None:
                     continue
@@ -315,8 +360,13 @@ def _find_spatial_candidates(sg: SceneGraph, verbose: bool = False) -> List[Dict
                 # Classify proximity
                 proximity = classify_proximity(min_dist)
                 
-                # Check if entities cross paths (very close approach)
-                crosses_paths = min_dist <= CROSS_PATHS_THRESHOLD_M
+                # Check if entities truly cross paths:
+                # min_dist <= 2m AND far→close→far AND bbox positions swap
+                crosses_paths = (
+                    min_dist <= CROSS_PATHS_THRESHOLD_M
+                    and trajectory is not None
+                    and _is_true_crossing(trajectory, min_dist)
+                )
                 
                 candidates.append({
                     "entity_a": ent_a.entity_id,
@@ -510,19 +560,21 @@ def generate_spatial_qa(sg: SceneGraph, resolved: ResolvedGraph,
             continue
         
         question = (
-            f"How close do {desc_a} and {desc_b} come to each other in the scene?"
+            f"How do {desc_a} and {desc_b} move relative to each other in the scene?"
         )
         
-        # Build options - crosses_paths is the "special" answer
+        # Build options — A/D are clearly distinct:
+        # A = they end up near each other (approach/converge)
+        # D = they walk past each other and swap positions (true crossing)
         options = [
-            "They come close together (within a few meters)",
+            "They approach and stay near each other (within a few meters)",
             "They stay at a moderate distance (5-15 meters apart)",
             "They remain far apart (more than 15 meters)",
-            "They cross paths (pass very close to each other)",
+            "They walk past each other, swapping positions (cross paths)",
         ]
         
         if crosses:
-            correct_idx = 3  # cross paths
+            correct_idx = 3  # true crossing: far→close→far with position swap
         elif proximity == "near":
             correct_idx = 0
         elif proximity == "moderate":

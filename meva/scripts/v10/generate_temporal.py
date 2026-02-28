@@ -1,10 +1,17 @@
 """
-V8 generate_temporal.py — Temporal cross-camera questions with MEVID person descriptions.
+V10 generate_temporal.py — Multi-camera temporal cross-camera questions.
 
-V8 CHANGES from V7:
-- Entity aliases replaced with MEVID person descriptions when available
-- Questions prioritize events involving described persons
-- Description-enriched question text for better naturalization
+V10 CHANGES from V8:
+- REMOVED entity-cluster linkage as scoring factor —
+  deliberately pairs unrelated events across different cameras so VLMs
+  can't "cheat" by inferring causal/narrative answers.
+- Scoring now driven by CAMERA PROXIMITY: adjacent cameras at the same
+  site get highest priority (events *require* multi-camera reasoning).
+- Added "What happened before/after X?" question format (alongside
+  "which occurred first?") to match ego-exo4d/agibot breadth.
+- Uses new camera_proximity utility for indoor-aware spatial reasoning,
+  including cameras without KRTD (admin, school hallways, bus indoor).
+- Connection type metadata preserved for debug but not used for selection.
 """
 
 import random
@@ -26,6 +33,15 @@ from .utils.mevid import find_mevid_persons_for_slot
 from .utils.krtd import load_camera_model, CameraModel, INDOOR_CAMERAS
 from .utils.yaml_stream import get_bbox_at_frame
 
+# Camera proximity (new V10) — graceful degradation
+try:
+    from .utils.camera_proximity import (
+        score_camera_pair_for_temporal, get_proximity_tier,
+    )
+    _HAS_PROXIMITY = True
+except ImportError:
+    _HAS_PROXIMITY = False
+
 # Scene context (optional — graceful degradation)
 try:
     from .scene_context import get_scene_context, enrich_description_with_location
@@ -38,8 +54,8 @@ except ImportError:
 # ============================================================================
 
 MIN_GAP = 1.0
-MAX_GAP = 15.0
-FALLBACK_MAX_GAP = 20.0
+MAX_GAP = 10.0
+FALLBACK_MAX_GAP = 15.0
 DEFAULT_FPS = 30.0
 # Cross-camera duplicate detection: if two events have same activity,
 # 3D positions within this distance AND time within this window,
@@ -179,13 +195,21 @@ def _event_has_visible_bbox(event: Event, sg: SceneGraph) -> bool:
 
 
 # ============================================================================
-# Connection Scoring (from V7, unchanged)
+# Connection Scoring (V10: camera-proximity-driven, entity-cluster removed)
 # ============================================================================
 
 def _score_connection(event_a: Event, event_b: Event,
                       sg: SceneGraph, resolved: ResolvedGraph,
                       mevid_person_cameras: Dict[int, Set[str]]) -> Dict:
-    """Score connection strength between two events."""
+    """Score connection strength between two cross-camera events.
+
+    V10 philosophy: Score is driven by CAMERA PROXIMITY, not entity linkage.
+    Adjacent cameras at the same site produce the best multi-camera temporal
+    questions. Entity-cluster and activity-relationship info is recorded in
+    metadata for debugging but does NOT influence the score — we deliberately
+    want unrelated event pairs so VLMs can't shortcut the answer via causal
+    reasoning.
+    """
     score = 0.0
     connection_type = "unrelated"
     connection_strength = "weak"
@@ -193,11 +217,28 @@ def _score_connection(event_a: Event, event_b: Event,
     mevid_person_id = None
     relationship = None
     cluster_id = None
-    
-    for cluster in resolved.entity_clusters:
+    proximity_tier = None
+
+    # Primary scoring signal: camera spatial proximity
+    if _HAS_PROXIMITY:
+        proximity_score = score_camera_pair_for_temporal(
+            event_a.camera_id, event_b.camera_id
+        )
+        proximity_tier = get_proximity_tier(event_a.camera_id, event_b.camera_id)
+        score += proximity_score
+    else:
+        # Fallback: any cross-camera pair on same site gets base score
+        score += 1.0
+
+    # Bonus: different activities = more interesting question (harder to guess)
+    if event_a.activity != event_b.activity:
+        score += 1.0
+
+    # Record (but do NOT score) entity cluster linkage — metadata only
+    for cluster_obj in resolved.entity_clusters:
         a_entities = set()
         b_entities = set()
-        for eid in cluster.entities:
+        for eid in cluster_obj.entities:
             entity = sg.entities.get(eid)
             if not entity:
                 continue
@@ -211,30 +252,31 @@ def _score_connection(event_a: Event, event_b: Event,
                         b_entities.add(eid)
         if a_entities and b_entities:
             connection_type = "same_entity_cluster"
-            connection_strength = "strong"
-            score += 3.0
-            cluster_id = cluster.cluster_id
+            cluster_id = cluster_obj.cluster_id
             break
-    
+
+    # Record (but do NOT score) activity relationships — metadata only
     rel = get_relationship(event_a.activity, event_b.activity)
     if rel:
         relationship = rel
-        rel_score = get_relationship_strength(event_a.activity, event_b.activity)
-        score += rel_score * 2.0
         if connection_type == "unrelated":
             connection_type = f"related_activities_{rel}"
-            connection_strength = "medium" if rel_score >= 0.7 else "weak"
-    
+
+    # Record MEVID validation — metadata only (no score bonus)
     for pid, cameras in mevid_person_cameras.items():
         if event_a.camera_id in cameras and event_b.camera_id in cameras:
             mevid_validated = True
             mevid_person_id = pid
-            score += 1.5
             break
-    
-    if event_a.activity != event_b.activity:
-        score += 0.5
-    
+
+    # Derive connection_strength from proximity tier (for debug display)
+    if proximity_tier == "adjacent":
+        connection_strength = "strong"
+    elif proximity_tier == "same_site":
+        connection_strength = "medium"
+    else:
+        connection_strength = "weak"
+
     return {
         "connection_type": connection_type,
         "connection_strength": connection_strength,
@@ -243,6 +285,7 @@ def _score_connection(event_a: Event, event_b: Event,
         "mevid_person_id": mevid_person_id,
         "relationship": relationship,
         "cluster_id": cluster_id,
+        "proximity_tier": proximity_tier,
     }
 
 
@@ -381,6 +424,56 @@ def _short_option_label(desc: str, activity: str) -> str:
 
 
 # ============================================================================
+# Uniqueness Gate
+# ============================================================================
+
+DESC_UNIQUENESS_LONG_EVENT_SEC = 30.0  # align with event_ordering first-instance threshold
+
+
+def _build_uniqueness_index(
+    events: List[Event], sg: SceneGraph, entity_descs: Dict[str, str],
+    fallback_eids: Optional[Set[str]] = None,
+) -> Dict[Tuple[str, str], int]:
+    """Build index of how many visually-indistinguishable entities share the
+    same (camera, activity).  Returns {(camera_id, activity): count_of_entities}
+    where count > 1 means ambiguity.
+
+    Two entities on the same camera doing the same activity are ambiguous if
+    their descriptions are identical (or both missing).
+    """
+    # (camera, activity) -> set of descriptions seen
+    cam_act_descs: Dict[Tuple[str, str], Dict[str, int]] = {}
+
+    for evt in events:
+        key = (evt.camera_id, evt.activity)
+        if key not in cam_act_descs:
+            cam_act_descs[key] = {}
+        for actor in evt.actors:
+            eid = f"{evt.camera_id}_actor_{actor['actor_id']}"
+            desc = entity_descs.get(eid, "")
+            if not desc or desc in ("a person", "a vehicle", "someone"):
+                desc = "__generic__"
+            cam_act_descs[key][desc] = cam_act_descs[key].get(desc, 0) + 1
+
+    # For each (cam, activity), record the max entity count sharing one description
+    ambiguity: Dict[Tuple[str, str], int] = {}
+    for key, desc_counts in cam_act_descs.items():
+        ambiguity[key] = max(desc_counts.values()) if desc_counts else 0
+    return ambiguity
+
+
+def _event_is_unique(
+    event: Event, sg: SceneGraph, entity_descs: Dict[str, str],
+    uniqueness_index: Dict[Tuple[str, str], int],
+) -> bool:
+    """Return True if this event's (camera, activity, description) combination
+    is unambiguous — no other entity on the same camera does the same activity
+    with an indistinguishable description."""
+    key = (event.camera_id, event.activity)
+    return uniqueness_index.get(key, 0) <= 1
+
+
+# ============================================================================
 # Candidate Selection
 # ============================================================================
 
@@ -393,16 +486,25 @@ def _find_temporal_candidates(events: List[Event], sg: SceneGraph,
     V10 additions:
     - Rejects pairs that are likely the same real-world event (cross-camera dedup)
     - Rejects events whose actors have bbox clipping the frame edge
+    - First-instance filter only for long events (>30s), aligning with event_ordering
     """
-    # Issue 5: Pre-filter — keep only the FIRST (earliest) instance
-    # per (activity, camera) for temporal ordering accuracy.
+    # First-instance filter: only for long-duration events (>30s).
+    # Short discrete actions (<30s) may be genuinely different occurrences
+    # by different people, so they're preserved — the uniqueness gate
+    # handles ambiguity at selection time.
     first_instance: Dict[Tuple[str, str], Event] = {}
+    short_events: List[Event] = []
     for evt in events:
-        key = (evt.activity, evt.camera_id)
-        if key not in first_instance or evt.start_sec < first_instance[key].start_sec:
-            first_instance[key] = evt
+        if evt.duration_sec > DESC_UNIQUENESS_LONG_EVENT_SEC:
+            key = (evt.activity, evt.camera_id)
+            if key not in first_instance or evt.start_sec < first_instance[key].start_sec:
+                first_instance[key] = evt
+        else:
+            short_events.append(evt)
+    # Merge: first instances of long events + all short events
+    merged = list(first_instance.values()) + short_events
     # Skip events in the first 5 seconds (camera stabilization period)
-    events = [e for e in first_instance.values() if e.start_sec >= 5.0]
+    events = [e for e in merged if e.start_sec >= 5.0]
     events.sort(key=lambda e: e.start_sec)
 
     candidates = []
@@ -467,39 +569,84 @@ def _event_has_visual_desc(event: Event, sg: SceneGraph,
     return False
 
 
+# ============================================================================
+# Question Format Builders (V10)
+# ============================================================================
+
+def _build_which_first_question(
+    desc_a: str, desc_b: str, short_a: str, short_b: str,
+    rng: random.Random,
+) -> Tuple[str, List[str], int]:
+    """Build a 'which occurred first?' question (original V8 format).
+
+    Returns (question_text, options_list, correct_answer_index).
+    event_a is always the one that occurred first.
+    """
+    question = f"{desc_a} and {desc_b} -- which occurred first?"
+    options = [
+        f"{short_a} occurred first",
+        f"{short_b} occurred first",
+        "They occurred simultaneously",
+        "Cannot be determined",
+    ]
+    correct_idx = 0
+
+    if rng.random() < 0.5:
+        question = f"{desc_b} and {desc_a} -- which occurred first?"
+        options = [
+            f"{short_b} occurred first",
+            f"{short_a} occurred first",
+            "They occurred simultaneously",
+            "Cannot be determined",
+        ]
+        correct_idx = 1
+
+    return question, options, correct_idx
+
+
 def generate_temporal_qa(sg: SceneGraph, resolved: ResolvedGraph,
                          entity_descs: Dict[str, str],
                          rng: random.Random, count: int = 2,
                          verbose: bool = False,
                          fallback_eids: Optional[Set[str]] = None) -> List[Dict]:
     """
-    Generate temporal cross-camera questions with MEVID person descriptions.
-    
-    V8 changes:
-      - entity_descs parameter provides MEVID descriptions
-      - Question text uses natural person descriptions instead of actor IDs
-      - Prioritizes events involving described persons
+    Generate temporal cross-camera questions.
+
+    V10 changes:
+      - Entity-cluster linkage removed from scoring — camera proximity drives
+        pair selection instead (adjacent cams at same site = best).
+      - Deliberately pairs unrelated events across cameras to prevent VLMs
+        from shortcutting via causal/narrative reasoning.
+      - All questions use "which occurred first?" format.
+      - Uniqueness gate: rejects pairs where the activity+description is
+        ambiguous on that camera (prevents indistinguishable-entity confusion).
+      - Same_area relaxation: 2-camera sites (admin) allowed since sparse.
+      - Max gap 10s (FALLBACK_MAX_GAP 15s).
     """
     slot_cameras = list(sg.cameras.keys())
     mevid_person_cameras = find_mevid_persons_for_slot(sg.slot, slot_cameras)
-    
+
+    # Build uniqueness index for the gate
+    uniqueness_index = _build_uniqueness_index(
+        sg.events, sg, entity_descs, fallback_eids
+    )
+
     candidates = _find_temporal_candidates(
         sg.events, sg, resolved, mevid_person_cameras, MAX_GAP
     )
-    
+
     if len(candidates) < count:
         candidates = _find_temporal_candidates(
             sg.events, sg, resolved, mevid_person_cameras, FALLBACK_MAX_GAP
         )
-    
+
     if verbose:
         print(f"  Temporal: {len(candidates)} candidate pairs")
-    
+
     if not candidates:
         return []
-    
+
     # Filter out candidates where EITHER event uses fallback (non-visual) descriptions
-    # Both events appear in the question text, so both must have visual descriptions
     if fallback_eids:
         visual_candidates = [
             c for c in candidates
@@ -510,147 +657,106 @@ def generate_temporal_qa(sg: SceneGraph, resolved: ResolvedGraph,
             print(f"    Filtered {len(candidates) - len(visual_candidates)} "
                   f"fallback-only pairs → {len(visual_candidates)} remaining")
         candidates = visual_candidates
-    
+
+    # Uniqueness gate: reject pairs where either event's (cam, activity)
+    # has multiple entities with indistinguishable descriptions
+    pre_uniq = len(candidates)
+    candidates = [
+        c for c in candidates
+        if _event_is_unique(c["event_a"], sg, entity_descs, uniqueness_index)
+        and _event_is_unique(c["event_b"], sg, entity_descs, uniqueness_index)
+    ]
+    if verbose and len(candidates) < pre_uniq:
+        print(f"    Uniqueness gate: {pre_uniq - len(candidates)} ambiguous "
+              f"pairs rejected → {len(candidates)} remaining")
+
     if not candidates:
         return []
-    
-    # Diversify selection: strong > medium > weak, MEVID-validated preferred
-    used_pairs = set()
-    used_activities = set()
-    used_event_ids: Set[str] = set()        # No event reuse across questions
-    used_activity_names: Set[str] = set()   # No activity string reuse across questions
+
+    # Determine if this site has only 2 cameras (sparse site like admin)
+    # If so, allow same_area pairs as fallback since there's no alternative
+    n_cameras = len(slot_cameras)
+    allow_same_area = (n_cameras <= 2)
+
+    # ----------------------------------------------------------------
+    # Selection: camera-proximity-based, single pass (no tiered passes)
+    # Prefer: adjacent cameras > same-site > same-area, diverse activities
+    # ----------------------------------------------------------------
+    used_event_ids: Set[str] = set()
+    used_activity_names: Set[str] = set()
     selected = []
-    
-    # Pass 1: strong connection + MEVID-validated (best quality)
+
     for c in candidates:
         if len(selected) >= count:
             break
-        if c["connection_strength"] == "strong" and c["mevid_validated"]:
-            ea_id = c["event_a"].event_id
-            eb_id = c["event_b"].event_id
-            if ea_id in used_event_ids or eb_id in used_event_ids:
-                continue
-            if c["event_a"].activity in used_activity_names or c["event_b"].activity in used_activity_names:
-                continue
-            cam_pair = (c["event_a"].camera_id, c["event_b"].camera_id)
-            act_pair = (c["event_a"].activity, c["event_b"].activity)
-            if cam_pair not in used_pairs or act_pair not in used_activities:
-                used_pairs.add(cam_pair)
-                used_activities.add(act_pair)
-                selected.append(c)
-                used_event_ids.add(ea_id)
-                used_event_ids.add(eb_id)
-                used_activity_names.add(c["event_a"].activity)
-                used_activity_names.add(c["event_b"].activity)
-    
-    # Pass 2: strong connection (entity cluster linked)
-    for c in candidates:
-        if len(selected) >= count:
-            break
-        if c in selected:
-            continue
-        if c["connection_strength"] == "strong":
-            ea_id = c["event_a"].event_id
-            eb_id = c["event_b"].event_id
-            if ea_id in used_event_ids or eb_id in used_event_ids:
-                continue
-            if c["event_a"].activity in used_activity_names or c["event_b"].activity in used_activity_names:
-                continue
-            cam_pair = (c["event_a"].camera_id, c["event_b"].camera_id)
-            act_pair = (c["event_a"].activity, c["event_b"].activity)
-            if cam_pair not in used_pairs or act_pair not in used_activities:
-                used_pairs.add(cam_pair)
-                used_activities.add(act_pair)
-                selected.append(c)
-                used_event_ids.add(ea_id)
-                used_event_ids.add(eb_id)
-                used_activity_names.add(c["event_a"].activity)
-                used_activity_names.add(c["event_b"].activity)
-    
-    # Pass 3: medium connection (related activities)
-    for c in candidates:
-        if len(selected) >= count:
-            break
-        if c in selected:
-            continue
         ea_id = c["event_a"].event_id
         eb_id = c["event_b"].event_id
         if ea_id in used_event_ids or eb_id in used_event_ids:
             continue
-        if c["event_a"].activity in used_activity_names or c["event_b"].activity in used_activity_names:
+        if (c["event_a"].activity in used_activity_names
+                or c["event_b"].activity in used_activity_names):
             continue
-        if c["connection_strength"] == "medium":
-            selected.append(c)
-            used_event_ids.add(ea_id)
-            used_event_ids.add(eb_id)
-            used_activity_names.add(c["event_a"].activity)
-            used_activity_names.add(c["event_b"].activity)
-    
-    # Pass 4: fill remaining from any candidates (score-sorted order)
-    for c in candidates:
-        if len(selected) >= count:
-            break
-        if c not in selected:
+        # Skip same_area pairs unless sparse site (≤2 cameras)
+        if _HAS_PROXIMITY and not allow_same_area:
+            tier = get_proximity_tier(c["event_a"].camera_id, c["event_b"].camera_id)
+            if tier == "same_area":
+                continue
+        selected.append(c)
+        used_event_ids.add(ea_id)
+        used_event_ids.add(eb_id)
+        used_activity_names.add(c["event_a"].activity)
+        used_activity_names.add(c["event_b"].activity)
+
+    # If still short, relax the activity-uniqueness constraint
+    if len(selected) < count:
+        for c in candidates:
+            if len(selected) >= count:
+                break
+            if c in selected:
+                continue
             ea_id = c["event_a"].event_id
             eb_id = c["event_b"].event_id
             if ea_id in used_event_ids or eb_id in used_event_ids:
                 continue
-            if c["event_a"].activity in used_activity_names or c["event_b"].activity in used_activity_names:
-                continue
+            if _HAS_PROXIMITY and not allow_same_area:
+                tier = get_proximity_tier(c["event_a"].camera_id, c["event_b"].camera_id)
+                if tier == "same_area":
+                    continue
             selected.append(c)
             used_event_ids.add(ea_id)
             used_event_ids.add(eb_id)
-            used_activity_names.add(c["event_a"].activity)
-            used_activity_names.add(c["event_b"].activity)
-    
-    # Generate QA pairs
+
+    # ----------------------------------------------------------------
+    # Generate QA pairs — always "which occurred first?" format
+    # ----------------------------------------------------------------
     qa_pairs = []
-    
+
     for idx, cand in enumerate(selected[:count]):
         ea = cand["event_a"]
         eb = cand["event_b"]
         gap = cand["gap_sec"]
-        
+
         desc_a = _get_event_description(ea, sg, entity_descs, fallback_eids)
         desc_b = _get_event_description(eb, sg, entity_descs, fallback_eids)
-        
-        # V10: Enrich with spatial location context (e.g. "near the school")
+
+        # Enrich with spatial location context (e.g. "near the school")
         desc_a = _enrich_with_location(desc_a, ea, sg)
         desc_b = _enrich_with_location(desc_b, eb, sg)
-        
-        # Issue 12: Do NOT add camera IDs to question text.
-        # If descriptions are identical after location enrichment, skip this pair
-        # (cannot be distinguished visually — would need camera ID which is forbidden)
+
+        # If descriptions identical after enrichment, skip (can't distinguish)
         if desc_a == desc_b:
             if verbose:
                 print(f"    Skipping temporal pair: identical descriptions '{desc_a}'")
             continue
-        
-        # Build short option labels from descriptions (no camera IDs)
+
         short_a = _short_option_label(desc_a, ea.activity)
         short_b = _short_option_label(desc_b, eb.activity)
-        
-        # Use descriptions directly (no camera context) in question text
-        question = f"{desc_a} and {desc_b} -- which occurred first?"
-        
-        options = [
-            f"{short_a} occurred first",
-            f"{short_b} occurred first",
-            "They occurred simultaneously",
-            "Cannot be determined",
-        ]
-        correct_idx = 0
-        
-        if rng.random() < 0.5:
-            question = f"{desc_b} and {desc_a} -- which occurred first?"
-            options = [
-                f"{short_b} occurred first",
-                f"{short_a} occurred first",
-                "They occurred simultaneously",
-                "Cannot be determined",
-            ]
-            correct_idx = 1
-        
+
+        q_format = "which_first"
+        question, options, correct_idx = _build_which_first_question(
+            desc_a, desc_b, short_a, short_b, rng
+        )
+
         debug_info = {
             "event_a": _build_debug_info(ea, sg, entity_descs),
             "event_b": _build_debug_info(eb, sg, entity_descs),
@@ -660,12 +766,14 @@ def generate_temporal_qa(sg: SceneGraph, resolved: ResolvedGraph,
             "connection_score": cand["score"],
             "relationship": cand["relationship"],
             "cluster_id": cand.get("cluster_id"),
+            "proximity_tier": cand.get("proximity_tier"),
             "mevid_validated": cand["mevid_validated"],
             "mevid_person_id": cand["mevid_person_id"],
+            "question_format": "which_first",
         }
-        
+
         qa = {
-            "question_id": f"v8_temporal_{idx+1:03d}",
+            "question_id": f"v10_temporal_{idx+1:03d}",
             "category": "temporal",
             "difficulty": "easy",
             "question_template": question,
@@ -698,10 +806,13 @@ def generate_temporal_qa(sg: SceneGraph, resolved: ResolvedGraph,
             "debug_info": debug_info,
         }
         qa_pairs.append(qa)
-    
+
     if verbose:
-        mevid_count = sum(1 for q in qa_pairs 
-                          if q["debug_info"]["mevid_validated"])
-        print(f"  Temporal: {len(qa_pairs)} questions ({mevid_count} MEVID-validated)")
-    
+        prox_counts = {}
+        for q in qa_pairs:
+            tier = q["debug_info"].get("proximity_tier", "unknown")
+            prox_counts[tier] = prox_counts.get(tier, 0) + 1
+        print(f"  Temporal: {len(qa_pairs)} questions "
+              f"(proximity: {prox_counts})")
+
     return qa_pairs

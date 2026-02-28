@@ -551,10 +551,17 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
     Enrich scene graph entities with visual descriptions.
     
     Priority:
-      1. MEVID descriptions (GPT/YOLO from MEVID crops — highest quality)
-      2. VLM descriptions (InternVL2.5-8B from video crops — rich NL)
-      3. Geom-extracted descriptions (SegFormer color from raw AVI + bbox)
-      4. Activity-verb fallback ("a person walking")
+      1. MEVID GPT description (natural language, richest — if available)
+      2. Geom-extracted descriptions (SegFormer color from raw AVI + bbox)
+      3. VLM descriptions (InternVL2.5-8B from video crops — rich NL)
+      4. MEVID YOLO color summary (crude upper/lower color — better than nothing)
+      5. Activity-verb fallback ("a person walking")
+    
+    NOTE: SegFormer descriptions are preferred over MEVID YOLO colors because
+    SegFormer produces rich multi-attribute descriptions (hair, clothing, shoes,
+    accessories) while MEVID YOLO only provides crude "blue top and blue pants"
+    for 82% of persons. MEVID GPT descriptions (when populated) are still
+    highest priority since they are natural language from crop analysis.
     
     The geom-extracted layer covers ALL annotated actors (not just MEVID's ~10%),
     giving every entity a color-based description for disambiguation.
@@ -579,10 +586,15 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
                 camera_persons[cam] = []
             camera_persons[cam].append(pid)
     
+    # Pre-check: does the MEVID database have any GPT descriptions?
+    db = load_person_database()
+    persons_db = db.get("persons", {})
+    
     entity_descriptions: Dict[str, str] = {}
     mevid_count = 0
     vlm_count = 0
     geom_count = 0
+    mevid_yolo_count = 0
     fallback_count = 0
     
     # Track which MEVID persons have been assigned to avoid reuse
@@ -614,17 +626,96 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
         cam = entity.camera_id
         available_persons = camera_persons.get(cam, [])
         
-        # Priority 1: MEVID person description (color-matched, Issue 1)
+        # Priority 1: MEVID GPT description (if available — richest source)
+        # Only use MEVID here if the person has a real GPT description.
+        # MEVID YOLO-only colors ("blue top and blue pants") are too crude
+        # and would override richer SegFormer descriptions, so they are
+        # deferred to Priority 4 below.
+        if available_persons:
+            used = assigned_persons.get(cam, set())
+            unused = [p for p in available_persons if p not in used]
+            
+            # Filter to candidates that actually have GPT descriptions
+            gpt_candidates = [p for p in unused
+                              if persons_db.get(p, {}).get("gpt_description")]
+            
+            if gpt_candidates:
+                geom_desc = geom_descs.get(eid, "")
+                
+                best_pid = None
+                best_score = -999.0
+                for candidate_pid in gpt_candidates:
+                    pdata = persons_db.get(candidate_pid, {})
+                    score = _color_match_score(pdata, geom_desc)
+                    if score > best_score:
+                        best_score = score
+                        best_pid = candidate_pid
+                
+                if best_pid is not None and best_score >= -0.5:
+                    pid = best_pid
+                    desc = get_person_description(pid)
+                    entity_descriptions[eid] = desc
+                    
+                    if cam not in assigned_persons:
+                        assigned_persons[cam] = set()
+                    assigned_persons[cam].add(pid)
+                    entity._mevid_person_id = pid
+                    mevid_count += 1
+                    
+                    if verbose:
+                        print(f"    {eid}: MEVID-GPT → {desc[:60]}... (color_score={best_score:.1f})")
+                    continue
+        
+        # Priority 2: Geom-extracted color description (SegFormer + bbox)
+        # These are rich multi-attribute descriptions (hair, upper, lower,
+        # shoes, accessories) extracted by SegFormer from raw video frames.
+        if eid in geom_descs:
+            desc = geom_descs[eid]
+            entity_descriptions[eid] = desc
+            geom_count += 1
+            
+            # Still try to assign a MEVID person_id for re-ID tracking,
+            # even though we're using the geom description text
+            if available_persons:
+                used = assigned_persons.get(cam, set())
+                unused = [p for p in available_persons if p not in used]
+                if unused:
+                    best_pid = None
+                    best_score = -999.0
+                    for candidate_pid in unused:
+                        pdata = persons_db.get(candidate_pid, {})
+                        score = _color_match_score(pdata, desc)
+                        if score > best_score:
+                            best_score = score
+                            best_pid = candidate_pid
+                    if best_pid is not None and best_score >= -0.5:
+                        if cam not in assigned_persons:
+                            assigned_persons[cam] = set()
+                        assigned_persons[cam].add(best_pid)
+                        entity._mevid_person_id = best_pid
+            
+            if verbose:
+                pid_tag = f" [MEVID:{entity._mevid_person_id}]" if hasattr(entity, '_mevid_person_id') and entity._mevid_person_id else ""
+                print(f"    {eid}: geom → {desc[:60]}{pid_tag}")
+            continue
+
+        # Priority 3: VLM description (InternVL2.5-8B from video crops)
+        if eid in vlm_descs:
+            desc = vlm_descs[eid]
+            entity_descriptions[eid] = desc
+            vlm_count += 1
+            if verbose:
+                print(f"    {eid}: VLM → {desc[:60]}...")
+            continue
+
+        # Priority 4: MEVID YOLO color summary (crude but better than nothing)
+        # Only used when no SegFormer/VLM description is available.
         if available_persons:
             used = assigned_persons.get(cam, set())
             unused = [p for p in available_persons if p not in used]
             
             if unused:
-                # Color-match: score all unused MEVID persons against geom-extracted colors
-                # Pick the best match instead of sequential first-come-first-served
                 geom_desc = geom_descs.get(eid, "")
-                db = load_person_database()
-                persons_db = db.get("persons", {})
                 
                 best_pid = None
                 best_score = -999.0
@@ -635,8 +726,6 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
                         best_score = score
                         best_pid = candidate_pid
                 
-                # Use best match if score is acceptable (>= -0.5 threshold),
-                # otherwise fall back to geom description directly
                 if best_pid is not None and best_score >= -0.5:
                     pid = best_pid
                     desc = get_person_description(pid)
@@ -645,36 +734,16 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
                     if cam not in assigned_persons:
                         assigned_persons[cam] = set()
                     assigned_persons[cam].add(pid)
-                    
-                    # Also store the MEVID person_id on the entity for re-ID questions
                     entity._mevid_person_id = pid
-                    mevid_count += 1
+                    mevid_yolo_count += 1
                     
                     if verbose:
-                        print(f"    {eid}: MEVID → {desc[:60]}... (color_score={best_score:.1f})")
+                        print(f"    {eid}: MEVID-YOLO → {desc[:60]}... (color_score={best_score:.1f})")
                     continue
                 elif verbose and best_pid:
-                    print(f"    {eid}: MEVID rejected (color_score={best_score:.1f} < -0.5, using geom)")
+                    print(f"    {eid}: MEVID-YOLO rejected (color_score={best_score:.1f} < -0.5)")
         
-        # Priority 2: VLM description (InternVL2.5-8B from video crops)
-        if eid in vlm_descs:
-            desc = vlm_descs[eid]
-            entity_descriptions[eid] = desc
-            vlm_count += 1
-            if verbose:
-                print(f"    {eid}: VLM → {desc[:60]}...")
-            continue
-
-        # Priority 3: Geom-extracted color description (SegFormer + bbox)
-        if eid in geom_descs:
-            desc = geom_descs[eid]
-            entity_descriptions[eid] = desc
-            geom_count += 1
-            if verbose:
-                print(f"    {eid}: geom → {desc}")
-            continue
-        
-        # Priority 4: Activity-verb fallback (V7 style)
+        # Priority 5: Activity-verb fallback (V7 style)
         primary_activity = None
         for evt in sg.events:
             if evt.camera_id == entity.camera_id:
@@ -695,9 +764,9 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
         fallback_count += 1
     
     if verbose:
-        total = mevid_count + vlm_count + geom_count + fallback_count
-        print(f"  Entity enrichment: {mevid_count} MEVID, {vlm_count} VLM, "
-              f"{geom_count} geom-color, {fallback_count} fallback ({total} total)")
+        total = mevid_count + vlm_count + geom_count + mevid_yolo_count + fallback_count
+        print(f"  Entity enrichment: {mevid_count} MEVID-GPT, {geom_count} geom, {vlm_count} VLM, "
+              f"{mevid_yolo_count} MEVID-YOLO, {fallback_count} fallback ({total} total)")
     
     # Build set of PERSON entity IDs that got fallback (non-visual) descriptions.
     # Non-person entities (vehicles, objects) always get generic descriptions like
@@ -713,7 +782,8 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
             fallback_eids.add(eid)
 
     return (entity_descriptions,
-            {"mevid": mevid_count, "vlm": vlm_count, "geom": geom_count, "fallback": fallback_count},
+            {"mevid": mevid_count, "vlm": vlm_count, "geom": geom_count,
+             "mevid_yolo": mevid_yolo_count, "fallback": fallback_count},
             fallback_eids)
 
 

@@ -1074,9 +1074,11 @@ def process_slot(slot: str, method: str = "segformer",
             if not crops:
                 continue
 
-            # Two-tier analysis: use SegFormer for large crops, color-only for small
+            # Run SegFormer on ALL actors regardless of size.
+            # Safety layers handle small crops: internal skip <15x8px,
+            # MIN_REGION_PIXELS=50 for color extraction, confidence filtering.
             avg_h = float(np.mean([c.shape[0] for c in crops]))
-            if method == "segformer" and avg_h >= MIN_BBOX_HEIGHT:
+            if method == "segformer":
                 attrs = analyze_crops_segformer(crops)
                 segformer_count += 1
             elif method == "yolo":

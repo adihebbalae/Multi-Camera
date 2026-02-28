@@ -17,7 +17,7 @@ Guard rails: skip any candidate whose correct count is < 2 (trivial) or > 20
 
 import random
 from collections import Counter, defaultdict
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from .parse_annotations import Event
 from .build_scene_graph import SceneGraph, Entity
@@ -104,8 +104,24 @@ def _build_options(correct: int, rng: random.Random) -> Tuple[List[str], int]:
 # Candidate Builders
 # ============================================================================
 
+def _get_entity_cluster(event: Event, sg: SceneGraph, resolved) -> Optional[str]:
+    """Get the entity cluster ID for an event's primary actor, if resolved.
+
+    Returns the cluster_id if the actor is in a known cluster, else None.
+    """
+    if resolved is None or sg is None:
+        return None
+    for actor in event.actors:
+        entity_id = f"{event.camera_id}_actor_{actor['actor_id']}"
+        for cluster in resolved.entity_clusters:
+            if entity_id in cluster.entities:
+                return cluster.cluster_id
+    return None
+
+
 def _dedup_activity_count(events_for_activity: list,
-                          sg: SceneGraph = None) -> Tuple[int, List[str], List[Dict]]:
+                          sg: SceneGraph = None,
+                          resolved=None) -> Tuple[int, List[str], List[Dict]]:
     """Count distinct instances of an activity with cross-camera temporal dedup.
 
     Events on DIFFERENT cameras whose start_sec is within ±2 seconds are
@@ -115,6 +131,11 @@ def _dedup_activity_count(events_for_activity: list,
     For cameras with KNOWN FOV overlap (e.g. admin G326/G329), the time
     window is widened to ±8 seconds since the same event is very likely
     to appear in both cameras with some annotation timing variation.
+
+    Entity identity guard: If two events' actors are in KNOWN DIFFERENT
+    entity clusters (i.e., confirmed different people), they are NOT deduped
+    even if they pass the time/position checks.  This prevents false dedup
+    of genuinely different people doing the same activity simultaneously.
 
     Issue 6: Also uses 3D position matching when available for more accurate dedup.
     Issue 10: Returns cluster details for key_frames in QA output.
@@ -144,6 +165,14 @@ def _dedup_activity_count(events_for_activity: list,
                 # Time-based check
                 if abs(evt.start_sec - c_evt.start_sec) > time_window:
                     continue
+
+                # Entity identity guard: if both actors are in KNOWN
+                # DIFFERENT clusters, they are different people — skip dedup
+                cluster_evt = _get_entity_cluster(evt, sg, resolved)
+                cluster_cevt = _get_entity_cluster(c_evt, sg, resolved)
+                if (cluster_evt is not None and cluster_cevt is not None
+                        and cluster_evt != cluster_cevt):
+                    continue  # Confirmed different people
 
                 # Issue 6: 3D position check when available
                 # Skip 3D check for overlapping cameras (same FOV = same location)
@@ -190,7 +219,7 @@ def _dedup_activity_count(events_for_activity: list,
     return len(clusters), all_ids, cluster_details
 
 
-def _activity_counting_candidates(sg: SceneGraph) -> List[Dict]:
+def _activity_counting_candidates(sg: SceneGraph, resolved=None) -> List[Dict]:
     """
     For each activity type, count event instances across all cameras
     with cross-camera temporal deduplication (±2 s).
@@ -205,7 +234,7 @@ def _activity_counting_candidates(sg: SceneGraph) -> List[Dict]:
 
     candidates = []
     for act, evts in activity_groups.items():
-        cnt, event_ids, cluster_details = _dedup_activity_count(evts, sg)
+        cnt, event_ids, cluster_details = _dedup_activity_count(evts, sg, resolved)
         if cnt < MIN_COUNT or cnt > MAX_COUNT:
             continue
         candidates.append({
@@ -373,7 +402,7 @@ def generate_numerical_qa(
     # 1. Collect all candidates from three subtypes
     # ------------------------------------------------------------------
     all_candidates: List[Dict] = []
-    all_candidates.extend(_activity_counting_candidates(sg))
+    all_candidates.extend(_activity_counting_candidates(sg, resolved))
 
     if not all_candidates:
         if verbose:

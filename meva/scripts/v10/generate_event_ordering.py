@@ -212,61 +212,57 @@ def _find_ordering_groups(events: List[Event], sg: SceneGraph,
     if len(unique_events) < MIN_EVENTS:
         return []
 
-    # Issue 5: Keep only the FIRST (earliest) instance per (activity, camera).
-    # Continuous activities must use their first instance to avoid misleading
-    # temporal comparisons (e.g., talking from t=10 to t=200 should use t=10).
+    # Issue 5 (refined): For LONG-DURATION events (>30s), keep only the first
+    # instance per (activity, camera) to avoid misleading temporal comparisons
+    # (e.g., "talking" annotated from t=10 to t=200 should use t=10).
+    # Short events (<30s) are kept as-is since they represent distinct actions
+    # even when the same activity type repeats on the same camera.
+    LONG_DURATION_THRESHOLD_SEC = 30.0
     first_instance: Dict[Tuple[str, str], Event] = {}
+    deduped_events: List[Event] = []
     for evt in unique_events:
-        key = (evt.activity, evt.camera_id)
-        if key not in first_instance or evt.start_sec < first_instance[key].start_sec:
-            first_instance[key] = evt
+        if evt.duration_sec > LONG_DURATION_THRESHOLD_SEC:
+            key = (evt.activity, evt.camera_id)
+            if key not in first_instance or evt.start_sec < first_instance[key].start_sec:
+                first_instance[key] = evt
+        else:
+            deduped_events.append(evt)
+    deduped_events.extend(first_instance.values())
     # Skip events in the first 5 seconds (camera stabilization period)
-    unique_events = [e for e in first_instance.values() if e.start_sec >= 5.0]
+    unique_events = [e for e in deduped_events if e.start_sec >= 5.0]
     unique_events.sort(key=lambda e: e.start_sec)
 
     if len(unique_events) < MIN_EVENTS:
         return []
 
-    # Build candidate groups using a sliding-window + greedy approach
-    # For each starting event, try to build a chain of 3-4 events with gaps
-    groups: List[Tuple[float, List[Event]]] = []  # (score, events)
+    # Build candidate groups using COMBINATORIAL enumeration.
+    # For each subset of 3 or 4 events, check all ordering constraints and
+    # score the group. This explores all possible combinations instead of
+    # greedily committing to the first qualifying next event.
+    # With typical slot sizes of 20-60 events, C(60,4) = 487,635 which is fast.
+    groups: List[Tuple[float, List[Event]]] = []
     seen_group_keys: Set[Tuple[str, ...]] = set()
 
-    for start_idx in range(len(unique_events)):
-        # Try to build chains of length 3 and 4
-        for chain_len in (MAX_EVENTS, MIN_EVENTS):
-            chain = [unique_events[start_idx]]
+    # Cap to avoid excessive computation on very large slots
+    MAX_EVENTS_FOR_COMBO = 80
+    events_to_search = unique_events[:MAX_EVENTS_FOR_COMBO]
 
-            for next_idx in range(start_idx + 1, len(unique_events)):
-                if len(chain) >= chain_len:
+    for chain_len in (MAX_EVENTS, MIN_EVENTS):
+        if len(events_to_search) < chain_len:
+            continue
+
+        for combo in itertools.combinations(range(len(events_to_search)), chain_len):
+            chain = [events_to_search[i] for i in combo]
+            # Events are already sorted by start_sec (combo indices are ascending)
+
+            # Check consecutive gaps are within [MIN_GAP_SEC, MAX_GAP_SEC]
+            valid_gaps = True
+            for k in range(len(chain) - 1):
+                gap = chain[k + 1].start_sec - chain[k].end_sec
+                if gap < MIN_GAP_SEC or gap > MAX_GAP_SEC:
+                    valid_gaps = False
                     break
-                candidate = unique_events[next_idx]
-                last = chain[-1]
-
-                # Must have clear temporal gap (2-10 seconds)
-                gap = candidate.start_sec - last.end_sec
-                if gap < MIN_GAP_SEC:
-                    continue
-                if gap > MAX_GAP_SEC:
-                    continue
-
-                # Prefer cross-camera: skip same-camera if we already have
-                # an event on that camera AND we haven't reached min cameras
-                chain_cameras = set(e.camera_id for e in chain)
-                if (candidate.camera_id in chain_cameras
-                        and len(chain_cameras) < 2
-                        and len(chain) >= 2):
-                    continue
-
-                # Issue 6: Cross-camera event dedup — skip if candidate
-                # is a likely duplicate of any event already in the chain
-                if any(_is_likely_duplicate_event(candidate, existing, sg)
-                       for existing in chain):
-                    continue
-
-                chain.append(candidate)
-
-            if len(chain) < chain_len:
+            if not valid_gaps:
                 continue
 
             # Require at least 2 cameras
@@ -277,6 +273,19 @@ def _find_ordering_groups(events: List[Event], sg: SceneGraph,
             # Require activity diversity: at most 1 repeated activity
             chain_activities = set(e.activity for e in chain)
             if len(chain_activities) < len(chain) - 1:
+                continue
+
+            # Cross-camera event dedup — skip if any pair in the chain
+            # is a likely duplicate (same real-world event seen by 2 cams)
+            has_dup = False
+            for k in range(len(chain)):
+                for m in range(k + 1, len(chain)):
+                    if _is_likely_duplicate_event(chain[k], chain[m], sg):
+                        has_dup = True
+                        break
+                if has_dup:
+                    break
+            if has_dup:
                 continue
 
             # De-duplicate by group key (sorted event_ids)

@@ -608,11 +608,12 @@ def run_pipeline(slot: str, verbose: bool = False,
     mevid_cnt = desc_counts["mevid"]
     vlm_cnt = desc_counts.get("vlm", 0)
     geom_cnt = desc_counts["geom"]
+    mevid_yolo_cnt = desc_counts.get("mevid_yolo", 0)
     fallback_cnt = desc_counts["fallback"]
     
     if verbose:
-        print(f"  {mevid_cnt} MEVID + {vlm_cnt} VLM + {geom_cnt} geom-color + "
-              f"{fallback_cnt} fallback / {len(entity_descs)} total")
+        print(f"  {mevid_cnt} MEVID-GPT + {geom_cnt} geom + {vlm_cnt} VLM + "
+              f"{mevid_yolo_cnt} MEVID-YOLO + {fallback_cnt} fallback / {len(entity_descs)} total")
     
     # Step 4b: Cross-camera clustering + height differentiation
     if verbose:
@@ -718,7 +719,7 @@ def run_pipeline(slot: str, verbose: bool = False,
         "version": "final",
         "annotation_source": "kitware",
         "entity_resolution_source": "mevid+heuristic",
-        "description_source": "mevid_yolo+vlm+geom_color",
+        "description_source": "geom_segformer+mevid_gpt+vlm+mevid_yolo",
         "generator": "final_pipeline",
         "seed": seed,
         "cameras": cameras_in_slot,
@@ -734,9 +735,10 @@ def run_pipeline(slot: str, verbose: bool = False,
         "total_questions": len(unique_qa),
         "category_counts": cat_counts,
         "stats": {
-            "entities_with_mevid_descriptions": mevid_cnt,
+            "entities_with_mevid_gpt_descriptions": mevid_cnt,
             "entities_with_vlm_descriptions": vlm_cnt,
             "entities_with_geom_descriptions": geom_cnt,
+            "entities_with_mevid_yolo_descriptions": mevid_yolo_cnt,
             "entities_with_fallback_descriptions": fallback_cnt,
             "attribute_verification_questions": attr_verification,
             "best_camera_questions": cat_counts.get("best_camera", 0),
@@ -762,7 +764,7 @@ def run_pipeline(slot: str, verbose: bool = False,
         print(f"  ---")
         print(f"  Cameras:    {cameras_in_slot}")
         print(f"  Events:     {len(events)}")
-        print(f"  Entities:   {len(sg.entities)} ({mevid_cnt} MEVID + {vlm_cnt} VLM + {geom_cnt} geom)")
+        print(f"  Entities:   {len(sg.entities)} ({mevid_cnt} MEVID-GPT + {geom_cnt} geom + {vlm_cnt} VLM + {mevid_yolo_cnt} MEVID-YOLO)")
         print(f"  MEVID persons: {sorted(mevid_persons)}")
         print(f"  Cross-cam clusters: {len(resolved.entity_clusters)}")
         print(f"  Validation issues: {len(issues)}")

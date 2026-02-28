@@ -48,6 +48,7 @@ data/gpt_logs/
 tmp/
 temp/
 *.tmp
+*.bak
 
 # Local configuration (copy from config_template.py)
 config.py
