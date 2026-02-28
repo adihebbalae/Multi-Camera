@@ -145,8 +145,20 @@ def extract_crops(video_path: Path,
 
         frames = sorted(usable.keys())
         if len(frames) > max_crops:
-            indices = np.linspace(0, len(frames) - 1, max_crops, dtype=int)
-            frames = [frames[i] for i in indices]
+            # Prefer middle-of-track frames (#5): more stable pose/lighting,
+            # less likely to be entering/exiting frame. Sample from inner 80%
+            # of the track, with endpoints only if needed.
+            n = len(frames)
+            inner_start = max(0, int(n * 0.1))
+            inner_end = min(n - 1, int(n * 0.9))
+            inner_frames = frames[inner_start:inner_end + 1]
+            if len(inner_frames) >= max_crops:
+                indices = np.linspace(0, len(inner_frames) - 1, max_crops, dtype=int)
+                frames = [inner_frames[i] for i in indices]
+            else:
+                # Track too short — use uniform across full range
+                indices = np.linspace(0, n - 1, max_crops, dtype=int)
+                frames = [frames[i] for i in indices]
 
         for fn in frames:
             frame_to_actors[fn].append((actor_id, usable[fn]))
@@ -385,6 +397,17 @@ def _majority_vote(colors: List[str]) -> str:
     return Counter(filtered).most_common(1)[0][0]
 
 
+def _majority_vote_with_confidence(colors: List[str]) -> Tuple[str, float]:
+    """Majority vote returning (winner, confidence 0-1) ignoring 'unknown'."""
+    filtered = [c for c in colors if c != "unknown"]
+    if not filtered:
+        return "unknown", 0.0
+    counter = Counter(filtered)
+    winner, count = counter.most_common(1)[0]
+    confidence = count / len(filtered)
+    return winner, confidence
+
+
 # ============================================================================
 # YOLO Analysis (optional, richer — detects carried objects)
 # ============================================================================
@@ -520,6 +543,89 @@ def _extract_mask_color(crop_bgr: np.ndarray, mask: np.ndarray) -> str:
     return _hsv_to_color(h_mean, s_mean, v_mean)
 
 
+def _detect_texture(crop_bgr: np.ndarray, mask: np.ndarray) -> Dict:
+    """
+    Detect clothing texture/pattern within a segmentation mask.
+
+    Analyzes:
+      - Solid vs patterned: low intra-mask color variance = solid
+      - Striped: high directional gradient variance (horizontal or vertical bands)
+      - Light/dark qualifier: based on mean V channel value
+
+    Returns dict: {"texture": "solid"|"patterned"|"striped", "brightness": "light"|"dark"|""}
+    """
+    result = {"texture": "", "brightness": ""}
+    if mask.sum() < MIN_REGION_PIXELS * 2:  # need enough pixels for texture
+        return result
+
+    pixels = crop_bgr[mask]
+    hsv = cv2.cvtColor(pixels.reshape(-1, 1, 3), cv2.COLOR_BGR2HSV)
+
+    # --- Brightness qualifier ---
+    v_mean = float(np.mean(hsv[:, 0, 2]))
+    s_mean = float(np.mean(hsv[:, 0, 1]))
+    # Only add qualifier for chromatic colors (skip achromatic = low saturation)
+    # Also skip very dark regions (V < 60) — brightness is noise at that level
+    if s_mean >= 40 and v_mean >= 60:
+        if v_mean < 90:
+            result["brightness"] = "dark"
+        elif v_mean > 190:
+            result["brightness"] = "light"
+
+    # --- Texture detection via color variance within mask ---
+    # Use HSV Hue + Saturation channels for variance (ignore brightness variations
+    # from shading which don't indicate pattern)
+    h_std = float(np.std(hsv[:, 0, 0]))
+    s_std = float(np.std(hsv[:, 0, 1]))
+
+    # Skip texture detection on very dark regions (V_mean < 70) — dark clothing
+    # creates compression noise that falsely triggers pattern detection
+    if v_mean < 70:
+        result["texture"] = "solid"  # assume solid for very dark clothing
+        return result
+
+    # High hue variance = multi-color pattern (raised thresholds to reduce FP)
+    if h_std > 45 or s_std > 60:
+        # Check for stripes: look for strong directional gradients
+        # Get the bounding box of the mask region for structured analysis
+        ys, xs = np.where(mask)
+        y_min, y_max = ys.min(), ys.max()
+        x_min, x_max = xs.min(), xs.max()
+        region = crop_bgr[y_min:y_max+1, x_min:x_max+1]
+        region_mask = mask[y_min:y_max+1, x_min:x_max+1]
+        rh, rw = region.shape[:2]
+
+        if rh > 10 and rw > 10:
+            gray = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY).astype(np.float32)
+            # Apply mask: set non-mask pixels to mean to avoid edge artifacts
+            mean_val = float(gray[region_mask].mean()) if region_mask.any() else 128
+            gray[~region_mask] = mean_val
+
+            # Horizontal gradient (detects vertical stripes)
+            grad_h = np.abs(np.diff(gray, axis=1))
+            # Vertical gradient (detects horizontal stripes)
+            grad_v = np.abs(np.diff(gray, axis=0))
+
+            # Stripe detection: one direction should have much stronger gradients
+            h_energy = float(grad_h.mean())
+            v_energy = float(grad_v.mean())
+
+            if max(h_energy, v_energy) > 15:  # significant edge energy
+                ratio = max(h_energy, v_energy) / (min(h_energy, v_energy) + 1e-6)
+                if ratio > 1.5:
+                    result["texture"] = "striped"
+                else:
+                    result["texture"] = "patterned"
+            else:
+                result["texture"] = "patterned"
+        else:
+            result["texture"] = "patterned"
+    else:
+        result["texture"] = "solid"
+
+    return result
+
+
 # SegFormer class IDs → semantic groups
 _SEG_HAIR = 2
 _SEG_UPPER = 4
@@ -539,12 +645,14 @@ def analyze_crops_segformer(crops: List[np.ndarray]) -> Dict:
     Analyze crops with SegFormer human parsing (18 body-part classes).
 
     Segments each crop into semantic regions (hair, upper-clothes, pants/skirt/dress,
-    shoes, etc.), extracts HSV color per region, detects accessories.
-    Majority-votes across crops for robust results.
+    shoes, etc.), extracts HSV color per region, detects accessories and texture.
+    Majority-votes across crops with confidence tracking for robust results.
 
     Returns dict with:
       hair_color, upper_color, lower_color, lower_type,
-      shoe_color, accessories, carried_objects
+      shoe_color, accessories, carried_objects,
+      upper_texture, lower_texture, upper_brightness, lower_brightness,
+      confidence (per-attribute confidence scores)
     """
     processor, model = _get_segformer()
 
@@ -554,6 +662,11 @@ def analyze_crops_segformer(crops: List[np.ndarray]) -> Dict:
     shoe_colors = []
     lower_types = []
     accessories_per_crop = []
+    # Texture/brightness per crop (#2)
+    upper_textures = []
+    lower_textures = []
+    upper_brightness_list = []
+    lower_brightness_list = []
 
     for crop in crops:
         h, w = crop.shape[:2]
@@ -566,25 +679,43 @@ def analyze_crops_segformer(crops: List[np.ndarray]) -> Dict:
         hair_colors.append(_extract_mask_color(crop, seg_map == _SEG_HAIR))
 
         # Upper-clothes (class 4)
-        upper_colors.append(_extract_mask_color(crop, seg_map == _SEG_UPPER))
+        upper_mask = seg_map == _SEG_UPPER
+        upper_colors.append(_extract_mask_color(crop, upper_mask))
+        # Texture analysis for upper clothing (#2)
+        upper_tex = _detect_texture(crop, upper_mask)
+        upper_textures.append(upper_tex["texture"])
+        upper_brightness_list.append(upper_tex["brightness"])
 
         # Lower body: Pants(6), Skirt(5), Dress(7) — pick dominant
         pants_px = (seg_map == _SEG_PANTS).sum()
         skirt_px = (seg_map == _SEG_SKIRT).sum()
         dress_px = (seg_map == _SEG_DRESS).sum()
 
+        lower_mask = None
         if dress_px > max(pants_px, skirt_px) and dress_px >= MIN_REGION_PIXELS:
-            lower_colors.append(_extract_mask_color(crop, seg_map == _SEG_DRESS))
+            lower_mask = seg_map == _SEG_DRESS
+            lower_colors.append(_extract_mask_color(crop, lower_mask))
             lower_types.append("dress")
         elif skirt_px > pants_px and skirt_px >= MIN_REGION_PIXELS:
-            lower_colors.append(_extract_mask_color(crop, seg_map == _SEG_SKIRT))
+            lower_mask = seg_map == _SEG_SKIRT
+            lower_colors.append(_extract_mask_color(crop, lower_mask))
             lower_types.append("skirt")
         elif pants_px >= MIN_REGION_PIXELS:
-            lower_colors.append(_extract_mask_color(crop, seg_map == _SEG_PANTS))
+            lower_mask = seg_map == _SEG_PANTS
+            lower_colors.append(_extract_mask_color(crop, lower_mask))
             lower_types.append("pants")
         else:
             lower_colors.append("unknown")
             lower_types.append("unknown")
+
+        # Texture for lower clothing (#2)
+        if lower_mask is not None:
+            lower_tex = _detect_texture(crop, lower_mask)
+            lower_textures.append(lower_tex["texture"])
+            lower_brightness_list.append(lower_tex["brightness"])
+        else:
+            lower_textures.append("")
+            lower_brightness_list.append("")
 
         # Shoes (left 9 + right 10)
         shoe_mask = (seg_map == _SEG_LSHOE) | (seg_map == _SEG_RSHOE)
@@ -602,17 +733,31 @@ def analyze_crops_segformer(crops: List[np.ndarray]) -> Dict:
             crop_acc.append("scarf")
         accessories_per_crop.append(crop_acc)
 
-    # Majority votes
-    hair = _majority_vote(hair_colors)
-    upper = _majority_vote(upper_colors)
-    lower = _majority_vote(lower_colors)
-    shoes = _majority_vote(shoe_colors)
+    # Majority votes with confidence (#5)
+    hair, hair_conf = _majority_vote_with_confidence(hair_colors)
+    upper, upper_conf = _majority_vote_with_confidence(upper_colors)
+    lower, lower_conf = _majority_vote_with_confidence(lower_colors)
+    shoes, shoes_conf = _majority_vote_with_confidence(shoe_colors)
     lower_type = _majority_vote(lower_types)
+
+    # Texture/brightness votes (#2)
+    upper_texture = _majority_vote([t for t in upper_textures if t])
+    lower_texture = _majority_vote([t for t in lower_textures if t])
+    upper_brightness = _majority_vote([b for b in upper_brightness_list if b])
+    lower_brightness = _majority_vote([b for b in lower_brightness_list if b])
 
     # Accessories: keep if seen in ≥2 crops (or any if ≤2 total)
     acc_counter = Counter(a for crop_acc in accessories_per_crop for a in crop_acc)
     threshold = 2 if len(crops) > 2 else 1
     accessories = sorted(a for a, cnt in acc_counter.items() if cnt >= threshold)
+
+    # Confidence dict (#5): per-attribute agreement score
+    confidence = {
+        "hair": round(hair_conf, 2),
+        "upper": round(upper_conf, 2),
+        "lower": round(lower_conf, 2),
+        "shoes": round(shoes_conf, 2),
+    }
 
     return {
         "hair_color": hair,
@@ -622,6 +767,11 @@ def analyze_crops_segformer(crops: List[np.ndarray]) -> Dict:
         "shoe_color": shoes,
         "accessories": accessories,
         "carried_objects": [],  # SegFormer detects bags; other objects need YOLO
+        "upper_texture": upper_texture if upper_texture != "unknown" else "",
+        "lower_texture": lower_texture if lower_texture != "unknown" else "",
+        "upper_brightness": upper_brightness if upper_brightness != "unknown" else "",
+        "lower_brightness": lower_brightness if lower_brightness != "unknown" else "",
+        "confidence": confidence,
     }
 
 
@@ -657,6 +807,25 @@ def build_description(attrs: Dict, include_position: bool = False) -> str:
     shoes = attrs.get("shoe_color")
     accessories = attrs.get("accessories", [])
     carried = attrs.get("carried_objects", [])
+    confidence = attrs.get("confidence", {})
+
+    # Texture/brightness qualifiers (#2)
+    upper_texture = attrs.get("upper_texture", "")
+    lower_texture = attrs.get("lower_texture", "")
+    upper_brightness = attrs.get("upper_brightness", "")
+    lower_brightness = attrs.get("lower_brightness", "")
+
+    # Drop low-confidence attributes (#5): if agreement < 40%, omit to avoid
+    # wrong colors. Better to say nothing than to say the wrong color.
+    min_conf = 0.4
+    if confidence.get("hair", 1.0) < min_conf:
+        hair = "unknown"
+    if confidence.get("upper", 1.0) < min_conf:
+        upper = "unknown"
+    if confidence.get("lower", 1.0) < min_conf:
+        lower = "unknown"
+    if confidence.get("shoes", 1.0) < min_conf:
+        shoes = "unknown"
 
     # Relative height from bbox (tall/medium/short)
     height_hint = attrs.get("height_category")  # set by enrich step if available
@@ -670,12 +839,34 @@ def build_description(attrs: Dict, include_position: bool = False) -> str:
     if hair and hair != "unknown":
         desc += f" with {hair} hair"
 
-    # Clothing
+    # Clothing — include brightness + texture qualifiers (#2)
     clothing_parts = []
+    # Colors that are inherently dark/light — don't add redundant qualifiers
+    _DARK_COLORS = {"black", "charcoal", "navy", "maroon", "dark gray"}
+    _LIGHT_COLORS = {"white", "ivory", "silver"}
+
     if upper != "unknown":
-        clothing_parts.append(f"{_article(upper)} {upper} top")
+        upper_desc = upper
+        # Add brightness: "light blue", "dark green" — skip if color is already dark/light
+        if upper_brightness == "dark" and upper not in _DARK_COLORS:
+            upper_desc = f"dark {upper}"
+        elif upper_brightness == "light" and upper not in _LIGHT_COLORS:
+            upper_desc = f"light {upper}"
+        # Add texture: "striped blue top", "patterned red top"
+        if upper_texture and upper_texture not in ("solid", ""):
+            clothing_parts.append(f"{_article(upper_texture)} {upper_texture} {upper_desc} top")
+        else:
+            clothing_parts.append(f"{_article(upper_desc)} {upper_desc} top")
     if lower != "unknown":
-        clothing_parts.append(f"{lower} {lower_type}")
+        lower_desc = lower
+        if lower_brightness == "dark" and lower not in _DARK_COLORS:
+            lower_desc = f"dark {lower}"
+        elif lower_brightness == "light" and lower not in _LIGHT_COLORS:
+            lower_desc = f"light {lower}"
+        if lower_texture and lower_texture not in ("solid", ""):
+            clothing_parts.append(f"{lower_texture} {lower_desc} {lower_type}")
+        else:
+            clothing_parts.append(f"{lower_desc} {lower_type}")
 
     if clothing_parts:
         desc += ", wearing " + " and ".join(clothing_parts)
@@ -909,6 +1100,11 @@ def process_slot(slot: str, method: str = "segformer",
                 "shoe_color": attrs.get("shoe_color", "unknown"),
                 "accessories": attrs.get("accessories", []),
                 "carried_objects": attrs.get("carried_objects", []),
+                "upper_texture": attrs.get("upper_texture", ""),
+                "lower_texture": attrs.get("lower_texture", ""),
+                "upper_brightness": attrs.get("upper_brightness", ""),
+                "lower_brightness": attrs.get("lower_brightness", ""),
+                "confidence": attrs.get("confidence", {}),
                 "description": desc,
                 "num_crops": len(crops),
                 "avg_crop_height": int(np.mean([c.shape[0] for c in crops])),
