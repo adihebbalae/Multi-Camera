@@ -24,6 +24,13 @@ from .build_scene_graph import SceneGraph, Entity
 from .entity_resolution import ResolvedGraph
 from .activity_hierarchy import humanize_activity, humanize_activity_gerund
 
+# Issue 6: Import 3D position matching for improved cross-camera dedup
+try:
+    from .generate_temporal import _get_event_3d_position, CROSS_CAM_DEDUP_DISTANCE_M
+    _HAS_3D_DEDUP = True
+except ImportError:
+    _HAS_3D_DEDUP = False
+
 
 # ============================================================================
 # Constants
@@ -90,14 +97,20 @@ def _build_options(correct: int, rng: random.Random) -> Tuple[List[str], int]:
 # Candidate Builders
 # ============================================================================
 
-def _dedup_activity_count(events_for_activity: list) -> Tuple[int, List[str]]:
+def _dedup_activity_count(events_for_activity: list,
+                          sg: SceneGraph = None) -> Tuple[int, List[str], List[Dict]]:
     """Count distinct instances of an activity with cross-camera temporal dedup.
 
     Events on DIFFERENT cameras whose start_sec is within ±2 seconds are
     merged into a single cluster (counted as one occurrence).  Events on
     the SAME camera are always counted separately.
 
-    Returns (deduped_count, list_of_event_ids).
+    Issue 6: Also uses 3D position matching when available for more accurate dedup.
+    Issue 10: Returns cluster details for key_frames in QA output.
+
+    Returns (deduped_count, list_of_event_ids, cluster_details).
+    cluster_details: List[Dict] with one entry per cluster, each containing
+    {camera, start_sec, end_sec, start_frame, event_id, clip_file}.
     """
     sorted_evts = sorted(events_for_activity, key=lambda e: e.start_sec)
     clusters: List[list] = []
@@ -105,16 +118,54 @@ def _dedup_activity_count(events_for_activity: list) -> Tuple[int, List[str]]:
         merged = False
         for cluster in clusters:
             for c_evt in cluster:
-                if evt.camera_id != c_evt.camera_id and abs(evt.start_sec - c_evt.start_sec) <= 2.0:
-                    cluster.append(evt)
-                    merged = True
-                    break
+                if evt.camera_id == c_evt.camera_id:
+                    continue  # Same camera = always distinct
+
+                # Time-based check
+                if abs(evt.start_sec - c_evt.start_sec) > 2.0:
+                    continue
+
+                # Issue 6: 3D position check when available
+                if _HAS_3D_DEDUP and sg is not None:
+                    import numpy as np
+                    pos_a = _get_event_3d_position(evt, sg)
+                    pos_b = _get_event_3d_position(c_evt, sg)
+                    if pos_a is not None and pos_b is not None:
+                        dist = float(np.linalg.norm(pos_a - pos_b))
+                        if dist > CROSS_CAM_DEDUP_DISTANCE_M:
+                            continue  # Far apart, not duplicates despite time proximity
+
+                cluster.append(evt)
+                merged = True
+                break
             if merged:
                 break
         if not merged:
             clusters.append([evt])
+
     all_ids = [e.event_id for e in sorted_evts]
-    return len(clusters), all_ids
+
+    # Issue 10: Build cluster details (key_frames) — one representative per cluster
+    cluster_details = []
+    for cluster in clusters:
+        # Use earliest event as representative
+        rep = min(cluster, key=lambda e: e.start_sec)
+        clip_file = rep.video_file
+        if clip_file and clip_file.endswith(".avi"):
+            clip_file = clip_file.replace(".avi", ".mp4")
+        cluster_details.append({
+            "camera": rep.camera_id,
+            "start_frame": rep.start_frame,
+            "start_sec": round(rep.start_sec, 2),
+            "end_sec": round(rep.end_sec, 2),
+            "event_id": rep.event_id,
+            "clip_file": clip_file or "",
+            "cluster_size": len(cluster),
+        })
+    # Sort chronologically
+    cluster_details.sort(key=lambda d: d["start_sec"])
+
+    return len(clusters), all_ids, cluster_details
 
 
 def _activity_counting_candidates(sg: SceneGraph) -> List[Dict]:
@@ -132,7 +183,7 @@ def _activity_counting_candidates(sg: SceneGraph) -> List[Dict]:
 
     candidates = []
     for act, evts in activity_groups.items():
-        cnt, event_ids = _dedup_activity_count(evts)
+        cnt, event_ids, cluster_details = _dedup_activity_count(evts, sg)
         if cnt < MIN_COUNT or cnt > MAX_COUNT:
             continue
         candidates.append({
@@ -142,6 +193,7 @@ def _activity_counting_candidates(sg: SceneGraph) -> List[Dict]:
             "cameras_involved": sorted(activity_cameras[act]),
             "event_ids": event_ids,
             "cross_camera": len(activity_cameras[act]) >= 2,
+            "key_frames": cluster_details,  # Issue 10: per-instance details
         })
     return candidates
 
@@ -214,6 +266,54 @@ def _classify_difficulty(cand: Dict) -> str:
     if cnt <= 5 and n_cams <= 3:
         return "easy"
     return "medium"
+
+
+# ============================================================================
+# Issue 9: Deterministic Reasoning Generation
+# ============================================================================
+
+def _build_reasoning(cand: Dict) -> str:
+    """
+    Build deterministic reasoning text for a counting question.
+
+    Uses the deduped cluster details to produce structured reasoning with
+    per-camera breakdown and the correct count. This reasoning is passed
+    to naturalize.py so GPT only polishes grammar, not numbers.
+
+    Example: "The action of opening a vehicle door was observed 8 times
+    across cameras G299 and G330: G299 contributed 5 occurrences and G330
+    contributed 3 occurrences (0 cross-camera duplicates were removed)."
+    """
+    activity = humanize_activity(cand.get("activity", "unknown"))
+    correct = cand["correct_count"]
+    cameras = cand["cameras_involved"]
+    key_frames = cand.get("key_frames", [])
+
+    # Per-camera breakdown from key_frames
+    cam_counts: Dict[str, int] = defaultdict(int)
+    for kf in key_frames:
+        cam_counts[kf["camera"]] += 1
+
+    # Count cross-camera dedup removals
+    total_raw_events = len(cand.get("event_ids", []))
+    dedup_removed = total_raw_events - correct
+
+    if len(cameras) == 1:
+        breakdown = f"all on camera {cameras[0]}"
+    else:
+        cam_parts = [f"{cam}: {cam_counts.get(cam, 0)}" for cam in sorted(cam_counts.keys())]
+        breakdown = ", ".join(cam_parts)
+
+    reasoning = (
+        f"The action of {activity} was observed {correct} time{'s' if correct != 1 else ''} "
+        f"across {len(cameras)} camera{'s' if len(cameras) != 1 else ''} "
+        f"({breakdown})"
+    )
+    if dedup_removed > 0:
+        reasoning += f". {dedup_removed} cross-camera duplicate{'s' if dedup_removed != 1 else ''} removed"
+    reasoning += "."
+
+    return reasoning
 
 
 # ============================================================================
@@ -333,6 +433,9 @@ def generate_numerical_qa(
             verification["event_ids"] = cand["event_ids"]
         if cand.get("cluster_ids"):
             verification["cluster_ids"] = cand["cluster_ids"]
+        # Issue 10: Key frames for visual verification
+        if cand.get("key_frames"):
+            verification["key_frames"] = cand["key_frames"]
 
         debug_info: Dict[str, Any] = {
             "subtype": cand["subtype"],
@@ -358,6 +461,9 @@ def generate_numerical_qa(
         if clip_files:
             debug_info["clip_files"] = sorted(clip_files)
 
+        # Issue 9: Build deterministic reasoning (not GPT-generated)
+        reasoning = _build_reasoning(cand)
+
         qa = {
             "question_id": f"v8_numerical_{idx + 1:03d}",
             "category": "numerical",
@@ -366,6 +472,7 @@ def generate_numerical_qa(
             "options": options,
             "correct_answer_index": correct_idx,
             "correct_answer": options[correct_idx],
+            "reasoning": reasoning,  # Issue 9: pre-built, GPT polishes only grammar
             "requires_cameras": requires_cams,
             "requires_multi_camera": len(requires_cams) > 1,
             "verification": verification,

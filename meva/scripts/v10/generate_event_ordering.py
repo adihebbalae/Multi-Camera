@@ -27,6 +27,9 @@ from .activity_hierarchy import (
 )
 from .utils.mevid import find_mevid_persons_for_slot
 
+# Issue 6: Import cross-camera event dedup from temporal generator
+from .generate_temporal import _is_likely_duplicate_event
+
 # ============================================================================
 # Constants
 # ============================================================================
@@ -80,15 +83,15 @@ def _get_event_description(event: Event, sg: SceneGraph,
         # Guard: avoid duplication when desc already contains the activity
         act_check = humanize_activity(event.activity).lower()
         if act_check in desc.lower() or activity_text.lower() in desc.lower():
-            return f"{desc} on camera {event.camera_id}"
-        return f"{desc}, {activity_text.lower()} on camera {event.camera_id}"
+            return desc
+        return f"{desc}, {activity_text.lower()}"
     
     # Use fallback description if available (still better than "Someone")
     if fallback_desc:
         act_check = humanize_activity(event.activity).lower()
         if act_check in fallback_desc.lower() or activity_text.lower() in fallback_desc.lower():
-            return f"{fallback_desc} on camera {event.camera_id}"
-        return f"{fallback_desc}, {activity_text.lower()} on camera {event.camera_id}"
+            return fallback_desc
+        return f"{fallback_desc}, {activity_text.lower()}"
     
     # Last resort: use geom description directly from entity_descs
     for eid, entity in sg.entities.items():
@@ -98,10 +101,10 @@ def _get_event_description(event: Event, sg: SceneGraph,
                     d = entity_descs.get(eid)
                     if d and d not in ("a person", "a vehicle", "someone"):
                         if activity_text.lower() in d.lower():
-                            return f"{d} on camera {event.camera_id}"
-                        return f"{d}, {activity_text.lower()} on camera {event.camera_id}"
+                            return d
+                        return f"{d}, {activity_text.lower()}"
     
-    return f"A person {activity_text.lower()} on camera {event.camera_id}"
+    return f"A person {activity_text.lower()}"
 
 
 # ============================================================================
@@ -209,6 +212,21 @@ def _find_ordering_groups(events: List[Event], sg: SceneGraph,
     if len(unique_events) < MIN_EVENTS:
         return []
 
+    # Issue 5: Keep only the FIRST (earliest) instance per (activity, camera).
+    # Continuous activities must use their first instance to avoid misleading
+    # temporal comparisons (e.g., talking from t=10 to t=200 should use t=10).
+    first_instance: Dict[Tuple[str, str], Event] = {}
+    for evt in unique_events:
+        key = (evt.activity, evt.camera_id)
+        if key not in first_instance or evt.start_sec < first_instance[key].start_sec:
+            first_instance[key] = evt
+    # Skip events in the first 5 seconds (camera stabilization period)
+    unique_events = [e for e in first_instance.values() if e.start_sec >= 5.0]
+    unique_events.sort(key=lambda e: e.start_sec)
+
+    if len(unique_events) < MIN_EVENTS:
+        return []
+
     # Build candidate groups using a sliding-window + greedy approach
     # For each starting event, try to build a chain of 3-4 events with gaps
     groups: List[Tuple[float, List[Event]]] = []  # (score, events)
@@ -238,6 +256,12 @@ def _find_ordering_groups(events: List[Event], sg: SceneGraph,
                 if (candidate.camera_id in chain_cameras
                         and len(chain_cameras) < 2
                         and len(chain) >= 2):
+                    continue
+
+                # Issue 6: Cross-camera event dedup — skip if candidate
+                # is a likely duplicate of any event already in the chain
+                if any(_is_likely_duplicate_event(candidate, existing, sg)
+                       for existing in chain):
                     continue
 
                 chain.append(candidate)

@@ -375,6 +375,17 @@ def _find_temporal_candidates(events: List[Event], sg: SceneGraph,
     - Rejects pairs that are likely the same real-world event (cross-camera dedup)
     - Rejects events whose actors have bbox clipping the frame edge
     """
+    # Issue 5: Pre-filter — keep only the FIRST (earliest) instance
+    # per (activity, camera) for temporal ordering accuracy.
+    first_instance: Dict[Tuple[str, str], Event] = {}
+    for evt in events:
+        key = (evt.activity, evt.camera_id)
+        if key not in first_instance or evt.start_sec < first_instance[key].start_sec:
+            first_instance[key] = evt
+    # Skip events in the first 5 seconds (camera stabilization period)
+    events = [e for e in first_instance.values() if e.start_sec >= 5.0]
+    events.sort(key=lambda e: e.start_sec)
+
     candidates = []
     seen = set()
     
@@ -588,28 +599,20 @@ def generate_temporal_qa(sg: SceneGraph, resolved: ResolvedGraph,
         desc_a = _enrich_with_location(desc_a, ea, sg)
         desc_b = _enrich_with_location(desc_b, eb, sg)
         
-        # V10: Ensure descriptions are distinct — if identical, add camera context
+        # Issue 12: Do NOT add camera IDs to question text.
+        # If descriptions are identical after location enrichment, skip this pair
+        # (cannot be distinguished visually — would need camera ID which is forbidden)
         if desc_a == desc_b:
-            desc_a = f"{desc_a} (on camera {ea.camera_id})"
-            desc_b = f"{desc_b} (on camera {eb.camera_id})"
-        
-        # V10: Cross-category enrichment — add spatial context (camera ID)
-        # This helps ground the temporal question spatially
-        if f"camera" not in desc_a.lower():
-            desc_a_enriched = f"{desc_a} on camera {ea.camera_id}"
-        else:
-            desc_a_enriched = desc_a
-        if f"camera" not in desc_b.lower():
-            desc_b_enriched = f"{desc_b} on camera {eb.camera_id}"
-        else:
-            desc_b_enriched = desc_b
+            if verbose:
+                print(f"    Skipping temporal pair: identical descriptions '{desc_a}'")
+            continue
         
         # Build short option labels from descriptions (no camera IDs)
         short_a = _short_option_label(desc_a, ea.activity)
         short_b = _short_option_label(desc_b, eb.activity)
         
-        # Use enriched descriptions (with camera context) in question text
-        question = f"{desc_a_enriched} and {desc_b_enriched} -- which occurred first?"
+        # Use descriptions directly (no camera context) in question text
+        question = f"{desc_a} and {desc_b} -- which occurred first?"
         
         options = [
             f"{short_a} occurred first",
@@ -620,7 +623,7 @@ def generate_temporal_qa(sg: SceneGraph, resolved: ResolvedGraph,
         correct_idx = 0
         
         if rng.random() < 0.5:
-            question = f"{desc_b_enriched} and {desc_a_enriched} -- which occurred first?"
+            question = f"{desc_b} and {desc_a} -- which occurred first?"
             options = [
                 f"{short_b} occurred first",
                 f"{short_a} occurred first",

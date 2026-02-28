@@ -35,6 +35,69 @@ FRAME_WIDTH = 1920
 FRAME_HEIGHT = 1080
 FRAME_EDGE_MARGIN = 10  # pixels
 
+# Issue 8: Same-person dedup thresholds
+SAME_PERSON_PROXIMITY_M = 0.5    # entities closer than this are likely same person
+SAME_PERSON_BBOX_IOU = 0.3       # bbox IoU above this = same person
+SAME_PERSON_TEMPORAL_OVERLAP = 0.5  # frame overlap ratio threshold
+
+
+def _compute_bbox_iou(bbox_a: List[int], bbox_b: List[int]) -> float:
+    """Compute Intersection over Union of two bounding boxes [x1, y1, x2, y2]."""
+    if not bbox_a or not bbox_b or len(bbox_a) < 4 or len(bbox_b) < 4:
+        return 0.0
+    x1 = max(bbox_a[0], bbox_b[0])
+    y1 = max(bbox_a[1], bbox_b[1])
+    x2 = min(bbox_a[2], bbox_b[2])
+    y2 = min(bbox_a[3], bbox_b[3])
+    inter = max(0, x2 - x1) * max(0, y2 - y1)
+    if inter == 0:
+        return 0.0
+    area_a = (bbox_a[2] - bbox_a[0]) * (bbox_a[3] - bbox_a[1])
+    area_b = (bbox_b[2] - bbox_b[0]) * (bbox_b[3] - bbox_b[1])
+    union = area_a + area_b - inter
+    return inter / union if union > 0 else 0.0
+
+
+def _is_likely_same_person(cand: Dict, resolved: ResolvedGraph) -> bool:
+    """
+    Issue 8: Check if two entities in a spatial candidate are likely the same person.
+
+    Uses three independent checks (any one triggering = skip):
+    1. Entity cluster membership (same resolved identity)
+    2. Bounding box IoU > 0.3
+    3. Distance < 0.5m with overlapping frame ranges
+    """
+    ent_a = cand["entity_a_obj"]
+    ent_b = cand["entity_b_obj"]
+    eid_a = cand["entity_a"]
+    eid_b = cand["entity_b"]
+
+    # Check 1: Same entity cluster
+    for cluster in resolved.entity_clusters:
+        if eid_a in cluster.entities and eid_b in cluster.entities:
+            return True
+
+    # Check 2: Bbox IoU
+    bbox_iou = _compute_bbox_iou(cand["bbox_a"], cand["bbox_b"])
+    if bbox_iou > SAME_PERSON_BBOX_IOU:
+        return True
+
+    # Check 3: Proximity + temporal overlap (same camera only)
+    if cand["camera_a"] == cand["camera_b"] and cand["distance_m"] < SAME_PERSON_PROXIMITY_M:
+        # Check frame overlap
+        start_a, end_a = ent_a.first_frame, ent_a.last_frame
+        start_b, end_b = ent_b.first_frame, ent_b.last_frame
+        overlap_start = max(start_a, start_b)
+        overlap_end = min(end_a, end_b)
+        if overlap_end > overlap_start:
+            duration_a = max(end_a - start_a, 1)
+            duration_b = max(end_b - start_b, 1)
+            overlap_ratio = (overlap_end - overlap_start) / min(duration_a, duration_b)
+            if overlap_ratio > SAME_PERSON_TEMPORAL_OVERLAP:
+                return True
+
+    return False
+
 
 def _is_bbox_clipping_frame(bbox: List[int], margin: int = FRAME_EDGE_MARGIN) -> bool:
     """Check if a bounding box is clipping the frame edge."""
@@ -49,7 +112,8 @@ def _disambiguate_description(desc: str, entity: Entity, sg: SceneGraph,
                                other_desc: str) -> str:
     """Add disambiguating context when two entities share the same description.
     
-    Appends temporal or activity context to make descriptions unique.
+    Appends activity context to make descriptions unique.
+    Camera IDs and raw timestamps are forbidden (Issue 12).
     """
     # Find primary activity for this entity
     primary_activity = None
@@ -62,13 +126,11 @@ def _disambiguate_description(desc: str, entity: Entity, sg: SceneGraph,
             if primary_activity:
                 break
     
-    # Add temporal context
-    time_str = f"at {entity.first_sec:.0f}s"
-    
     if primary_activity:
         act_gerund = humanize_activity_gerund(primary_activity)
-        return f"{desc} ({act_gerund.lower()} {time_str})"
-    return f"{desc} ({time_str})"
+        return f"{desc} ({act_gerund.lower()})"
+    # Cannot disambiguate without activity — return original
+    return desc
 
 
 # ============================================================================
@@ -205,6 +267,16 @@ def generate_spatial_qa(sg: SceneGraph, resolved: ResolvedGraph,
     if not candidates:
         return []
     
+    # Issue 8: Filter out pairs that are likely the same person
+    before_same_person = len(candidates)
+    candidates = [c for c in candidates if not _is_likely_same_person(c, resolved)]
+    if verbose and before_same_person != len(candidates):
+        print(f"    Filtered {before_same_person - len(candidates)} same-person pairs "
+              f"→ {len(candidates)} remaining")
+    
+    if not candidates:
+        return []
+
     # Filter out pairs with identical descriptions (indistinguishable entities)
     # V10: Instead of just filtering, try to disambiguate with activity/time context
     filtered = []
@@ -289,9 +361,9 @@ def generate_spatial_qa(sg: SceneGraph, resolved: ResolvedGraph,
         
         # All spatial questions are same-camera (filtered in _find_spatial_candidates)
         
-        # V10: Use disambiguated descriptions if available, else MEVID/geom
-        desc_a = cand.get("disambiguated_a") or entity_descs.get(cand["entity_a"], f"a person on camera {cand['camera_a']}")
-        desc_b = cand.get("disambiguated_b") or entity_descs.get(cand["entity_b"], f"a person on camera {cand['camera_b']}")
+        # Issue 12: Use descriptions WITHOUT camera IDs or raw timestamps
+        desc_a = cand.get("disambiguated_a") or entity_descs.get(cand["entity_a"], "a person")
+        desc_b = cand.get("disambiguated_b") or entity_descs.get(cand["entity_b"], "a person")
         
         # V10: Enrich with spatial location context if available
         if _HAS_SCENE_CONTEXT:
@@ -314,16 +386,15 @@ def generate_spatial_qa(sg: SceneGraph, resolved: ResolvedGraph,
                         if pt_b is not None:
                             desc_b = enrich_description_with_location(desc_b, pt_b, site)
         
-        # V10: Cross-category enrichment — add temporal context to spatial questions
-        time_a = f"{ent_a.first_sec:.0f}s"
-        time_b = f"{ent_b.first_sec:.0f}s"
-        temporal_context = ""
-        if abs(ent_a.first_sec - ent_b.first_sec) > 10:
-            temporal_context = f" (around the {time_a}-{time_b} mark)"
+        # Issue 12: No camera IDs or raw timestamps in question text
+        # Skip pairs with identical descriptions (can't distinguish without camera IDs)
+        if desc_a == desc_b:
+            if verbose:
+                print(f"    Skipping spatial pair: identical descriptions '{desc_a}'")
+            continue
         
         question = (
-            f"How close are {desc_a} and {desc_b} "
-            f"in the scene visible on camera {cand['camera_a']}{temporal_context}?"
+            f"How close are {desc_a} and {desc_b} in the scene?"
         )
         
         options = [

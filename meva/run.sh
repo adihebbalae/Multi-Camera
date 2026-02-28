@@ -34,7 +34,7 @@ for arg in "$@"; do
     SLOT="$arg"
   fi
 done
-SLOT="${SLOT:-2018-03-11.11-25.school}"
+SLOT="${SLOT:-2018-03-09.10-15.school}"
 
 # export PYTHONPATH=$PYTHONPATH:$(pwd)
 

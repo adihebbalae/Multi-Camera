@@ -377,9 +377,9 @@ def main():
         help="Resume from previous run (skip completed slots)")
     parser.add_argument("--verbose", "-v", action="store_true",
         help="Verbose output from extraction script")
-    parser.add_argument("--method", default="yolo",
+    parser.add_argument("--method", default="segformer",
         choices=["yolo", "segformer", "color_only"],
-        help="Extraction method (default: yolo)")
+        help="Extraction method (default: segformer — richest descriptions)")
     parser.add_argument("--force-reextract", action="store_true",
         help="Force re-extraction even if descriptions already exist")
     

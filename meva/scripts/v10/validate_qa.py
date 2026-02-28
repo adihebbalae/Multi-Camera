@@ -723,6 +723,151 @@ def check_grammar(qa_pairs: List[dict]) -> List[Issue]:
 # Main Validator
 # ============================================================================
 
+# ============================================================================
+# Check 7: Forbidden Pattern Detection (Issue 12)
+# ============================================================================
+
+# Categories where camera IDs, raw timestamps, and location context are FORBIDDEN
+_NO_CAMERA_CATEGORIES = {"temporal", "event_ordering", "spatial", "counting"}
+
+# Regex patterns that should NOT appear in question text for restricted categories
+_FORBIDDEN_PATTERNS = [
+    (re.compile(r'\bcamera\s+G?\d+', re.IGNORECASE), "camera ID reference"),
+    (re.compile(r'\bon camera\b', re.IGNORECASE), "camera reference"),
+    (re.compile(r'\bat\s+\d+s\b', re.IGNORECASE), "raw timestamp (e.g. 'at 45s')"),
+    (re.compile(r'\b\d+s[-–]\d+s\b', re.IGNORECASE), "timestamp range (e.g. '12s-180s')"),
+    (re.compile(r'\baround the \d+', re.IGNORECASE), "temporal marker"),
+    (re.compile(r'\bat time\s+\d+', re.IGNORECASE), "timestamp reference"),
+    (re.compile(r'\b\d+ seconds?\b', re.IGNORECASE), "raw seconds in question"),
+]
+
+
+def check_forbidden_patterns(qa_pairs: List[dict]) -> List[Issue]:
+    """
+    Issue 12: Enforce no-camera/no-timestamp policy for restricted categories.
+    
+    temporal, event_ordering, spatial, counting questions must rely ONLY on
+    visual appearance + activity verbs. Camera IDs, raw timestamps, and
+    spatial/location markers are forbidden in question text and options.
+    """
+    issues: List[Issue] = []
+    
+    for q in qa_pairs:
+        cat = q.get("category", "")
+        if cat not in _NO_CAMERA_CATEGORIES:
+            continue
+        
+        qid = q.get("question_id", "?")
+        
+        # Check question text
+        for field_name in ("question_template", "naturalized_question"):
+            text = q.get(field_name, "")
+            if not text:
+                continue
+            for pattern, label in _FORBIDDEN_PATTERNS:
+                m = pattern.search(text)
+                if m:
+                    issues.append(Issue(qid, "forbidden_pattern", ERROR,
+                        f"[{cat}] {field_name} contains {label}: '{m.group()}'"
+                    ))
+        
+        # Check options
+        for i, opt in enumerate(q.get("options", [])):
+            for pattern, label in _FORBIDDEN_PATTERNS:
+                m = pattern.search(opt)
+                if m:
+                    issues.append(Issue(qid, "forbidden_pattern", WARNING,
+                        f"[{cat}] option[{i}] contains {label}: '{m.group()}'"
+                    ))
+    
+    return issues
+
+
+# ============================================================================
+# Check 8: Annotation-Based Verification (Issue 11)
+# ============================================================================
+
+def check_annotation_verification(qa_pairs: List[dict]) -> List[Issue]:
+    """
+    Lightweight sanity check: verify numerical counts and temporal ordering
+    match the verification data. NOT circular — checks internal consistency
+    between question text/answer and verification metadata.
+
+    Catches:
+    - Counting: reasoning mentions wrong number vs correct_answer
+    - Temporal: event_a start_sec >= event_b start_sec (wrong ordering)
+    - Event ordering: events in verification not chronologically sorted
+    - All: correct_answer_index out of range or pointing to wrong option
+    """
+    issues: List[Issue] = []
+
+    for q in qa_pairs:
+        qid = q.get("question_id", "unknown")
+        cat = q.get("category", "")
+        v = q.get("verification", {})
+        options = q.get("options", [])
+        correct_idx = q.get("correct_answer_index", -1)
+        correct_answer = q.get("correct_answer", "")
+
+        # Universal: correct_answer_index in range and matches correct_answer
+        if correct_idx < 0 or correct_idx >= len(options):
+            issues.append(Issue(qid, "annotation_verify", ERROR,
+                f"correct_answer_index={correct_idx} out of range (options has {len(options)} items)",
+                "Fix correct_answer_index"))
+        elif options[correct_idx] != correct_answer:
+            issues.append(Issue(qid, "annotation_verify", ERROR,
+                f"correct_answer '{correct_answer}' != options[{correct_idx}] '{options[correct_idx]}'",
+                "Sync correct_answer with correct_answer_index"))
+
+        # Counting: verify reasoning numbers match correct_answer
+        if cat in ("numerical", "counting"):
+            reasoning = q.get("reasoning", "")
+            correct_count = v.get("correct_count")
+            if correct_count is not None:
+                # Check correct_answer matches correct_count
+                try:
+                    if str(correct_count) != correct_answer:
+                        issues.append(Issue(qid, "annotation_verify", ERROR,
+                            f"correct_count={correct_count} but correct_answer='{correct_answer}'",
+                            "Sync correct_count with correct_answer"))
+                except (ValueError, TypeError):
+                    pass
+
+                # Check reasoning mentions the correct number
+                if reasoning:
+                    import re as _re_verify
+                    nums_in_reasoning = [int(n) for n in _re_verify.findall(r'\b(\d+)\b', reasoning)]
+                    if correct_count not in nums_in_reasoning and str(correct_count) not in reasoning:
+                        issues.append(Issue(qid, "annotation_verify", WARNING,
+                            f"Reasoning doesn't mention correct count {correct_count}",
+                            "Regenerate reasoning with correct count"))
+
+        # Temporal: verify event ordering matches
+        elif cat == "temporal":
+            ea = v.get("event_a", {})
+            eb = v.get("event_b", {})
+            ea_start = ea.get("start_sec", 0)
+            eb_start = eb.get("start_sec", 0)
+            if ea_start and eb_start and ea_start >= eb_start:
+                issues.append(Issue(qid, "annotation_verify", ERROR,
+                    f"Event A (start={ea_start:.2f}s) does not precede Event B (start={eb_start:.2f}s)",
+                    "Fix temporal ordering — event_a must come first"))
+
+        # Event ordering: verify events are chronologically sorted
+        elif cat == "event_ordering":
+            ordered = v.get("ordered_events", [])
+            for i in range(len(ordered) - 1):
+                t_curr = ordered[i].get("start_sec", 0)
+                t_next = ordered[i + 1].get("start_sec", 0)
+                if t_curr >= t_next:
+                    issues.append(Issue(qid, "annotation_verify", ERROR,
+                        f"Verification events not chronological at position {i}: "
+                        f"{t_curr:.2f}s >= {t_next:.2f}s",
+                        "Fix event ordering in verification"))
+
+    return issues
+
+
 def validate(data: Dict[str, Any], verbose: bool = False) -> Dict[str, Any]:
     """
     Run all 6 checks on QA data.
@@ -747,7 +892,7 @@ def validate(data: Dict[str, Any], verbose: bool = False) -> Dict[str, Any]:
 
     all_issues: List[Issue] = []
 
-    # Run all 6 checks
+    # Run all 8 checks
     checks = [
         ("reasoning_consistency", check_reasoning_consistency),
         ("raw_token_leak", check_raw_token_leaks),
@@ -755,6 +900,8 @@ def validate(data: Dict[str, Any], verbose: bool = False) -> Dict[str, Any]:
         ("generic_description", check_generic_descriptions),
         ("multi_correct_ambiguity", check_multi_correct_ambiguity),
         ("grammar", check_grammar),
+        ("forbidden_pattern", check_forbidden_patterns),
+        ("annotation_verify", check_annotation_verification),
     ]
 
     for check_name, check_fn in checks:

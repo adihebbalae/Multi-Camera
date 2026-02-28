@@ -223,6 +223,108 @@ def is_visual_description(desc: str) -> bool:
     return any(kw in desc_lower for kw in _VISUAL_KEYWORDS)
 
 
+# ============================================================================
+# Color Match Scoring — Cross-validate MEVID ↔ geom-extracted colors (Issue 1)
+# ============================================================================
+
+# Color similarity groups: colors in the same group are considered "matching"
+_COLOR_GROUPS = {
+    "black": {"black", "charcoal", "dark"},
+    "dark_gray": {"charcoal", "dark gray", "dark"},
+    "gray": {"gray", "grey", "silver", "dark gray"},
+    "white": {"white", "ivory", "light"},
+    "red": {"red", "crimson", "maroon", "rust"},
+    "orange": {"orange", "rust"},
+    "yellow": {"yellow", "gold", "khaki"},
+    "green": {"green", "olive", "teal"},
+    "blue": {"blue", "navy", "indigo", "teal"},
+    "purple": {"purple", "plum", "indigo", "mauve"},
+    "pink": {"pink", "mauve"},
+    "brown": {"brown", "khaki", "beige"},
+    "beige": {"beige", "khaki", "ivory"},
+    "navy": {"navy", "blue", "dark blue", "indigo"},
+    "olive": {"olive", "green", "khaki"},
+}
+
+def _normalize_color(color: str) -> str:
+    """Normalize a color string for matching (lowercase, strip prefixes)."""
+    if not color:
+        return ""
+    color = color.lower().strip()
+    # Strip 'dark ' / 'light ' prefixes for fuzzy matching
+    for prefix in ("dark ", "light ", "bright "):
+        if color.startswith(prefix):
+            return color[len(prefix):]
+    return color
+
+def _colors_similar(color_a: str, color_b: str) -> bool:
+    """Check if two color names are semantically similar."""
+    a = _normalize_color(color_a)
+    b = _normalize_color(color_b)
+    if not a or not b:
+        return False
+    if a == b:
+        return True
+    # Check if they share a color group
+    for group_colors in _COLOR_GROUPS.values():
+        if a in group_colors and b in group_colors:
+            return True
+    return False
+
+def _color_match_score(mevid_person_data: Dict, geom_desc: str) -> float:
+    """
+    Score how well a MEVID person's colors match a geom-extracted description.
+
+    Returns 0.0-2.0:
+      - 1.0 per matching region (upper, lower)
+      - 0.0 for unknown/missing data
+      - -1.0 penalty for clear mismatch (known colors that don't match)
+    
+    Args:
+        mevid_person_data: Dict with primary_upper_color, primary_lower_color
+        geom_desc: e.g. "a person in a blue top and black pants"
+    """
+    if not geom_desc or geom_desc in ("a person", "a vehicle", "someone"):
+        return 0.0  # No geom data to compare — neutral score
+
+    mevid_upper = mevid_person_data.get("primary_upper_color", "unknown")
+    mevid_lower = mevid_person_data.get("primary_lower_color", "unknown")
+
+    # Parse geom description for colors: "a person in a {color} top and {color} pants"
+    geom_upper = ""
+    geom_lower = ""
+    desc_lower = geom_desc.lower()
+    
+    # Extract upper color: look for "{color} top" or "wearing a {color} top"
+    import re as _re_color
+    upper_match = _re_color.search(r'(?:in\s+(?:a\s+)?|wearing\s+(?:a\s+)?)(\w+)\s+top', desc_lower)
+    if upper_match:
+        geom_upper = upper_match.group(1)
+    
+    # Extract lower color: look for "{color} pants/shorts"
+    lower_match = _re_color.search(r'(\w+)\s+(?:pants|shorts|skirt)', desc_lower)
+    if lower_match:
+        geom_lower = lower_match.group(1)
+
+    score = 0.0
+    
+    # Score upper body
+    if mevid_upper != "unknown" and geom_upper:
+        if _colors_similar(mevid_upper, geom_upper):
+            score += 1.0
+        else:
+            score -= 1.0  # Clear mismatch penalty
+    
+    # Score lower body
+    if mevid_lower != "unknown" and geom_lower:
+        if _colors_similar(mevid_lower, geom_lower):
+            score += 1.0
+        else:
+            score -= 1.0  # Clear mismatch penalty
+    
+    return score
+
+
 def get_person_short_label(person_id: str) -> str:
     """
     Get a short label for a person (for options / distractor text).
@@ -469,28 +571,47 @@ def enrich_entities(sg: SceneGraph, verbose: bool = False) -> Dict[str, str]:
         cam = entity.camera_id
         available_persons = camera_persons.get(cam, [])
         
-        # Priority 1: MEVID person description
+        # Priority 1: MEVID person description (color-matched, Issue 1)
         if available_persons:
             used = assigned_persons.get(cam, set())
             unused = [p for p in available_persons if p not in used]
             
             if unused:
-                # Assign next available person
-                pid = unused[0]
-                desc = get_person_description(pid)
-                entity_descriptions[eid] = desc
+                # Color-match: score all unused MEVID persons against geom-extracted colors
+                # Pick the best match instead of sequential first-come-first-served
+                geom_desc = geom_descs.get(eid, "")
+                db = load_person_database()
+                persons_db = db.get("persons", {})
                 
-                if cam not in assigned_persons:
-                    assigned_persons[cam] = set()
-                assigned_persons[cam].add(pid)
+                best_pid = None
+                best_score = -999.0
+                for candidate_pid in unused:
+                    pdata = persons_db.get(candidate_pid, {})
+                    score = _color_match_score(pdata, geom_desc)
+                    if score > best_score:
+                        best_score = score
+                        best_pid = candidate_pid
                 
-                # Also store the MEVID person_id on the entity for re-ID questions
-                entity._mevid_person_id = pid
-                mevid_count += 1
-                
-                if verbose:
-                    print(f"    {eid}: MEVID → {desc[:60]}...")
-                continue
+                # Use best match if score is acceptable (>= -0.5 threshold),
+                # otherwise fall back to geom description directly
+                if best_pid is not None and best_score >= -0.5:
+                    pid = best_pid
+                    desc = get_person_description(pid)
+                    entity_descriptions[eid] = desc
+                    
+                    if cam not in assigned_persons:
+                        assigned_persons[cam] = set()
+                    assigned_persons[cam].add(pid)
+                    
+                    # Also store the MEVID person_id on the entity for re-ID questions
+                    entity._mevid_person_id = pid
+                    mevid_count += 1
+                    
+                    if verbose:
+                        print(f"    {eid}: MEVID → {desc[:60]}... (color_score={best_score:.1f})")
+                    continue
+                elif verbose and best_pid:
+                    print(f"    {eid}: MEVID rejected (color_score={best_score:.1f} < -0.5, using geom)")
         
         # Priority 2: Geom-extracted color description (from raw AVI + bbox)
         if eid in geom_descs:

@@ -90,15 +90,16 @@ _ENTITY_DESC_DIR = Path(os.environ.get("MEVA_ENTITY_DESC_DIR") or "/nas/mars/dat
 CANONICAL_SLOTS_PATH = _REPO_DATA / "canonical_slots.json"
 RANDOM_SEED = 42
 
-# 7 categories — target question counts per slot
-TARGET_TEMPORAL = 2
-TARGET_EVENT_ORDERING = 2
-TARGET_PERCEPTION = 2       # includes attribute_verification if MEVID
-TARGET_SPATIAL = 3           # increased: ~70% slot hit rate requires 3/slot for 500 total
-TARGET_SUMMARIZATION = 1    # scene_summary (renamed for paper alignment)
-TARGET_COUNTING = 1         # activity-counting only (entity-counting removed)
-TARGET_BEST_CAMERA = 3      # increased: Camera Transition Logic, ~70% hit rate
-# Total target: ~14 questions per slot
+# 7 categories — max question counts per slot (soft ceilings, not rigid targets)
+# Generators produce all valid candidates and cap at MAX.
+MAX_TEMPORAL = 2
+MAX_EVENT_ORDERING = 2
+MAX_PERCEPTION = 2           # includes attribute_verification if MEVID
+MAX_SPATIAL = 3              # ~70% slot hit rate requires 3/slot for 500 total
+MAX_SUMMARIZATION = 1        # scene_summary (renamed for paper alignment)
+MAX_COUNTING = 1             # activity-counting only (entity-counting removed)
+MAX_BEST_CAMERA = 3          # Camera Transition Logic, ~70% hit rate
+# Maximum total: ~14 questions per slot (actual count may be lower)
 
 
 # ============================================================================
@@ -531,22 +532,22 @@ def run_pipeline(slot: str, verbose: bool = False,
         print(f"\nStep 5-11: Generating questions (7 categories)...")
     
     temporal_qa = generate_temporal_qa(sg, resolved, entity_descs, rng,
-                                       count=TARGET_TEMPORAL, verbose=verbose,
+                                       count=MAX_TEMPORAL, verbose=verbose,
                                        fallback_eids=fallback_eids)
     ordering_qa = generate_event_ordering_qa(sg, resolved, entity_descs, rng,
-                                              count=TARGET_EVENT_ORDERING, verbose=verbose,
+                                              count=MAX_EVENT_ORDERING, verbose=verbose,
                                               fallback_eids=fallback_eids)
     perception_qa = generate_perception_qa(sg, resolved, entity_descs, rng,
-                                           count=TARGET_PERCEPTION, verbose=verbose)
+                                           count=MAX_PERCEPTION, verbose=verbose)
     spatial_qa = generate_spatial_qa(sg, resolved, entity_descs, rng,
-                                     count=TARGET_SPATIAL, verbose=verbose,
+                                     count=MAX_SPATIAL, verbose=verbose,
                                      fallback_eids=fallback_eids)
     summary_qa = generate_scene_summary_qa(sg, resolved, entity_descs, rng,
-                                            count=TARGET_SUMMARIZATION, verbose=verbose)
+                                            count=MAX_SUMMARIZATION, verbose=verbose)
     counting_qa = generate_numerical_qa(sg, resolved, entity_descs, rng,
-                                         count=TARGET_COUNTING, verbose=verbose)
+                                         count=MAX_COUNTING, verbose=verbose)
     best_camera_qa = generate_best_camera_qa(sg, resolved, entity_descs, rng,
-                                              count=TARGET_BEST_CAMERA, verbose=verbose)
+                                              count=MAX_BEST_CAMERA, verbose=verbose)
     
     # Rename categories for paper alignment
     for q in summary_qa:

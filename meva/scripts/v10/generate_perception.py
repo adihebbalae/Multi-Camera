@@ -134,7 +134,10 @@ def generate_perception_qa(sg: SceneGraph, resolved: ResolvedGraph,
     used_cameras = set()
     
     # ------------------------------------------------------------------
-    # Type 1: "Which camera captures X?" (1 question, V7 logic)
+    # Type 1: "Which camera captures X?" (1 question)
+    # Issue 7: Enrich with entity description for specificity.
+    # Filter: only valid if the described person performs the activity
+    # on exactly one camera (otherwise ambiguous without camera ID).
     # ------------------------------------------------------------------
     type1_pool = [
         (act, cams) for act, cams in activity_cameras.items()
@@ -148,7 +151,46 @@ def generate_perception_qa(sg: SceneGraph, resolved: ResolvedGraph,
         if act in used_activities:
             continue
         
-        correct_cam = sorted(correct_cams)[0]
+        # Issue 7: Find the best entity description for this activity
+        # Group actors performing this activity by their visual description
+        desc_to_cameras: Dict[str, Set[str]] = defaultdict(set)
+        desc_to_event: Dict[str, Event] = {}
+        
+        for evt in activity_events[act]:
+            for actor in evt.actors:
+                eid = f"{evt.camera_id}_actor_{actor['actor_id']}"
+                desc = entity_descs.get(eid, "")
+                # Skip generic/empty descriptions
+                if not desc or desc in ("a person", "a vehicle", "someone", "a person walking"):
+                    continue
+                desc_to_cameras[desc].add(evt.camera_id)
+                if desc not in desc_to_event:
+                    desc_to_event[desc] = evt
+        
+        # Find a description that is unique to one camera for this activity
+        best_desc = None
+        best_cam = None
+        best_event = None
+        for desc, cams_with_desc in desc_to_cameras.items():
+            if len(cams_with_desc) == 1:
+                best_desc = desc
+                best_cam = next(iter(cams_with_desc))
+                best_event = desc_to_event[desc]
+                break
+        
+        # Fall back to original generic approach if no unique description found
+        if best_desc is None:
+            correct_cam = sorted(correct_cams)[0]
+            gerund_act = humanize_activity_gerund(act)
+            gerund_lower = gerund_act[0].lower() + gerund_act[1:]
+            question = f"Which camera captures a person {gerund_lower}?"
+        else:
+            correct_cam = best_cam
+            gerund_act = humanize_activity_gerund(act)
+            gerund_lower = gerund_act[0].lower() + gerund_act[1:]
+            # Issue 7: Include visual description for specificity
+            question = f"Which camera captures {best_desc} {gerund_lower}?"
+        
         distractors = get_camera_distractors([correct_cam], all_cameras, rng, n=3)
         
         if len(distractors) < 2:
@@ -159,12 +201,8 @@ def generate_perception_qa(sg: SceneGraph, resolved: ResolvedGraph,
         correct_idx = options.index(f"Camera {correct_cam}")
         
         human_act = humanize_activity(act)
-        # Use gerund form for natural sentence: "Which camera captures a person opening a door?"
-        gerund_act = humanize_activity_gerund(act)
-        gerund_lower = gerund_act[0].lower() + gerund_act[1:]
-        question = f"Which camera captures a person {gerund_lower}?"
         
-        rep_event = activity_events[act][0] if activity_events[act] else None
+        rep_event = best_event or (activity_events[act][0] if activity_events[act] else None)
         
         debug_info = {
             "question_type": "which_camera",
@@ -172,6 +210,8 @@ def generate_perception_qa(sg: SceneGraph, resolved: ResolvedGraph,
             "activity_alias": human_act,
             "correct_camera": correct_cam,
             "cameras_with_activity": sorted(correct_cams),
+            "entity_description": best_desc,
+            "description_unique": best_desc is not None,
         }
         if rep_event:
             debug_info["representative_event"] = {

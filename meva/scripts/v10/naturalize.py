@@ -735,12 +735,12 @@ Output format — respond with ONLY a JSON object:
 
 CATEGORY_EXAMPLES = {
     "temporal": {
-        "hint": "This is a temporal ordering question about two events. Person descriptions (clothing, objects) identify who is who — there are NO camera references in the question. VARY your phrasing creatively. Return ONLY {question, reasoning}.",
+        "hint": "This is a temporal ordering question about two events. CRITICAL: Do NOT mention camera IDs (like G421, G339), timestamps (like 'at 45 seconds'), or locations (like 'near the parking lot'). Person descriptions (clothing, objects) identify who is who. VARY your phrasing creatively. Return ONLY {question, reasoning}.",
         "example_input": 'Consider two events in this multi-camera scene: (1) A person wearing a gray top and green pants, carrying a black backpack, entering a scene through a structure. (2) A person in a blue top and green pants, interacting with a person. Which event occurred first?',
         "example_output": '{"question": "Which of these happened first: a person in gray with green pants and a black backpack walking in through a structure, or a person in a blue top and green pants interacting with someone?", "reasoning": "The person in gray entered through the structure before the blue-topped person interacted with anyone."}',
     },
     "spatial": {
-        "hint": "Spatial distance question about two people. Use their appearance descriptions to identify them. No camera references. VARY phrasing. Return ONLY {question, reasoning}.",
+        "hint": "Spatial distance question about two people. CRITICAL: Do NOT mention camera IDs (like G421), timestamps (like 'at 45 seconds', 'around the 2:10 mark'), or raw time references. Use only visual appearance descriptions (clothing, hair, objects) to identify people. VARY phrasing. Return ONLY {question, reasoning}.",
         "example_input": 'How close are a person wearing a blue top and blue pants, with a black hoodie featuring a graphic design on the back and a person wearing a white hoodie with a Puma logo, camouflage pants, and a camouflage cap in the scene?',
         "example_output": '{"question": "How far apart would you say the person in blue with the black graphic hoodie is from the one wearing a white Puma hoodie and camo pants?", "reasoning": "Their positions in the scene place them approximately 6 meters apart."}',
     },
@@ -760,7 +760,7 @@ CATEGORY_EXAMPLES = {
         "example_output": '{"question": "What would you say best describes what is going on across all 8 camera feeds?", "reasoning": "Pedestrian activities dominate across all 8 feeds, with putting down objects being the most common."}',
     },
     "event_ordering": {
-        "hint": "Event ordering question about chronological sequence. Rephrase the event list naturally — vary how you introduce the events and ask for the order. Do NOT add letter prefixes (A, B, C, D) to options. Return ONLY {question, reasoning}.",
+        "hint": "Event ordering question about chronological sequence. CRITICAL: Do NOT mention camera IDs (like G421, G339), timestamps, or time references. Rephrase the event list naturally using visual descriptions and activities only. Vary how you introduce the events and ask for the order. Do NOT add letter prefixes (A, B, C, D) to options. Return ONLY {question, reasoning}.",
         "example_input": "Identify the correct chronological order of the following events: I. Someone opening a door II. A person walking through the courtyard. Which is the correct chronological order?",
         "example_output": '{"question": "Several activities were captured across different camera feeds. Place these events in the order they occurred: I. A door being opened near the entrance II. Someone strolling through the courtyard What is the right sequence?", "reasoning": "The door was opened before the person walked through the courtyard."}',
     },
@@ -770,7 +770,7 @@ CATEGORY_EXAMPLES = {
         "example_output": '{"question": "Once the individual grabbed an item from the ground, what did they most likely do next?", "reasoning": "Picking up an object is commonly followed by putting it down in another location."}',
     },
     "numerical": {
-        "hint": "Counting question about activities, entities, or cameras. Rephrase the counting query naturally — vary sentence structure but preserve the exact scope. Return ONLY {question, reasoning}.",
+        "hint": "Counting question about activities across cameras. CRITICAL: Do NOT mention specific camera IDs (like G421) in the question. Rephrase the counting query naturally — vary sentence structure but preserve the exact scope. Return ONLY {question, reasoning}.",
         "example_input": "How many cameras capture at least one instance of talking to person?",
         "example_output": '{"question": "Across the available camera feeds, on how many of them can you spot at least one conversation taking place?", "reasoning": "Conversations were observed on 5 of the available camera feeds."}',
     },
